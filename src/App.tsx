@@ -94,7 +94,7 @@ import { showAlert } from './components/shared/showAlert';
 import { getMaxTracks } from './capabilities';
 import { WelcomeModal } from './components/modals/WelcomeModal';
 import { UpdateBanner } from './components/shared/UpdateBanner';
-import { useTranslation, detectLanguage } from './i18n';
+import { useTranslation } from './i18n';
 import { registerServiceWorker, checkForUpdate } from './pwa';
 
 const DEFAULT_FPS = 30;
@@ -422,7 +422,7 @@ export default function ReVideeo() {
     return !localStorage.getItem('revideeo:welcomed');
   });
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
-  const { lang, setLang, t } = useTranslation();
+  const { setLang, t } = useTranslation();
 
   useEffect(() => {
     void registerServiceWorker();

@@ -30,3 +30,7 @@ yarn.lock
 
 # Server is a separate repo with its own .git
 server/
+.env*
+
+# Kilo config (local commands)
+.kilo/

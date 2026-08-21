@@ -162,7 +162,7 @@ export const JuicerModal = ({
     : localProvider
       ? [localProvider]
       : [];
-  const dedupedProviders = availableProviders.filter((p, i, arr) => {
+  const dedupedProviders = availableProviders.filter((p, _i, arr) => {
     if (p.type === 'gemini' && arr.some((q) => q.type === 'gemini' && q.id !== p.id)) {
       return !p.id.startsWith('server-') ? false : true;
     }
