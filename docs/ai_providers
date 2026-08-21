@@ -1,0 +1,44 @@
+
+Juicer
+   ↓
+AI Provider
+   ├── local → llama-server → Qwen
+   └── gemini → Google Gemini API
+
+
+Czyli możesz mieć w config.ini:
+
+[ai]
+provider=gemini
+model=gemini-3-flash-preview
+api_key=YOUR_GEMINI_API_KEY
+
+I zrobiłbym jeszcze jedną rzecz
+
+Dodaj do konfiguracji:
+
+[ai]
+provider=gemini
+model=gemini-3-flash-preview
+
+a nie:
+
+ai_power=...
+
+Bo ai_power jest świetne dla lokalnych modeli, ale provider powinien być niezależny:
+
+provider=local
+ai_power=1
+
+albo:
+
+provider=gemini
+model=gemini-3-flash-preview
+
+albo później:
+provider=custom
+endpoint=http://192.168.1.50:8080
+
+lub 
+provider=custom
+model='path_to_file'

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f1013"/>
+      <stop offset="50%" stop-color="#18191c"/>
+      <stop offset="100%" stop-color="#111214"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="580" width="1200" height="4" fill="url(#accent)" opacity="0.6"/>
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)" opacity="0.3"/>
+  <circle cx="1050" cy="120" r="200" fill="#2563EB" opacity="0.06"/>
+  <circle cx="150" cy="520" r="150" fill="#2563EB" opacity="0.04"/>
+  <g transform="translate(80, 200)">
+    <rect width="80" height="80" rx="16" fill="#2563EB"/>
+    <g transform="translate(16, 16)" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="m12.296 3.464 3.02 3.956"/>
+      <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3z"/>
+      <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <path d="m6.18 5.276 3.1 3.899"/>
+    </g>
+  </g>
+  <text x="190" y="260" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="72" font-weight="800" fill="white" letter-spacing="-2">Re<tspan fill="#3b82f6">Videeo</tspan></text>
+  <text x="190" y="310" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="22" fill="#9ca3af" font-weight="500">Open Source Video Editor with AI</text>
+  <g transform="translate(190, 350)">
+    <rect width="140" height="36" rx="8" fill="#2563EB" opacity="0.15"/>
+    <text x="70" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">Timeline</text>
+    <rect x="155" width="140" height="36" rx="8" fill="#2563EB" opacity="0.15"/>
+    <text x="225" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">AI Editing</text>
+    <rect x="310" width="140" height="36" rx="8" fill="#2563EB" opacity="0.15"/>
+    <text x="380" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">Plugins</text>
+    <rect x="465" width="140" height="36" rx="8" fill="#2563EB" opacity="0.15"/>
+    <text x="535" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">Real-time</text>
+  </g>
+  <text x="190" y="440" font-family="Inter, system-ui, sans-serif" font-size="16" fill="#6b7280">github.com/RevoProject/revideeo</text>
+</svg>

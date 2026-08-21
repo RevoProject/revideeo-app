@@ -1,0 +1,27 @@
+{
+  "name": "ReVideeo",
+  "short_name": "ReVideeo",
+  "description": "AI-powered open source video editor with timeline, plugins, and real-time preview.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111214",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "ReVideeo Editor"
+    }
+  ]
+}

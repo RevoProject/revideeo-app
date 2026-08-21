@@ -1,0 +1,150 @@
+{
+  "app": "revideeo",
+  "version": 1,
+  "format": "reevproj",
+  "name": "hacking (1)",
+  "config": {
+    "resolutionLabel": "480p",
+    "orientation": "16:9"
+  },
+  "clips": [
+    {
+      "id": "e19b0b61-fd42-4fd1-b9eb-cb28272be1da",
+      "sourceId": "9ede1a6e-a087-48cf-85c7-e5aec1ddf75f",
+      "startFrame": 0,
+      "durationInFrames": 42,
+      "scale": 1,
+      "posX": 0,
+      "offsetInTimeline": 0,
+      "transitionIn": "none",
+      "transitionDurationInFrames": 15,
+      "trackIndex": 0
+    },
+    {
+      "id": "72d5acb8-edde-4447-b290-62ce5556f733",
+      "sourceId": "9ede1a6e-a087-48cf-85c7-e5aec1ddf75f",
+      "startFrame": 42,
+      "durationInFrames": 36,
+      "scale": 1,
+      "posX": 0,
+      "offsetInTimeline": 42,
+      "transitionIn": "none",
+      "transitionDurationInFrames": 15,
+      "trackIndex": 0
+    },
+    {
+      "id": "ce4deada-6b75-474d-b1c2-26d1ae65038c",
+      "sourceId": "9ede1a6e-a087-48cf-85c7-e5aec1ddf75f",
+      "startFrame": 78,
+      "durationInFrames": 71,
+      "scale": 1,
+      "posX": -50,
+      "offsetInTimeline": 78,
+      "transitionIn": "none",
+      "transitionDurationInFrames": 15,
+      "trackIndex": 0
+    },
+    {
+      "id": "6e423dc7-fd03-4198-af77-132ba8cac127",
+      "sourceId": "9ede1a6e-a087-48cf-85c7-e5aec1ddf75f",
+      "startFrame": 149,
+      "durationInFrames": 22,
+      "scale": 1,
+      "posX": 0,
+      "offsetInTimeline": 120,
+      "transitionIn": "wipe",
+      "transitionDurationInFrames": 29,
+      "trackIndex": 0
+    },
+    {
+      "id": "899d3aac-1fc6-4992-a972-ac21ba3e7bf0",
+      "sourceId": "9ede1a6e-a087-48cf-85c7-e5aec1ddf75f",
+      "startFrame": 171,
+      "durationInFrames": 83,
+      "scale": 1,
+      "posX": 0,
+      "offsetInTimeline": 161,
+      "transitionIn": "none",
+      "transitionDurationInFrames": 15,
+      "trackIndex": 0
+    },
+    {
+      "id": "e4239337-ddff-4684-accd-138fd79f7c26",
+      "sourceId": "9ede1a6e-a087-48cf-85c7-e5aec1ddf75f",
+      "startFrame": 254,
+      "durationInFrames": 712,
+      "scale": 1,
+      "posX": 0,
+      "offsetInTimeline": 244,
+      "transitionIn": "none",
+      "transitionDurationInFrames": 23,
+      "trackIndex": 0
+    },
+    {
+      "id": "ec1b6d0f-cf75-4891-8bf1-a1785c5cf61e",
+      "sourceId": "9ede1a6e-a087-48cf-85c7-e5aec1ddf75f",
+      "startFrame": 966,
+      "durationInFrames": 172,
+      "scale": 1,
+      "posX": 0,
+      "offsetInTimeline": 940,
+      "transitionIn": "slide",
+      "transitionDurationInFrames": 16,
+      "trackIndex": 0,
+      "height": 99
+    },
+    {
+      "id": "60676a38-fcce-4825-9584-6ca554375fda",
+      "sourceId": "e335a5e0-d8bd-442e-86cf-595f2a873ae0",
+      "trackIndex": 1,
+      "offsetInTimeline": 232,
+      "startFrame": 0,
+      "durationInFrames": 2622,
+      "scale": 1,
+      "posX": 0,
+      "transitionIn": "none",
+      "transitionDurationInFrames": 15
+    }
+  ],
+  "assets": [
+    {
+      "sourceId": "dd9b1d09-e711-4007-8ff6-48692997ec9e",
+      "name": "tt1.mov",
+      "durationInFrames": 1800
+    },
+    {
+      "sourceId": "e335a5e0-d8bd-442e-86cf-595f2a873ae0",
+      "name": "zagra-demo-plinko.mp4",
+      "durationInFrames": 2622
+    },
+    {
+      "sourceId": "9ede1a6e-a087-48cf-85c7-e5aec1ddf75f",
+      "name": "Wideo",
+      "durationInFrames": 1800
+    }
+  ],
+  "trackCount": 3,
+  "markers": [],
+  "trackSettings": [
+    {
+      "name": "V1",
+      "locked": false,
+      "muted": false,
+      "hidden": false
+    },
+    {
+      "name": "HAZARDZIK HAHA",
+      "locked": false,
+      "muted": false,
+      "hidden": false
+    },
+    {
+      "name": "Ścieżka 3",
+      "locked": false,
+      "muted": false,
+      "hidden": false
+    }
+  ],
+  "media": {},
+  "checksum": "133fd326541cecf5c9d8daf55d28e6e68600e1f85c71b2427ed3a4712cacb9d3"
+}
