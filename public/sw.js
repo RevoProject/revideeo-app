@@ -1,5 +1,5 @@
-const CACHE_NAME = 'revideeo-v2';
-const STATIC_CACHE = 'revideeo-static-v2';
+const CACHE_NAME = 'revideeo-v3';
+const STATIC_CACHE = 'revideeo-static-v3';
 
 const PRECACHE_URLS = [
   '/',
@@ -31,7 +31,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (request.url.includes('/api/') || request.url.includes('/__revideeo_media')) return;
+  if (request.url.includes('/api/') || request.url.includes('/__revideeo_media') || request.url.includes('/version.json')) return;
 
   event.respondWith(
     caches.match(request).then((cached) => {

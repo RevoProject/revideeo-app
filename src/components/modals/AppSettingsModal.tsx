@@ -4,6 +4,7 @@ import type { AppLanguage, AppSettings, RenderServer } from '../../types';
 import { RENDER_SERVER_BASE_URL } from '../../export/renderServerConfig';
 import { generateId } from '../../storage';
 import { useTranslation } from '../../i18n';
+import { APP_VERSION } from '../../pwa';
 
 const LANGUAGES: { code: AppLanguage; flag: string; labelKey: string }[] = [
   { code: 'pl', flag: '🇵🇱', labelKey: 'lang.pl' },
@@ -50,7 +51,10 @@ export const AppSettingsModal = ({
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4">
       <div className="flex w-[440px] max-h-[90vh] flex-col gap-5 overflow-y-auto rounded-xl border border-[#2c2d33] bg-[#18191c] p-6 shadow-2xl">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">{t('settings.title')}</h2>
+          <div>
+            <h2 className="text-lg font-bold text-white">{t('settings.title')}</h2>
+            <p className="mt-0.5 text-[10px] text-gray-500">v{APP_VERSION} · {new Date(document.lastModified).toLocaleDateString('en-CA')}</p>
+          </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white" title={t('settings.close')}>
             <X size={18} />
           </button>
