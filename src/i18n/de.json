@@ -132,6 +132,7 @@
   "timeline.addTrack": "Spur hinzufügen",
   "timeline.trackCount": "Spur {count}/{max}",
   "timeline.split": "Teilen",
+  "timeline.playPause": "Abspielen / Pause",
   "timeline.scrollTo": "Zeitleiste scrollen",
   "timeline.frameOrTime": "Frame oder mm:ss",
   "timeline.frameLabel": "Frame:",
@@ -226,6 +227,9 @@
   "mobile.addMedia": "Medien hinzufügen",
   "mobile.splitClip": "Clip teilen",
   "mobile.timelineSlider": "Zeitleisten-Schieber",
+  "mobile.media": "Medien",
+  "mobile.audioMixer": "Audio-Mixer",
+  "mobile.sheetClipProperties": "Clip-Eigenschaften",
 
   "welcome.title": "Willkommen bei ReVideeo",
   "welcome.devVersion": "Entwicklungsversion",
@@ -236,6 +240,11 @@
 
   "update.banner": "Eine neue Version ist verfügbar ({version}). Möchten Sie sie installieren?",
   "update.install": "Installieren",
+  "update.modal.title": "Update verfügbar",
+  "update.modal.version": "Version {version}",
+  "update.modal.description": "Eine neue Version von ReVideeo ist bereit. Aktualisieren Sie, um die neuesten Funktionen und Fehlerbehebungen zu erhalten.",
+  "update.modal.update": "Jetzt aktualisieren",
+  "update.modal.later": "Später",
 
   "ctx.cut": "Ausschneiden",
   "ctx.copy": "Kopieren",
@@ -494,5 +503,18 @@
 
   "common.featureUnavailable": "Funktion nicht verfügbar",
   "common.featureUnavailableDesc": "Diese Funktion ist in dieser Version nicht verfügbar. Wir arbeiten an der Implementierung.",
-  "common.ok": "OK"
+  "common.ok": "OK",
+
+  "release.title": "Neuigkeiten",
+  "release.understand": "Verstanden!",
+  "release.migration.title": "Player-Wiedergabe behoben",
+  "release.migration.desc": "Ein kritischer Fehler im Frame-Akkumulator wurde behoben — Seekbar und Playhead folgen der Wiedergabe jetzt flüssig. Das Problem lag am Verlust des fractional Teils von frameRef, der Frame bei0 stecken blieb.",
+  "release.fixes.title": "CORS & Vercel Preview",
+  "release.fixes.desc": "Zugriff auf den Render-Server von Vercel-Preview-Deployments behoben (Private Network Access). CORS-Regex passt jetzt auf alle Vercel-Preview-URL-Muster.",
+  "release.eupl.title": "Wiedergabestabilität",
+  "release.eupl.desc": "Play/Pause/Seek funktioniert flüssig ohne Ruckler. Seekbar, Playhead und Frame-Zähler werden korrekt auf ganze Zahlen gerundet.",
+
+  "import.reading": "Projektdatei wird gelesen...",
+  "import.storing": "Medien werden importiert...",
+  "import.opening": "Projekt wird geöffnet..."
 }

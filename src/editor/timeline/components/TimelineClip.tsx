@@ -70,7 +70,7 @@ export const TimelineClip = ({
       onClick={onClick}
       data-clip-index={index}
       style={{ left, width, touchAction: 'none' }}
-      className={`absolute top-2 bottom-2 overflow-hidden rounded border cursor-grab active:cursor-grabbing transition-shadow ${clip.type === 'audio' ? 'border-pink-700 bg-pink-800/50 hover:bg-pink-800/70' : clip.type === 'text' ? 'border-blue-700 bg-blue-800/40 hover:bg-blue-800/60' : clip.type === 'image' ? 'border-amber-600 bg-amber-700/40 hover:bg-amber-700/60' : 'border-blue-700 bg-blue-800/40 hover:bg-blue-800/60'} ${clip.groupId ? 'border-t-2 border-t-emerald-400' : ''} ${isSelected ? 'z-10 ring-2 ring-blue-500 shadow-lg shadow-blue-500/20' : ''}`}
+      className={`absolute top-2 bottom-2 overflow-hidden rounded border cursor-grab active:cursor-grabbing transition-shadow z-[1] ${clip.type === 'audio' ? 'border-pink-700 bg-pink-800/50 hover:bg-pink-800/70' : clip.type === 'text' ? 'border-blue-700 bg-blue-800/40 hover:bg-blue-800/60' : clip.type === 'image' ? 'border-amber-600 bg-amber-700/40 hover:bg-amber-700/60' : 'border-blue-700 bg-blue-800/40 hover:bg-blue-800/60'} ${clip.groupId ? 'border-t-2 border-t-emerald-400' : ''} ${isSelected ? '!z-10 ring-2 ring-blue-500 shadow-lg shadow-blue-500/20' : ''}`}
     >
       <ClipThumbnailStrip clipId={clip.id} thumbnails={thumbnails} trimStart={trimStart} trimEnd={trimEnd} />
       {showName && <div className="relative z-10 truncate bg-black/20 px-1 py-0.5 text-[10px] text-blue-100">{clip.type === 'text' ? clip.text ?? t('props.standardText') : assetName}</div>}
@@ -79,7 +79,7 @@ export const TimelineClip = ({
       {clip.type === 'image' && <div className="pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center"><span className="inline-flex max-w-[90%] items-center gap-1 rounded bg-amber-950/80 px-1.5 py-0.5 text-[9px] font-semibold text-amber-200"><Image size={10} />{t('media.image')}</span></div>}
       <ClipTrimHandles disabled={locked} onTrimLeftPointerDown={onTrimLeftPointerDown} onTrimRightPointerDown={onTrimRightPointerDown} />
     </div>
-    {hasTransition && <TransitionHandle left={transitionLeft} width={transitionWidth} title={transitionTitle} label={transitionLabel} onPointerDown={onTransitionPointerDown} onDoubleClick={onTransitionDoubleClick} onContextMenu={onTransitionContextMenu} />}
+    {hasTransition && <TransitionHandle left={transitionLeft} width={transitionWidth} title={transitionTitle} label={transitionLabel} top="8px" bottom="8px" onPointerDown={onTransitionPointerDown} onDoubleClick={onTransitionDoubleClick} onContextMenu={onTransitionContextMenu} />}
   </>
   );
 };

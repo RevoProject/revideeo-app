@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION = '0.2.0';
 const VERSION_CHECK_INTERVAL = 60 * 60 * 1000;
 const VERSION_KEY = 'revideeo:app-version';
 

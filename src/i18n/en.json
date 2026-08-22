@@ -132,6 +132,7 @@
   "timeline.addTrack": "Add track",
   "timeline.trackCount": "Track {count}/{max}",
   "timeline.split": "Split",
+  "timeline.playPause": "Play / Pause",
   "timeline.scrollTo": "Scroll timeline",
   "timeline.frameOrTime": "frame or mm:ss",
   "timeline.frameLabel": "Frame:",
@@ -226,6 +227,9 @@
   "mobile.addMedia": "Add media",
   "mobile.splitClip": "Split clip",
   "mobile.timelineSlider": "Timeline slider",
+  "mobile.media": "Media",
+  "mobile.audioMixer": "Audio Mixer",
+  "mobile.sheetClipProperties": "Clip Properties",
 
   "welcome.title": "Welcome to ReVideeo",
   "welcome.devVersion": "Development version",
@@ -236,6 +240,11 @@
 
   "update.banner": "A new version is available ({version}). Would you like to install it?",
   "update.install": "Install",
+  "update.modal.title": "Update Available",
+  "update.modal.version": "Version {version}",
+  "update.modal.description": "A new version of ReVideeo is ready. Update to get the latest features and fixes.",
+  "update.modal.update": "Update Now",
+  "update.modal.later": "Later",
 
   "ctx.cut": "Cut",
   "ctx.copy": "Copy",
@@ -494,5 +503,18 @@
 
   "common.featureUnavailable": "Feature Unavailable",
   "common.featureUnavailableDesc": "This feature is not available in this version. We are working on implementing it.",
-  "common.ok": "OK"
+  "common.ok": "OK",
+
+  "release.title": "What's New",
+  "release.understand": "Got it!",
+  "release.migration.title": "Player Playback Fix",
+  "release.migration.desc": "Fixed a critical bug in the frame accumulator — seekbar and playhead now follow playback smoothly. The issue was caused by losing the fractional part of frameRef, which kept the frame stuck at 0.",
+  "release.fixes.title": "CORS & Vercel Preview",
+  "release.fixes.desc": "Fixed access to render server from Vercel preview deployments (Private Network Access). CORS regex now matches all Vercel preview URL patterns.",
+  "release.eupl.title": "Playback Stability",
+  "release.eupl.desc": "Play/pause/seek works smoothly without stuttering. Seekbar, playhead and frame counter are properly rounded to whole numbers.",
+
+  "import.reading": "Reading project file...",
+  "import.storing": "Importing media assets...",
+  "import.opening": "Opening project..."
 }

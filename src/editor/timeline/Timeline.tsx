@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { PlayerRef } from '@remotion/player';
+import type { NativePlayerHandle } from '@revideeo/player';
 import { ArrowRightLeft } from 'lucide-react';
 import type { StoredClip, TimelineMarker, TrackSettings } from '../../types';
 import { useTranslation } from '../../i18n';
@@ -40,7 +40,7 @@ interface TimelineProps {
   selectedTrack: number;
   trackCount: number;
   trackSettings: TrackSettings[];
-  playerRef: React.RefObject<PlayerRef | null>;
+  playerRef: React.RefObject<NativePlayerHandle | null>;
   isPlaying: boolean;
   onSeek: (frame: number) => void;
   onSelectClip: (id: string, additive?: boolean) => void;
@@ -84,6 +84,7 @@ export const Timeline = ({
   const pinchRef = useRef<{ startDist: number; startZoom: number; startAreaWidth: number; playheadViewportX: number } | null>(null);
   const pendingScrollRef = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const playheadRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef(1);
   const MIN_ZOOM = mobile ? 0.125 : 0.25;
   const { zoom: timelineZoom, setZoom } = useTimelineZoom(MIN_ZOOM);
@@ -95,6 +96,12 @@ export const Timeline = ({
   // Render the highest layer at the top while keeping Ścieżka 1 at the bottom.
   const tracks = Array.from({ length: trackCount }, (_, index) => trackCount - 1 - index);
   const pct = (value: number) => `${(value / totalFrames) * 100}%`;
+
+  useEffect(() => {
+    if (!isPlaying && playheadRef.current) {
+      playheadRef.current.style.left = pct(currentFrame);
+    }
+  }, [currentFrame, isPlaying, totalFrames]);
 
   const seekFromEvent = (event: React.MouseEvent<HTMLElement> | React.PointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -192,7 +199,7 @@ export const Timeline = ({
       const area = areaRef.current;
       if (!drag || !area || pinchingRef.current) return;
       const rect = area.getBoundingClientRect();
-      const framesPerPixel = totalFrames / rect.width;
+      const framesPerPixel = totalFrames / areaWidth;
       const dx = event.clientX - drag.startX;
       if (drag.kind === 'marquee') {
         drag.moved = true;
@@ -298,7 +305,7 @@ export const Timeline = ({
                 </div>)}
               </div>
               {markers.map((marker) => <button key={marker.id} type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => onSeek(marker.frame)} title={t('timeline.marker', { frame: String(marker.frame) })} className="absolute top-0 bottom-0 z-20 w-4 -translate-x-1/2" style={{ left: pct(marker.frame) }}><span className="absolute top-0 left-1/2 h-4 w-0.5 -translate-x-1/2 bg-amber-400" /><span className="absolute top-0 left-1/2 -translate-x-1/2 rounded-b bg-amber-400 px-1 text-[9px] font-bold text-black">T</span></button>)}
-              <div className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 pointer-events-none" style={{ left: pct(currentFrame) }} />
+              <div ref={playheadRef} data-testid="timeline-playhead" className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 pointer-events-none" />
               {!mobile && selectionBox && <div className="pointer-events-none absolute z-40 border border-blue-400 bg-blue-500/15" style={selectionBox} />}
               {transitionDragLabel && (
                 <div

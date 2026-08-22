@@ -132,6 +132,7 @@
   "timeline.addTrack": "Dodaj ścieżkę",
   "timeline.trackCount": "Ścieżka {count}/{max}",
   "timeline.split": "Zrób cięcie",
+  "timeline.playPause": "Odtwarzaj / Pauza",
   "timeline.scrollTo": "Przewiń oś czasu",
   "timeline.frameOrTime": "klatka lub mm:ss",
   "timeline.frameLabel": "Klatka:",
@@ -226,6 +227,9 @@
   "mobile.addMedia": "Dodaj media",
   "mobile.splitClip": "Podziel klip",
   "mobile.timelineSlider": "Suwak osi czasu",
+  "mobile.media": "Media",
+  "mobile.audioMixer": "Mikser audio",
+  "mobile.sheetClipProperties": "Właściwości klipu",
 
   "welcome.title": "Witaj w ReVideeo",
   "welcome.devVersion": "Wersja rozwojowa",
@@ -236,6 +240,11 @@
 
   "update.banner": "Dostępna jest nowa wersja ({version}). Chcesz zainstalować?",
   "update.install": "Zainstaluj",
+  "update.modal.title": "Dostępna aktualizacja",
+  "update.modal.version": "Wersja {version}",
+  "update.modal.description": "Nowa wersja ReVideeo jest gotowa. Zaktualizuj, aby otrzymać najnowsze funkcje i poprawki.",
+  "update.modal.update": "Aktualizuj teraz",
+  "update.modal.later": "Później",
 
   "ctx.cut": "Wytnij",
   "ctx.copy": "Kopiuj",
@@ -494,5 +503,18 @@
 
   "common.featureUnavailable": "Funkcja niedostępna",
   "common.featureUnavailableDesc": "Ta funkcja jest niedostępna w tej wersji. Pracujemy nad jej wdrożeniem.",
-  "common.ok": "OK"
+  "common.ok": "OK",
+
+  "release.title": "Co nowego",
+  "release.understand": "Rozumiem!",
+  "release.migration.title": "Naprawiono zacinanie playera",
+  "release.migration.desc": "Wyeliminowano bug w akumulatorze klatek odtwarzacza — seekbar i playhead płynnie podążają za odtwarzaniem. Fix dotyczył utraty części ułamkowej frameRef, co powodowało zablokowanie się na klatce 0.",
+  "release.fixes.title": "CORS i podgląd Vercel",
+  "release.fixes.desc": "Naprawiono dostęp do serwera renderującego z podglądów Vercel (Private Network Access). Regex CORS dopasowuje teraz wszystkie wzorce URL preview.",
+  "release.eupl.title": "Stabilność odtwarzania",
+  "release.eupl.desc": "Play/pause/seek działa płynnie bez zacinania. seekbar, playhead i numer klatki są zaokrąglane do liczb całkowitych.",
+
+  "import.reading": "Odczytywanie pliku projektu...",
+  "import.storing": "Odkurzanie projektu...",
+  "import.opening": "Otwieranie projektu..."
 }

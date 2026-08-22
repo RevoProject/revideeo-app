@@ -231,7 +231,7 @@ Complete project metadata (stored in localStorage, no media blobs).
   "_source": "src/types.ts",
   "_description": "Configuration for an external render server",
   "id": "uuid",
-  "url": "http://192.168.1.10:3000",
+  "url": "http://192.168.1.10:33623",
   "alias": "Workstation"
 }
 ```

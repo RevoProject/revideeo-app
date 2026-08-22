@@ -44,9 +44,9 @@ const DEMO_ANALYSIS = (request: AIPlanRequest): AIAnalysisResult => ({
   totalDurationSeconds: request.context.clips.reduce((acc, c) => acc + c.durationInFrames / request.context.fps, 0),
   detectedScenes: Math.max(1, request.context.clips.length),
   recommendations: [
-    'Można usunąć ciszę z 2-3 fragmentów',
-    'Wykryto podobne ujęcia — warto rozważyć selekcję',
-    'Brak napisów — dodaj captiony dla lepszej dostępności',
+    'Can remove silence from 2-3 fragments',
+    'Similar shots detected — consider selection',
+    'No captions — add captions for better accessibility',
   ],
   metadata: { latencyMs: Math.floor(Math.random() * 200) + 50 },
 });

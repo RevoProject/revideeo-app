@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Player, type PlayerRef } from '@remotion/player';
+import { NativePlayer, type NativePlayerHandle } from '@revideeo/player';
 import {
   ArrowRightLeft,
   ArrowDown,
@@ -75,7 +75,6 @@ import { JuicerModal, type JuicerSnapshot } from './components/modals/JuicerModa
 import { MediaPanel as MediaPanelView } from './editor/media/MediaPanel';
 import { PropertiesPanel as PropertiesPanelView } from './editor/tools/PropertiesPanel';
 import { Header as HeaderView } from './components/layout/Header';
-import { VideoComposition as VideoCompositionView } from './editor/composition/VideoComposition';
 import { PreviewTransformOverlay } from './editor/composition/PreviewTransformOverlay';
 import { MobileEditorShell, type MobileEditorShellHandle } from './mobile/MobileEditorShell';
 import { MobileTracksPanel } from './mobile/MobileTracksPanel';
@@ -93,7 +92,8 @@ import { showConfirm } from './components/shared/showConfirm';
 import { showAlert } from './components/shared/showAlert';
 import { getMaxTracks } from './capabilities';
 import { WelcomeModal } from './components/modals/WelcomeModal';
-import { UpdateBanner } from './components/shared/UpdateBanner';
+import { ReleaseChangesModal } from './components/modals/ReleaseChangesModal';
+import { UpdateModal } from './components/shared/UpdateModal';
 import { useTranslation } from './i18n';
 import { registerServiceWorker, checkForUpdate } from './pwa';
 
@@ -377,7 +377,7 @@ const findJunctionAt = (
 // --- Popup ze skrótami klawiszowymi ---
 // --- SERCE CAPCUTA 4: OŚ CZASU (Dolny Panel) — wielościeżkowa ---
 export default function ReVideeo() {
-  const playerRef = useRef<PlayerRef>(null);
+  const playerRef = useRef<NativePlayerHandle>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
   const mobileShellRef = useRef<MobileEditorShellHandle>(null);
   const mediaUrls = useRef(new Map<string, string>());
@@ -420,6 +420,10 @@ export default function ReVideeo() {
   const juicerSnapshotRef = useRef<JuicerSnapshot | null>(null);
   const [showWelcome, setShowWelcome] = useState(() => {
     return !localStorage.getItem('revideeo:welcomed');
+  });
+  const [showRelease, setShowRelease] = useState(() => {
+    const lastSeen = localStorage.getItem('revideeo:lastSeenVersion');
+    return lastSeen !== '0.2.0';
   });
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const { setLang, t } = useTranslation();
@@ -716,19 +720,6 @@ export default function ReVideeo() {
   useEffect(() => {
     return () => revokeMedia();
   }, [revokeMedia]);
-
-  // Synchronizacja suwaka z odtwarzaczem Remotion
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const player = playerRef.current;
-      if (!player) return;
-      setIsPlaying(player.isPlaying());
-      if (player.isPlaying()) {
-        setCurrentFrame(player.getCurrentFrame());
-      }
-    }, 30);
-    return () => clearInterval(interval);
-  }, []);
 
   // Przycinanie playheada, gdy długość osi się zmienia
   useEffect(() => {
@@ -1485,7 +1476,7 @@ export default function ReVideeo() {
   const openProject = useCallback(
     async (stored: StoredProject, remoteId?: string) => {
       revokeMedia();
-      setLoading({ progress: 0, label: 'Otwieranie projektu...' });
+      setLoading({ progress: 0, label: t('import.opening') });
       try {
         const sourceIds = [...new Set<string>([
           ...(stored.assets ?? []).map((a) => a.sourceId),
@@ -1496,13 +1487,13 @@ export default function ReVideeo() {
           const blob = await getMedia(stored.id, sourceId);
           if (!blob) {
             completed += 1;
-            setLoading({ progress: completed / Math.max(1, sourceIds.length), label: 'Ładowanie materiałów...' });
+            setLoading({ progress: completed / Math.max(1, sourceIds.length), label: t('import.storing') });
             return null;
           }
           const meta = (stored.assets ?? []).find((a) => a.sourceId === sourceId);
           const thumbnails = await createVideoThumbnails(blob);
           completed += 1;
-          setLoading({ progress: completed / Math.max(1, sourceIds.length), label: t('app.cleaning') });
+          setLoading({ progress: completed / Math.max(1, sourceIds.length), label: t('import.storing') });
           return {
             sourceId,
             name: meta?.name ?? t('media.videoDefault'),
@@ -1652,7 +1643,7 @@ export default function ReVideeo() {
   const openRemoteProject = async (summary: RemoteProjectSummary) => {
     const serverUrl = spaceRenderServers[0]?.url;
     if (!serverUrl) return;
-    setLoading({ progress: 0, label: 'Pobieranie projektu z serwera...' });
+    setLoading({ progress: 0, label: t('import.storing') });
     try {
       const remote = await loadRemoteProject(summary.id, serverUrl);
       await Promise.all(Object.entries(remote.media).map(([sourceId, blob]) => putMedia(remote.project.id, sourceId, blob)));
@@ -1805,6 +1796,7 @@ export default function ReVideeo() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
+      setLoading({ progress: 0, label: t('import.reading') });
       const { project: imported, media } = await readProjectFile(file);
       const existing = new Set(listProjects().map((p) => p.name));
       let name = imported.name;
@@ -1814,10 +1806,19 @@ export default function ReVideeo() {
       }
       imported.name = name;
 
-      await Promise.all(Object.entries(media).map(([sourceId, blob]) => putMedia(imported.id, sourceId, blob)));
+      const entries = Object.entries(media);
+      let stored = 0;
+      setLoading({ progress: 0.1, label: t('import.storing') });
+      await Promise.all(entries.map(async ([sourceId, blob]) => {
+        await putMedia(imported.id, sourceId, blob);
+        stored++;
+        setLoading({ progress: 0.1 + (stored / Math.max(1, entries.length)) * 0.5, label: t('import.storing') });
+      }));
+      setLoading({ progress: 0.7, label: t('import.opening') });
       upsertProject(imported);
       await openProject(imported);
     } catch (err) {
+      setLoading(null);
       showAlert(t('ctx.importError'), t('ctx.importErrorMessage') + String(err));
     }
     e.target.value = '';
@@ -1937,7 +1938,7 @@ export default function ReVideeo() {
       )}
 
       {updateVersion && (
-        <UpdateBanner version={updateVersion} onDismiss={() => setUpdateVersion(null)} />
+        <UpdateModal version={updateVersion} onDismiss={() => setUpdateVersion(null)} />
       )}
 
       {isMobileDevice && project && (
@@ -1974,7 +1975,7 @@ export default function ReVideeo() {
             recentExports={recentExports}
             onDownloadRecent={downloadRecentExport}
             onDeleteRecent={removeRecentExport}
-             preview={<div className="flex h-full items-center justify-center bg-black p-3"><div className={`relative overflow-hidden rounded-lg border border-[#2c2d33] bg-black ${project.config.orientation === '9:16' ? 'aspect-[9/16] h-full max-w-full' : 'aspect-video w-full'}`}><Player ref={playerRef} component={VideoCompositionView} durationInFrames={totalFrames} fps={FPS} compositionWidth={getPreset(project.config.resolutionLabel, project.config.orientation).width} compositionHeight={getPreset(project.config.resolutionLabel, project.config.orientation).height} style={{ width: '100%', height: '100%' }} controls={false} inputProps={{ clips: clipsForPlayer, trackSettings }} acknowledgeRemotionLicense /><PreviewTransformOverlay clip={showTransformOverlay ? activeClip : null}               trackName={trackSettings[activeClip?.trackIndex ?? 0]?.name ?? t('timeline.track', { index: '1' })}
+             preview={<div className="flex h-full items-center justify-center bg-black p-3"><div className={`relative overflow-hidden rounded-lg border border-[#2c2d33] bg-black ${project.config.orientation === '9:16' ? 'aspect-[9/16] h-full max-w-full' : 'aspect-video w-full'}`}><NativePlayer ref={playerRef} clips={clipsForPlayer} trackSettings={trackSettings} compositionWidth={getPreset(project.config.resolutionLabel, project.config.orientation).width} compositionHeight={getPreset(project.config.resolutionLabel, project.config.orientation).height} durationInFrames={totalFrames} fps={FPS} currentFrame={currentFrame} onFrameChange={setCurrentFrame} onPlayStateChange={setIsPlaying} style={{ width: '100%', height: '100%' }} /><PreviewTransformOverlay clip={showTransformOverlay ? activeClip : null}               trackName={trackSettings[activeClip?.trackIndex ?? 0]?.name ?? t('timeline.track', { index: '1' })}
               compositionWidth={getPreset(project.config.resolutionLabel, project.config.orientation).width}
               compositionHeight={getPreset(project.config.resolutionLabel, project.config.orientation).height} onBeginEdit={beginEdit} onUpdate={(patch) => activeClip && applyClipDrag(activeClip.id, patch)} /></div></div>}
              media={<MediaPanelView mobile assets={assets} loading={mediaImport} selectedTrack={selectedTrack} trackCount={project.trackCount} onSelectTrack={setSelectedTrack} onFilesSelected={handleFilesSelected} onFilesDropped={handleFilesDropped} onPlaceAsset={handlePlaceAsset} onAddText={addTextLayer} onContextMenuAsset={(event, sourceId) => showContextMenu(event, { kind: 'asset', sourceId })} />}
@@ -2089,17 +2090,18 @@ export default function ReVideeo() {
                 : 'aspect-video w-full max-h-full'
             }`}
             >
-            <Player
+            <NativePlayer
               ref={playerRef}
-              component={VideoCompositionView}
-              durationInFrames={totalFrames}
-              fps={FPS}
+              clips={clipsForPlayer}
+              trackSettings={trackSettings}
               compositionWidth={project ? getPreset(project.config.resolutionLabel, project.config.orientation).width : 720}
               compositionHeight={project ? getPreset(project.config.resolutionLabel, project.config.orientation).height : 1280}
+              durationInFrames={totalFrames}
+              fps={FPS}
+              currentFrame={currentFrame}
+              onFrameChange={setCurrentFrame}
+              onPlayStateChange={setIsPlaying}
               style={{ width: '100%', height: '100%' }}
-              controls={false}
-              inputProps={{ clips: clipsForPlayer, trackSettings, compositionWidth: project ? getPreset(project.config.resolutionLabel, project.config.orientation).width : 720, compositionHeight: project ? getPreset(project.config.resolutionLabel, project.config.orientation).height : 1280 }}
-              acknowledgeRemotionLicense
             />
             <PreviewTransformOverlay
               clip={showTransformOverlay ? activeClip : null}
@@ -2455,6 +2457,9 @@ export default function ReVideeo() {
       )}
       {showWelcome && (
         <WelcomeModal onDismiss={() => { localStorage.setItem('revideeo:welcomed', '1'); setShowWelcome(false); }} />
+      )}
+      {!showWelcome && showRelease && (
+        <ReleaseChangesModal version="0.2.0" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.2.0'); setShowRelease(false); }} />
       )}
     </div>
   );

@@ -1,11 +1,11 @@
 import React from 'react';
-import type { PlayerRef } from '@remotion/player';
+import type { NativePlayerHandle } from '@revideeo/player';
 import { Pause, Play, Plus, Scissors } from 'lucide-react';
 import { useTranslation } from '../../../i18n';
 import { formatTimecode, parsePositionInput } from '../utils/timelineGeometry';
 
 interface TimelineControlsProps {
-  playerRef: React.RefObject<PlayerRef | null>;
+  playerRef: React.RefObject<NativePlayerHandle | null>;
   isPlaying: boolean;
   trackCount: number;
   maxTracks: number;
@@ -36,11 +36,21 @@ export const TimelineControls = ({
   const [editingPosition, setEditingPosition] = React.useState(false);
   const [positionDraft, setPositionDraft] = React.useState('');
 
+  const seekbarRef = React.useRef<HTMLInputElement>(null);
+  const frameLabelRef = React.useRef<HTMLSpanElement>(null);
+
   const commitPosition = () => {
     const position = parsePositionInput(positionDraft, fps);
     if (position !== null) onSeek(Math.max(0, Math.min(position, totalFrames)));
     setEditingPosition(false);
   };
+
+  React.useEffect(() => {
+    if (!isPlaying) {
+      if (seekbarRef.current) seekbarRef.current.value = String(currentFrame);
+      if (frameLabelRef.current) frameLabelRef.current.textContent = String(currentFrame);
+    }
+  }, [currentFrame, isPlaying]);
 
   return (
     <div className={`${mobile ? 'h-10 px-2 gap-2' : 'h-12 px-4 gap-3'} flex items-center border-b border-[#222429] text-xs`}>
@@ -56,12 +66,12 @@ export const TimelineControls = ({
         <Scissors size={14} className="text-blue-400" />
         {!mobile && t('timeline.split')}
       </button>
-      <input type="range" min="0" max={totalFrames} value={currentFrame} onChange={(event) => onSeek(parseInt(event.target.value))} className="flex-1 min-w-0 h-1.5 accent-blue-500 cursor-ew-resize" title={t('timeline.seek')} />
+      <input ref={seekbarRef} data-testid="timeline-seekbar" type="range" min="0" max={totalFrames} defaultValue={currentFrame} onChange={(event) => onSeek(parseInt(event.target.value))} className="flex-1 min-w-0 h-1.5 accent-blue-500 cursor-ew-resize" title={t('timeline.seek')} />
       {editingPosition ? (
         <input autoFocus value={positionDraft} onChange={(event) => setPositionDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Escape') setEditingPosition(false); if (event.key === 'Enter') commitPosition(); }} className="w-36 rounded border border-blue-500 bg-[#202124] px-2 py-1 text-right font-mono text-xs text-gray-200 outline-none" placeholder={t('timeline.positionPlaceholder')} />
       ) : (
         <button type="button" onClick={() => setShowTimecode((value) => !value)} onDoubleClick={() => { setPositionDraft(showTimecode ? formatTimecode(currentFrame, fps) : String(currentFrame)); setEditingPosition(true); }} className="text-gray-400 font-mono whitespace-nowrap shrink-0 hover:text-gray-200 transition-colors" title={t('timeline.frameHint')}>
-          {showTimecode ? <><span className="text-blue-400">{formatTimecode(currentFrame, fps)}</span> / {formatTimecode(totalFrames, fps)}</> : <>{t('timeline.frame')}: <span className="text-blue-400">{currentFrame}</span> / {totalFrames}</>}
+          {showTimecode ? <><span className="text-blue-400">{formatTimecode(currentFrame, fps)}</span> / {formatTimecode(totalFrames, fps)}</> : <>{t('timeline.frame')}: <span ref={frameLabelRef} data-testid="timeline-frame-label" className="text-blue-400" /> / {totalFrames}</>}
         </button>
       )}
     </div>

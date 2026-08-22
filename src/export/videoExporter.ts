@@ -58,11 +58,15 @@ export const correctAssetDurationsBeforeExport = async (
   return corrected;
 };
 
-import { exportVideoViaRenderServer } from './renderClient';
+import { exportVideoViaRenderServer, exportVideoViaManifest } from './renderClient';
 
 export const exportVideo = async (input: VideoExportInput): Promise<Blob> => {
   checkAborted(input.signal);
-  return exportVideoViaRenderServer(input);
+  try {
+    return await exportVideoViaManifest(input);
+  } catch {
+    return exportVideoViaRenderServer(input);
+  }
 };
 
 export const downloadVideoBlob = (blob: Blob, name: string, format: VideoExportFormat): void => {

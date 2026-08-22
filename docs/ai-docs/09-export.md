@@ -39,7 +39,7 @@ Video export pipeline: format selection, transition computation, render server c
   "onProgress": "(progress: number) => void",
   "_onProgress_note": "Progress callback, 0.0 to 1.0",
   "signal": "<AbortSignal>",
-  "serverUrl": "http://localhost:3000",
+  "serverUrl": "http://localhost:33623",
   "normalize": false,
   "_normalize_note": "true for mobile transcoding"
 }

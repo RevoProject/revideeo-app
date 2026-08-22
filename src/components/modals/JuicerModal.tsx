@@ -115,7 +115,7 @@ export const JuicerModal = ({
   onClose, clips, trackCount, trackSettings, onApplySnapshot, onUndoSnapshot, hasSnapshot,
   pluginPickerFields = [], projectId, assetNames = [], projectConfig, assetCount = 0,
 }: JuicerProps) => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const quickActions = getQuickActions(t);
   const pluginTemplates = getPluginTemplates(t);
   const [phase, setPhase] = useState<JuicerPhase>('idle');
@@ -227,7 +227,7 @@ export const JuicerModal = ({
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { showAlert('Niedostępne', 'Użyj Chrome lub Edge.', 'info'); return; }
     const r = new SR();
-    r.lang = 'pl-PL'; r.interimResults = true; r.continuous = true;
+    r.lang = lang === 'pl' ? 'pl-PL' : lang === 'de' ? 'de-DE' : 'en-US'; r.interimResults = true; r.continuous = true;
     r.onresult = (e: SpeechRecognitionEvent) => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; setInput(t); };
     r.onerror = () => setIsRecording(false);
     r.onend = () => setIsRecording(false);
