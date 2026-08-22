@@ -1,32 +1,63 @@
-# React + TypeScript + Vite
+# ReVideeo — EUPL-Licensed Video Editor
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Web-based video editor with AI-powered auto-captions, multi-track timeline, transitions, and server-side rendering.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS
+- **Preview Engine:** `@revideeo/player` — native HTML5 renderer (no Remotion dependency in browser)
+- **Core Library:** `@revideeo/core` — manifest types, timeline utils, adapter interfaces
+- **Server:** Express.js render server (Remotion 4.x for server-side rendering, Chromium, FFmpeg)
+- **Deployment:** Vercel (frontend) + self-hosted Node.js (render server)
+- **License:** EUPL
 
-## React Compiler
+## Quick Start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+pnpm install
+pnpm dev          # → http://localhost:5173
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Render Server
+
+```bash
+cd server
+pnpm install
+node render-server.mjs   # → http://localhost:33623
+```
+
+## Export Workflow
+
+```
+pnpm build && vercel build --yes && vercel deploy --prebuilt --yes
+```
+
+Production deploy:
+```
+vercel deploy --prebuilt --yes --prod
+```
+
+## Project Structure
+
+```
+├── src/                    # Frontend application
+│   ├── editor/             # Timeline, clip editing, composition preview
+│   ├── export/             # Client-side manifest builder + render client
+│   ├── i18n/               # Translations (PL, EN, DE)
+│   └── components/         # Modals, settings, shared UI
+├── packages/
+│   ├── core/               # Manifest types, generators, validators, adapters
+│   └── player/             # Native HTML5 preview renderer (NativePlayer)
+├── server/
+│   ├── render-server.mjs   # Express server entry point
+│   ├── remotion-entry.tsx  # Remotion composition root (server-side only)
+│   └── modules/            # Render, AI, plugins, config
+└── docs/clean-room/        # Clean room audit trail
+```
+
+## Testing
+
+```bash
+cd packages/player && npx vitest run   # 184 tests
+cd packages/core && npx vitest run     # 54 tests
+```
