@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-export const APP_VERSION = '0.2.0';
+export const APP_VERSION = '0.2.1';
 const VERSION_CHECK_INTERVAL = 60 * 60 * 1000;
 const VERSION_KEY = 'revideeo:app-version';
 

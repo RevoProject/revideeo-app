@@ -507,12 +507,12 @@
 
   "release.title": "Co nowego",
   "release.understand": "Rozumiem!",
-  "release.migration.title": "Naprawiono zacinanie playera",
-  "release.migration.desc": "Wyeliminowano bug w akumulatorze klatek odtwarzacza — seekbar i playhead płynnie podążają za odtwarzaniem. Fix dotyczył utraty części ułamkowej frameRef, co powodowało zablokowanie się na klatce 0.",
-  "release.fixes.title": "CORS i podgląd Vercel",
-  "release.fixes.desc": "Naprawiono dostęp do serwera renderującego z podglądów Vercel (Private Network Access). Regex CORS dopasowuje teraz wszystkie wzorce URL preview.",
-  "release.eupl.title": "Stabilność odtwarzania",
-  "release.eupl.desc": "Play/pause/seek działa płynnie bez zacinania. seekbar, playhead i numer klatki są zaokrąglane do liczb całkowitych.",
+  "release.migration.title": "Open Source!",
+  "release.migration.desc": "ReVideeo jest oficjalnie open source na licencji EUPL-1.2. Pełny kod źródłowy dostępny na GitHubie: github.com/RevoProject/revideeo-app",
+  "release.fixes.title": "Publiccode i zgodność",
+  "release.fixes.desc": "publiccode.yml dla EU Open Source Solutions Catalogue, pełny tekst licencji EUPL-1.2, plik NOTICE z zawiadomieniami o zależnościach trzecich oraz nagłówki EUPL na wszystkich plikach źródłowych.",
+  "release.eupl.title": "GitHub Social Preview",
+  "release.eupl.desc": "Dodano grafikę GitHub social preview oraz zaktualizowano meta tagi Open Graph / Twitter. Informacja o wersji z linkiem GitHub widoczna w ustawieniach aplikacji.",
 
   "import.reading": "Odczytywanie pliku projektu...",
   "import.storing": "Odkurzanie projektu...",

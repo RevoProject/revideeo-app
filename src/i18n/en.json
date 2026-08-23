@@ -507,12 +507,12 @@
 
   "release.title": "What's New",
   "release.understand": "Got it!",
-  "release.migration.title": "Player Playback Fix",
-  "release.migration.desc": "Fixed a critical bug in the frame accumulator — seekbar and playhead now follow playback smoothly. The issue was caused by losing the fractional part of frameRef, which kept the frame stuck at 0.",
-  "release.fixes.title": "CORS & Vercel Preview",
-  "release.fixes.desc": "Fixed access to render server from Vercel preview deployments (Private Network Access). CORS regex now matches all Vercel preview URL patterns.",
-  "release.eupl.title": "Playback Stability",
-  "release.eupl.desc": "Play/pause/seek works smoothly without stuttering. Seekbar, playhead and frame counter are properly rounded to whole numbers.",
+  "release.migration.title": "Open Source!",
+  "release.migration.desc": "ReVideeo is now officially open source under EUPL-1.2. The full source code is available on GitHub: github.com/RevoProject/revideeo-app",
+  "release.fixes.title": "Publiccode & Compliance",
+  "release.fixes.desc": "publiccode.yml for EU Open Source Solutions Catalogue, full EUPL-1.2 license text, NOTICE file with third-party attributions, and EUPL copyright headers on all source files.",
+  "release.eupl.title": "GitHub Social Preview",
+  "release.eupl.desc": "Added GitHub social preview image and updated Open Graph / Twitter meta tags. Version info with GitHub link now visible in Application Settings.",
 
   "import.reading": "Reading project file...",
   "import.storing": "Importing media assets...",
