@@ -1,12 +1,20 @@
+<!--
+  Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors
+  Licensed under the European Union Public Licence v1.2 (EUPL-1.2)
+  See LICENSE file in the project root for full license information.
+-->
+
 # Clean Room Specification — ReVideeo Manifest Generator
 
-## Date: 2026-08-22
+## Date: 2026-08-22 · Updated: 2026-08-23
 
 ## 1. Purpose
 
 This document records the Clean Room Design process used to create the
 `@revideeo/core` package — specifically the universal video manifest generator
 and renderer adapter layer.
+
+Licensed under EUPL-1.2. Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors.
 
 ## 2. Black-Box Analysis (Phase 1 — Specification)
 
@@ -139,6 +147,14 @@ specification from Phase 1. The implementation uses:
 | 2026-08-22 | Implemented timeline utilities | `packages/core/src/manifest/timeline.ts` |
 | 2026-08-22 | Implemented adapter interfaces + Remotion/FFmpeg adapters | `packages/core/src/adapters/` |
 | 2026-08-22 | Wrote unit tests with ReVideeo-native assertions | `packages/core/tests/` |
+| 2026-08-22 | Player module: NativePlayer, ClipRenderer, computeClipStyle | `packages/player/src/` |
+| 2026-08-22 | 184 player tests — pixel-accurate comparison vs legacy getClipStyle | `packages/player/tests/` |
+| 2026-08-23 | Fixed frame accumulator bug: `frameRef.current = next` (fractional) | `packages/player/src/NativePlayer.tsx:91` |
+| 2026-08-23 | Removed clipScale from VideoComposition (render parity fix) | `src/editor/composition/VideoComposition.tsx` |
+| 2026-08-23 | CORS PNA fix: manual middleware for Private Network Access | `server/render-server.mjs` |
+| 2026-08-23 | Render cancelSignal fix: `makeCancelSignal()` for Remotion 4.x | `server/modules/render.mjs` |
+| 2026-08-23 | Added EUPL-1.2 copyright headers to 86 source files | All `src/`, `server/` `.ts/.tsx/.mjs` |
+| 2026-08-23 | Added publiccode.yml for EU Open Source Solutions Catalogue | `public/publiccode.yml` |
 
 ## 6. Verification
 

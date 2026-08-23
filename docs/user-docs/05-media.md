@@ -1,3 +1,9 @@
+<!--
+  Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors
+  Licensed under the European Union Public Licence v1.2 (EUPL-1.2)
+  See LICENSE file in the project root for full license information.
+-->
+
 # ReVideeo Media Library — Importing and Managing Media
 
 The media library is where you import and organize your video, audio, and image files.

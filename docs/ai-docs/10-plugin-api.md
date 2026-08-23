@@ -1,3 +1,9 @@
+<!--
+  Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors
+  Licensed under the European Union Public Licence v1.2 (EUPL-1.2)
+  See LICENSE file in the project root for full license information.
+-->
+
 # Plugin API — `src/api/`
 
 Full plugin system with permission-based access, event bus, manifest validation, and localStorage persistence.

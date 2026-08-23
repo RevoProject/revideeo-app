@@ -1,3 +1,9 @@
+<!--
+  Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors
+  Licensed under the European Union Public Licence v1.2 (EUPL-1.2)
+  See LICENSE file in the project root for full license information.
+-->
+
 # ReVideeo Editor — Overview
 
 ReVideeo is a modern, browser-based video editor built for speed and simplicity. No downloads, no installs — just open your browser and start editing.

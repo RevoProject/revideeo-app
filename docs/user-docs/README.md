@@ -1,6 +1,14 @@
+<!--
+  Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors
+  Licensed under the European Union Public Licence v1.2 (EUPL-1.2)
+  See LICENSE file in the project root for full license information.
+-->
+
 # ReVideeo — User Documentation
 
 Welcome to ReVideeo — the browser-based video editor that puts professional editing in your hands without installing anything.
+
+**Version:** 0.2.0 · **License:** EUPL-1.2
 
 ## Documentation
 
