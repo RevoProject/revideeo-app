@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors
+ * Licensed under the European Union Public Licence v1.2 (EUPL-1.2)
+ * See LICENSE file in the project root for full license information.
+ */
+
 import { useEffect, useState } from 'react';
 
 export const useTimelineZoom = (minZoom = 0.25, maxZoom = 4): { zoom: number; zoomIn: () => void; zoomOut: () => void; setZoom: (value: number) => void; reset: () => void } => {

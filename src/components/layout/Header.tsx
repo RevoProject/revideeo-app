@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors
+ * Licensed under the European Union Public Licence v1.2 (EUPL-1.2)
+ * See LICENSE file in the project root for full license information.
+ */
+
 import { useState } from 'react';
 import { Clapperboard, Download, FileDown, FileUp, Info, Plus, Redo2, Save, Settings2, Undo2, Video as VideoIcon } from 'lucide-react';
 import type { OpenProject } from '../../editor/editorTypes';

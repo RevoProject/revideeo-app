@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors
+ * Licensed under the European Union Public Licence v1.2 (EUPL-1.2)
+ * See LICENSE file in the project root for full license information.
+ */
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Package, Puzzle, Power, Search, X, Server, Download, Check, Loader2, Shield, AlertTriangle, Upload } from 'lucide-react';
 import { pluginRegistry, type RegisteredPlugin } from '../../api';

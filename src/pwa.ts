@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 iTVT Poland Group / ReVideeo Authors
+ * Licensed under the European Union Public Licence v1.2 (EUPL-1.2)
+ * See LICENSE file in the project root for full license information.
+ */
+
 export const APP_VERSION = '0.2.0';
 const VERSION_CHECK_INTERVAL = 60 * 60 * 1000;
 const VERSION_KEY = 'revideeo:app-version';
