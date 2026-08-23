@@ -34,13 +34,15 @@ Copyright (c) Lucide Contributors.
 Licensed under the ISC License.
 https://github.com/lucide-icons/lucide
 
-Remotion
---------
+Remotion (render server only — separate repo)
+------------------------------------------------
 Copyright (c) 2026 Remotion GmbH.
 Licensed under the Remotion License (custom two-tier: Free + Company).
 https://github.com/remotion-dev/remotion
 https://www.remotion.dev/docs/license
-Used for composition preview in browser and server-side video rendering.
+NOT included in this browser bundle. Used exclusively by the render server
+(https://github.com/RevoProject/revideeo-render-server) which maintains
+its own dependencies and license obligations. Listed here for completeness.
 See LICENSE_REMOTION.md for full license text.
 
 Vite
