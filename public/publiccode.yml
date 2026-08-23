@@ -103,8 +103,7 @@ dependencies:
       version: "4"
       url: "https://www.remotion.dev"
       optional: false
-      versionReserved: ""
-      description: "Server-side rendering only; not used in browser bundle"
+      description: "Used for composition preview in browser and server-side video rendering"
 
   proprietary:
     - name: "Chromium"

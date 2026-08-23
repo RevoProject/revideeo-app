@@ -1,0 +1,78 @@
+Third-Party Software Notices
+=============================
+
+ReVideeo is licensed under the European Union Public Licence v. 1.2 (EUPL-1.2).
+This file contains attribution notices for third-party software included in ReVideeo.
+
+React
+-----
+Copyright (c) Meta Platforms, Inc. and affiliates.
+Licensed under the MIT License.
+https://github.com/facebook/react
+
+react-dom
+---------
+Copyright (c) Meta Platforms, Inc. and affiliates.
+Licensed under the MIT License.
+https://github.com/facebook/react
+
+Tailwind CSS
+------------
+Copyright (c) Tailwind Labs, Inc.
+Licensed under the MIT License.
+https://github.com/tailwindlabs/tailwindcss
+
+@tailwindcss/vite
+------------------
+Copyright (c) Tailwind Labs, Inc.
+Licensed under the MIT License.
+https://github.com/tailwindlabs/tailwindcss
+
+lucide-react
+------------
+Copyright (c) Lucide Contributors.
+Licensed under the ISC License.
+https://github.com/lucide-icons/lucide
+
+Remotion
+--------
+Copyright (c) Remotion GmbH.
+Licensed under the MIT License.
+https://github.com/remotion-dev/remotion
+Used for composition preview in browser and server-side video rendering.
+
+Vite
+----
+Copyright (c) Evan You and Vite Contributors.
+Licensed under the MIT License.
+https://github.com/vitejs/vite
+
+TypeScript
+----------
+Copyright (c) Microsoft Corporation.
+Licensed under the Apache License 2.0.
+https://github.com/microsoft/TypeScript
+
+Vitest
+------
+Copyright (c) Vitest Contributors.
+Licensed under the MIT License.
+https://github.com/vitest-dev/vitest
+
+Oxlint
+------
+Copyright (c) oxc-project.
+Licensed under the MIT License.
+https://github.com/oxc-project/oxc
+
+@vitejs/plugin-react
+---------------------
+Copyright (c) Vite Team.
+Licensed under the MIT License.
+https://github.com/vitejs/vite-plugin-react
+
+jsdom
+-----
+Copyright (c) jsdom Contributors.
+Licensed under the MIT License.
+https://github.com/jsdom/jsdom

@@ -83,9 +83,14 @@ cd packages/core   && npx vitest run   #  54 tests
 
 ## Third-Party Notice
 
-This project's browser bundle contains **zero** Remotion code. The `@remotion/renderer` package
-is used exclusively on the server side for video rendering. All preview rendering is handled by
-the custom `@revideeo/player` package (EUPL-licensed, original clean-room implementation).
+The browser bundle uses [Remotion](https://www.remotion.dev/) (MIT license) for the composition
+preview engine (`VideoComposition`, `ClipLayer`). The preview engine renders clips with transitions
+inside the browser using Remotion's `AbsoluteFill`, `Sequence`, and `useCurrentFrame` primitives.
+
+Server-side video rendering also uses Remotion via `@remotion/renderer`.
+
+The `@revideeo/player` package (EUPL-1.2) provides an independent HTML5 preview renderer
+(`NativePlayer`) that does **not** depend on Remotion.
 
 ---
 

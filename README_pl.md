@@ -83,9 +83,14 @@ cd packages/core   && npx vitest run   #  54 testów
 
 ## Informacja o kodzie źródłowym trzecich stron
 
-Bundle przeglądarkowy tego projektu **nie zawiera kodu Remotion**. Pakiet `@remotion/renderer`
-jest używany wyłącznie po stronie serwera do renderowania wideo. Cały podgląd jest obsługiwany
-przez autorski pakiet `@revideeo/player` (licencja EUPL, oryginalna implementacja w procesie clean room).
+Bundle przeglądarkowy używa [Remotion](https://www.remotion.dev/) (licencja MIT) do podglądu
+kompozycji (`VideoComposition`, `ClipLayer`). Silnik podglądu renderuje klipy z przejściami
+w przeglądarce przy użyciu prymitywów Remotion: `AbsoluteFill`, `Sequence` i `useCurrentFrame`.
+
+Serwerowe renderowanie wideo również używa Remotion przez `@remotion/renderer`.
+
+Pakiet `@revideeo/player` (EUPL-1.2) zapewnia niezależny natywny renderer HTML5 (`NativePlayer`),
+który **nie** zależy od Remotion.
 
 ---
 
