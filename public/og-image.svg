@@ -25,16 +25,16 @@
     </g>
   </g>
   <text x="190" y="260" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="72" font-weight="800" fill="white" letter-spacing="-2">Re<tspan fill="#3b82f6">Videeo</tspan></text>
-  <text x="190" y="310" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="22" fill="#9ca3af" font-weight="500">Open Source Video Editor with AI</text>
+  <text x="190" y="310" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="22" fill="#9ca3af" font-weight="500">Browser-based Video Editor with AI Captions</text>
   <g transform="translate(190, 350)">
     <rect width="140" height="36" rx="8" fill="#2563EB" opacity="0.15"/>
-    <text x="70" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">Timeline</text>
+    <text x="70" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">EUPL-1.2</text>
     <rect x="155" width="140" height="36" rx="8" fill="#2563EB" opacity="0.15"/>
-    <text x="225" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">AI Editing</text>
+    <text x="225" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">Timeline</text>
     <rect x="310" width="140" height="36" rx="8" fill="#2563EB" opacity="0.15"/>
-    <text x="380" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">Plugins</text>
+    <text x="380" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">AI Captions</text>
     <rect x="465" width="140" height="36" rx="8" fill="#2563EB" opacity="0.15"/>
-    <text x="535" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">Real-time</text>
+    <text x="535" y="23" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="600">Transitions</text>
   </g>
-  <text x="190" y="440" font-family="Inter, system-ui, sans-serif" font-size="16" fill="#6b7280">github.com/RevoProject/revideeo</text>
+  <text x="190" y="440" font-family="Inter, system-ui, sans-serif" font-size="16" fill="#6b7280">github.com/RevoProject/revideeo-app</text>
 </svg>
