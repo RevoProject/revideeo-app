@@ -83,9 +83,14 @@ cd packages/core   && npx vitest run   #  54 testów
 
 ## Informacja o kodzie źródłowym trzecich stron
 
-Bundle przeglądarkowy używa [Remotion](https://www.remotion.dev/) (licencja MIT) do podglądu
+Bundle przeglądarkowy używa [Remotion](https://www.remotion.dev/) do podglądu
 kompozycji (`VideoComposition`, `ClipLayer`). Silnik podglądu renderuje klipy z przejściami
 w przeglądarce przy użyciu prymitywów Remotion: `AbsoluteFill`, `Sequence` i `useCurrentFrame`.
+
+**Ważne:** Remotion NIE jest licencjonowane na MIT. Używa niestandardowej licencji dwupoziomowej
+(Licencja Bezpłatna dla osób fizycznych/małych firm, Licencja Firmowa wymagana dla większych
+organizacji dochodowych). Pełna treść licencji w `LICENSE_REMOTION.md`. Remotion to zależność
+trzecia podlegająca własnym warunkom licencji.
 
 Serwerowe renderowanie wideo również używa Remotion przez `@remotion/renderer`.
 

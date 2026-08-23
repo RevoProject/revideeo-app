@@ -83,9 +83,14 @@ cd packages/core   && npx vitest run   #  54 tests
 
 ## Third-Party Notice
 
-The browser bundle uses [Remotion](https://www.remotion.dev/) (MIT license) for the composition
+The browser bundle uses [Remotion](https://www.remotion.dev/) for the composition
 preview engine (`VideoComposition`, `ClipLayer`). The preview engine renders clips with transitions
 inside the browser using Remotion's `AbsoluteFill`, `Sequence`, and `useCurrentFrame` primitives.
+
+**Important:** Remotion is NOT MIT licensed. It uses a custom two-tier license (Free License for
+individuals/small companies, Company License required for larger for-profit organizations).
+See `LICENSE_REMOTION.md` for the full license text. Remotion is a third-party dependency
+subject to its own license terms.
 
 Server-side video rendering also uses Remotion via `@remotion/renderer`.
 

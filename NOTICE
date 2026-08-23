@@ -36,10 +36,12 @@ https://github.com/lucide-icons/lucide
 
 Remotion
 --------
-Copyright (c) Remotion GmbH.
-Licensed under the MIT License.
+Copyright (c) 2026 Remotion GmbH.
+Licensed under the Remotion License (custom two-tier: Free + Company).
 https://github.com/remotion-dev/remotion
+https://www.remotion.dev/docs/license
 Used for composition preview in browser and server-side video rendering.
+See LICENSE_REMOTION.md for full license text.
 
 Vite
 ----
