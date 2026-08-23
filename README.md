@@ -1,8 +1,12 @@
 # ReVideeo
 
-**Web-based video editor** with AI-powered auto-captions, multi-track timeline, transitions, and server-side rendering.
+**Web-based video editor** with AI-powered auto-captions, multi-track timeline, transitions, and multi-format export.
 
 Made with ❤️ in Poland for the European Union.
+
+> **Render server required** — For video export and AI-assisted editing, you need the
+> separate render server: [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server).
+> The frontend app alone provides timeline editing, preview, and project management.
 
 ## License
 
@@ -18,20 +22,29 @@ SPDX identifier: `EUPL-1.2`
 - 12 transition types (fade, slide, wipe, push, cross-zoom, dreamy-zoom, linear-blur, film-burn, and more)
 - AI-powered auto-captions (Google Gemini + local demo mode)
 - Keyboard shortcuts and professional editing tools
-- Client-side export via server-side Remotion rendering
 - Progressive Web App (PWA) with offline support
 - Internationalization: Polish, English, German
+- Render server for video export (separate repo)
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React 19 + TypeScript + Vite + Tailwind CSS |
-| Preview Engine | `@revideeo/player` — native HTML5 renderer (browser-only, no Remotion) |
+| Preview Engine | `@revideeo/player` — native HTML5 renderer (EUPL-1.2) |
 | Core Library | `@revideeo/core` — manifest types, timeline utils, adapter interfaces |
-| Render Server | Express.js + Remotion 4.x + Chromium + FFmpeg |
+| Render Server | [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server) (separate repo) |
 | Deployment | Vercel (frontend) + self-hosted Node.js (render server) |
 | Testing | Vitest (238 tests) |
+
+## Render Server
+
+Video export and AI-assisted editing features require the render server.
+It is maintained as a **separate repository**:
+
+**→ [github.com/RevoProject/revideeo-render-server](https://github.com/RevoProject/revideeo-render-server)**
+
+The render server runs independently and is NOT part of this repository's browser bundle.
 
 ## Quick Start
 
@@ -39,11 +52,6 @@ SPDX identifier: `EUPL-1.2`
 # Frontend
 pnpm install
 pnpm dev              # → http://localhost:5173
-
-# Render server
-cd server
-pnpm install
-node render-server.mjs  # → http://localhost:33623
 ```
 
 ## Deployment
@@ -65,12 +73,15 @@ vercel deploy --prebuilt --yes --prod
 ├── packages/
 │   ├── core/                   # Manifest types, generators, validators, adapters
 │   └── player/                 # Native HTML5 preview renderer (NativePlayer)
-├── server/
-│   ├── render-server.mjs       # Express server entry point
-│   ├── remotion-entry.tsx      # Remotion composition root (server-side only)
-│   └── modules/                # Render, AI, plugins, config
-├── docs/clean-room/            # Clean room audit trail
+├── docs/
+│   ├── ai-docs/                # AI agent documentation
+│   ├── user-docs/              # End-user documentation
+│   ├── plugin-api/             # Plugin API docs (EN, PL)
+│   └── clean-room/             # Clean room audit trail
 ├── LICENSE                     # EUPL-1.2
+├── LICENSE_REMOTION.md         # Remotion license (for reference only — see Notice)
+├── NOTICE                      # Third-party attributions
+├── publiccode.yml              # EU Open Source Solutions Catalogue metadata
 └── README_pl.md                # Polish README
 ```
 
@@ -83,16 +94,12 @@ cd packages/core   && npx vitest run   #  54 tests
 
 ## Third-Party Notice
 
-The browser bundle uses [Remotion](https://www.remotion.dev/) for the composition
-preview engine (`VideoComposition`, `ClipLayer`). The preview engine renders clips with transitions
-inside the browser using Remotion's `AbsoluteFill`, `Sequence`, and `useCurrentFrame` primitives.
+This project does **not** include any Remotion code in its browser bundle.
+Remotion is used exclusively by the separate render server
+([revideeo-render-server](https://github.com/RevoProject/revideeo-render-server)),
+which maintains its own dependencies and license obligations.
 
-**Important:** Remotion is NOT MIT licensed. It uses a custom two-tier license (Free License for
-individuals/small companies, Company License required for larger for-profit organizations).
-See `LICENSE_REMOTION.md` for the full license text. Remotion is a third-party dependency
-subject to its own license terms.
-
-Server-side video rendering also uses Remotion via `@remotion/renderer`.
+See [NOTICE](NOTICE) for the full list of third-party dependencies and their licenses.
 
 The `@revideeo/player` package (EUPL-1.2) provides an independent HTML5 preview renderer
 (`NativePlayer`) that does **not** depend on Remotion.

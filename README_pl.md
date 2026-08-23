@@ -1,8 +1,12 @@
 # ReVideeo
 
-**Edytor wideo w przeglądarce** z automatycznymi napisami AI, osią czasu z wieloma ścieżkami, przejściami i renderowaniem po stronie serwera.
+**Edytor wideo w przeglądarce** z automatycznymi napisami AI, osią czasu z wieloma ścieżkami, przejściami i eksportem do wielu formatów.
 
 Stworzony z ❤️ w Polsce dla Unii Europejskiej.
+
+> **Wymagany serwer renderujący** — Do eksportu wideo i edycji z pomocą AI potrzebny jest
+> osobny serwer renderujący: [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server).
+> Aplikacja frontendowa samodzielnie zapewnia edycję osi czasu, podgląd i zarządzanie projektami.
 
 ## Licencja
 
@@ -18,20 +22,29 @@ Identyfikator SPDX: `EUPL-1.2`
 - 12 typów przejść (fade, slide, wipe, push, cross-zoom, dreamy-zoom, linear-blur, film-burn i inne)
 - Automatyczne napisy AI (Google Gemini + tryb demo lokalny)
 - Skróty klawiszowe i profesjonalne narzędzia edycyjne
-- Eksport po stronie klienta przez serwerowe renderowanie Remotion
 - Progressive Web App (PWA) z obsługą offline
 - Internacjonalizacja: polski, angielski, niemiecki
+- Serwer renderujący do eksportu wideo (osobne repozytorium)
 
 ## Stack technologiczny
 
 | Warstwa | Technologia |
 |---------|-------------|
 | Frontend | React 19 + TypeScript + Vite + Tailwind CSS |
-| Podgląd | `@revideeo/player` — natywny renderer HTML5 (tylko przeglądarka, bez Remotion) |
+| Podgląd | `@revideeo/player` — natywny renderer HTML5 (EUPL-1.2) |
 | Biblioteka core | `@revideeo/core` — typy manifestu, narzędzia osi czasu, interfejsy adapterów |
-| Serwer renderujący | Express.js + Remotion 4.x + Chromium + FFmpeg |
+| Serwer renderujący | [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server) (osobne repozytorium) |
 | Deployment | Vercel (frontend) + samodzielny Node.js (serwer renderujący) |
 | Testy | Vitest (238 testów) |
+
+## Serwer renderujący
+
+Eksport wideo i funkcje edycji z pomocą AI wymagają serwera renderującego.
+Jest on utrzymywany w **osobnym repozytorium**:
+
+**→ [github.com/RevoProject/revideeo-render-server](https://github.com/RevoProject/revideeo-render-server)**
+
+Serwer renderujący działa niezależnie i NIE jest częścią bundle'a przeglądarkowego tego repozytorium.
 
 ## Szybki start
 
@@ -39,11 +52,6 @@ Identyfikator SPDX: `EUPL-1.2`
 # Frontend
 pnpm install
 pnpm dev              # → http://localhost:5173
-
-# Serwer renderujący
-cd server
-pnpm install
-node render-server.mjs  # → http://localhost:33623
 ```
 
 ## Deployment
@@ -65,12 +73,15 @@ vercel deploy --prebuilt --yes --prod
 ├── packages/
 │   ├── core/                   # Typy manifestu, generatory, walidatory, adaptery
 │   └── player/                 # Natywny renderer HTML5 (NativePlayer)
-├── server/
-│   ├── render-server.mjs       # Punkt wejścia serwera Express
-│   ├── remotion-entry.tsx      # Root kompozycji Remotion (tylko serwer)
-│   └── modules/                # Renderowanie, AI, pluginy, konfiguracja
-├── docs/clean-room/            # Dokumentacja procesu clean room
+├── docs/
+│   ├── ai-docs/                # Dokumentacja dla agentów AI
+│   ├── user-docs/              # Dokumentacja użytkownika
+│   ├── plugin-api/             # Dokumentacja API pluginów (EN, PL)
+│   └── clean-room/             # Dokumentacja procesu clean room
 ├── LICENSE                     # EUPL-1.2
+├── LICENSE_REMOTION.md         # Licencja Remotion (tylko do wglądu — patrz Notice)
+├── NOTICE                      # Zawiadomienia o zależnościach trzecich
+├── publiccode.yml              # Metadane katalogu EU Open Source Solutions
 └── README.md                   # English README
 ```
 
@@ -81,18 +92,14 @@ cd packages/player && npx vitest run   # 184 testów
 cd packages/core   && npx vitest run   #  54 testów
 ```
 
-## Informacja o kodzie źródłowym trzecich stron
+## Informacja o zależnościach trzecich
 
-Bundle przeglądarkowy używa [Remotion](https://www.remotion.dev/) do podglądu
-kompozycji (`VideoComposition`, `ClipLayer`). Silnik podglądu renderuje klipy z przejściami
-w przeglądarce przy użyciu prymitywów Remotion: `AbsoluteFill`, `Sequence` i `useCurrentFrame`.
+Ten projekt **nie zawiera kodu Remotion** w bundle'u przeglądarkowym.
+Remotion jest używany wyłącznie przez osobny serwer renderujący
+([revideeo-render-server](https://github.com/RevoProject/revideeo-render-server)),
+który utrzymuje własne zależności i obowiązki licencyjne.
 
-**Ważne:** Remotion NIE jest licencjonowane na MIT. Używa niestandardowej licencji dwupoziomowej
-(Licencja Bezpłatna dla osób fizycznych/małych firm, Licencja Firmowa wymagana dla większych
-organizacji dochodowych). Pełna treść licencji w `LICENSE_REMOTION.md`. Remotion to zależność
-trzecia podlegająca własnym warunkom licencji.
-
-Serwerowe renderowanie wideo również używa Remotion przez `@remotion/renderer`.
+Zobacz [NOTICE](NOTICE) pełną listę zależności trzecich i ich licencje.
 
 Pakiet `@revideeo/player` (EUPL-1.2) zapewnia niezależny natywny renderer HTML5 (`NativePlayer`),
 który **nie** zależy od Remotion.

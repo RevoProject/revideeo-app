@@ -1,0 +1,99 @@
+publiccodeYmlVersion: "0.2"
+name: ReVideeo
+url: "https://revideeo.app"
+softwareVersion: "0.2.0"
+releaseDate: "2026-08-23"
+developmentStatus: beta
+softwareType: standalone/web
+
+platforms:
+  - web
+
+categories:
+  - content-creation
+  - multimedia
+
+tags:
+  - video-editor
+  - timeline
+  - transitions
+  - ai-captions
+  - react
+  - typescript
+  - pwa
+  - eupl
+
+description:
+  en:
+    genericName: "Video Editor"
+    shortDescription: "Web-based video editor with AI-powered auto-captions and multi-track timeline."
+    longDescription: >
+      ReVideeo is a browser-based video editor with AI-powered auto-captions,
+      multi-track timeline with free clip positioning, 12 transition types,
+      keyboard shortcuts, and progressive web app support. Internationalized
+      in Polish, English, and German. The render server for video export is
+      maintained as a separate repository (revideeo-render-server).
+  pl:
+    genericName: "Edytor wideo"
+    shortDescription: "Edytor wideo w przeglądarce z automatycznymi napisami AI i osią czasu."
+    longDescription: >
+      ReVideeo to edytor wideo w przeglądarce z automatycznymi napisami AI,
+      osią czasu z wieloma ścieżkami i swobodnym pozycjonowaniem klipów,
+      12 typami przejść, skrótami klawiszowymi i obsługą PWA. Zinternacjonalizowany
+      w języku polskim, angielskim i niemieckim. Serwer renderujący do eksportu
+      wideo jest utrzymywany w osobnym repozytorium (revideeo-render-server).
+  de:
+    genericName: "Video-Editor"
+    shortDescription: "Browserbasierter Videoeditor mit KI-Untertiteln und Mehrspur-Zeitleiste."
+    longDescription: >
+      ReVideeo ist ein browserbasierter Videoeditor mit KI-gestützten
+      automatischen Untertiteln, Mehrspur-Zeitleiste mit freier Clip-Positionierung,
+      12 Übergangstypen, Tastenkürzeln und Progressive-Web-App-Unterstützung.
+      Internationalisiert auf Polnisch, Englisch und Deutsch. Der Render-Server
+      für den Video-Export wird in einem separaten Repository gepflegt
+      (revideeo-render-server).
+
+badges:
+  - url: "https://img.shields.io/badge/license-EUPL--1.2-blue.svg"
+    alt: "EUPL-1.2 license badge"
+    description: "EUPL-1.2 license"
+
+maintenance:
+  type: "community"
+  contacts:
+    - name: Kamil Klubuntu
+      website: "https://revideeo.app"
+
+legal:
+  license: "EUPL-1.2"
+  mainCopyright: "iTVT Poland Group / ReVideeo Authors"
+
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - pl
+    - en
+    - de
+
+dependencies:
+  open:
+    - name: "react"
+      version: "19"
+      url: "https://react.dev"
+    - name: "react-dom"
+      version: "19"
+      url: "https://react.dev"
+    - name: "tailwindcss"
+      version: "4"
+      url: "https://tailwindcss.com"
+    - name: "lucide-react"
+      version: "0.5"
+      url: "https://lucide.dev"
+  proprietary:
+    - name: "revideeo-render-server"
+      url: "https://github.com/RevoProject/revideeo-render-server"
+      description: "Separate render server required for video export and AI-assisted editing"
+
+usedBy:
+  - name: "revideeo-render-server"
+    url: "https://github.com/RevoProject/revideeo-render-server"
