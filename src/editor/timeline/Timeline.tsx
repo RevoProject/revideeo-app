@@ -93,7 +93,7 @@ export const Timeline = ({
   const [selectionBox, setSelectionBox] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const [transitionDragLabel, setTransitionDragLabel] = useState<{ x: number; y: number; td: number } | null>(null);
   const trackClips = useMemo(() => groupByTrack(clips), [clips]);
-  // Render the highest layer at the top while keeping Ścieżka 1 at the bottom.
+  // Render the highest layer at the top while keeping Track 1 at the bottom.
   const tracks = Array.from({ length: trackCount }, (_, index) => trackCount - 1 - index);
   const pct = (value: number) => `${(value / totalFrames) * 100}%`;
 

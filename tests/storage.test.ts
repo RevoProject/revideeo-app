@@ -69,7 +69,7 @@ describe('project storage', () => {
   });
 
   it('import dziala bezpiecznie bez crypto.subtle i crypto.randomUUID (http na LAN)', async () => {
-    // Symulacja kontekstu niebezpiecznego: crypto.subtle oraz crypto.randomUUID === undefined
+    // Simulate insecure context: crypto.subtle and crypto.randomUUID are undefined
     const subtleDescriptor = Object.getOwnPropertyDescriptor(globalThis.crypto, 'subtle');
     const uuidDescriptor = Object.getOwnPropertyDescriptor(globalThis.crypto, 'randomUUID');
     Object.defineProperty(globalThis.crypto, 'subtle', { configurable: true, value: undefined });

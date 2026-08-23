@@ -7,7 +7,7 @@ const SETTINGS_KEY = 'revideeo:settings';
 
 const DEFAULT_SETTINGS: AppSettings = { autoSaveIntervalMinutes: 5, language: 'pl', renderServers: [], mobileRenderEnabled: false };
 
-// --- localStorage: metadane projektów ---
+// --- localStorage: project metadata ---
 
 export const listProjects = (): StoredProject[] => {
   try {
@@ -54,7 +54,7 @@ export const saveSettings = (settings: AppSettings): void => {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 };
 
-// --- IndexedDB: pliki wideo (Bloby) ---
+// --- IndexedDB: video files (blobs) ---
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -86,7 +86,7 @@ export interface RecentExport {
   blob: Blob;
   createdAt: number;
   size: number;
-  // False/undefined = jeszcze nie pobrano ręcznie z listy (liczy się do badge'a).
+  // False/undefined = not yet manually downloaded from list (counts toward badge).
   downloaded?: boolean;
 }
 
@@ -190,7 +190,7 @@ export const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => {
   return res.blob();
 };
 
-// --- Eksport / import pliku .reevproj na dysk (JSON + suma kontrolna) ---
+// --- Export / import .reevproj file to disk (JSON + checksum) ---
 
 export interface ExportFile {
   app: 'revideeo';
@@ -207,12 +207,12 @@ export interface ExportFile {
   media: Record<string, string>;
 }
 
-// Kanoniczna serializacja — ta sama kolejność kluczy i wcięcia po stronie zapisu i weryfikacji
+// Canonical serialization — same key order and indentation on save and verify
 const canonicalSerialize = (value: unknown): string => JSON.stringify(value, null, 2);
 
-// Czysta implementacja SHA-256 (bez crypto.subtle), aby weryfikacja sumy kontrolnej
-// działała również w kontekstach niebezpiecznych (http na adresie LAN), gdzie
-// crypto.subtle jest undefined i rzuca "Cannot read properties of undefined (reading 'digest')".
+// Pure SHA-256 implementation (no crypto.subtle), so checksum verification
+// also works in insecure contexts (http on LAN), where
+// crypto.subtle is undefined and throws "Cannot read properties of undefined (reading 'digest')".
 const SHA256_K = new Uint32Array([
   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
@@ -354,8 +354,8 @@ export const readProjectPayload = async (payload: ExportFile): Promise<{ project
   };
 };
 
-// UUID v4 generowany przez crypto.getRandomValues — działa również w kontekstach
-// niebezpiecznych (http na adresie LAN), gdzie crypto.randomUUID jest niedostępne.
+// UUID v4 generated via crypto.getRandomValues — also works in insecure
+// contexts (http on LAN), where crypto.randomUUID is unavailable.
 export const generateId = (): string => {
   const c = typeof crypto !== 'undefined' ? crypto : undefined;
   if (c && typeof c.getRandomValues === 'function') {

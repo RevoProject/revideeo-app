@@ -184,7 +184,7 @@ const normalizeClip = (clip: StoredClip): StoredClip => ({
   ),
 });
 
-// Odczytuje rzeczywistą długość wideo (bez wysyłania do sieci)
+// Reads actual video duration without network upload
 const loadVideoDurationInFrames = (url: string, fps: number): Promise<number> =>
   new Promise((resolve) => {
     const video = document.createElement('video');
@@ -201,14 +201,14 @@ const loadVideoDurationInFrames = (url: string, fps: number): Promise<number> =>
     };
     
     video.onloadedmetadata = () => {
-      // Dla dużych plików metadata może nie zawierać poprawnego duration
-      // Spróbuj odczytać duration po załadowaniu pierwszego klatka
+      // For large files, metadata may not contain correct duration
+      // Try reading duration after first frame loads
       if (video.duration && isFinite(video.duration) && video.duration > 1) {
         finish(video.duration);
       }
     };
     video.onloadeddata = () => {
-      // Po załadowaniu pierwszego klatka duration powinno być poprawne
+      // After first frame loads, duration should be accurate
       if (video.duration && isFinite(video.duration) && video.duration > 1) {
         finish(video.duration);
       }
@@ -219,15 +219,15 @@ const loadVideoDurationInFrames = (url: string, fps: number): Promise<number> =>
       }
     };
     video.onerror = () => finish(DEFAULT_DURATION_SECONDS);
-    // Timeout fallback - spróbuj seek do końca by wykryć rzeczywisty czas
+    // Timeout fallback — seek to end to detect actual duration
     setTimeout(async () => {
       if (resolved) return;
       if (video.duration && isFinite(video.duration) && video.duration > 1) {
         finish(video.duration);
       } else if (!resolved) {
-        // Spróbuj seek na koniec by wykryć rzeczywisty duration
+        // Seek to end to detect actual duration
         try {
-          video.currentTime = 1e9; // duża wartość by seeknąć na koniec
+          video.currentTime = 1e9; // large value to seek to end
           await new Promise<void>((r) => {
             const onSeeked = () => {
               video.removeEventListener('seeked', onSeeked);
@@ -293,7 +293,7 @@ const createVideoThumbnails = (blob: Blob, count = 8): Promise<string[]> =>
     video.src = url;
   });
 
-// --- Pomocnicze operacje na klipach (wolne pozycjonowanie, wielościeżkowe) ---
+// --- Clip operations (free positioning, multi-track) ---
 
 const groupByTrack = <T extends { trackIndex: number; offsetInTimeline: number }>(clips: T[]): [number, T[]][] => {
   const map = new Map<number, T[]>();
@@ -373,9 +373,9 @@ const findJunctionAt = (
   return null;
 };
 
-// --- Wizualizacja przejść (ręczna, oparta na klatkach) ---
-// --- Popup ze skrótami klawiszowymi ---
-// --- SERCE CAPCUTA 4: OŚ CZASU (Dolny Panel) — wielościeżkowa ---
+// --- Transition visualization (manual, frame-based) ---
+// --- Keyboard shortcuts popup ---
+// --- TIMELINE (bottom panel) — multi-track ---
 export default function ReVideeo() {
   const playerRef = useRef<NativePlayerHandle>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
@@ -660,12 +660,12 @@ export default function ReVideeo() {
         .findIndex((c) => c.id === activeClip.id)
     : -1;
 
-  // Rozwiązywanie URL-i dla mediów. W trybie dev serwujemy media przez dev-server
-  // jako zwykły URL HTTP (MEDIA_SERVER_PREFIX), bo blob: w niezabezpieczonym
-  // kontekście (http na LAN) jest blokowany przez mobile Chrome/Brave → <Video>
-  // Remotion nigdy się nie ładuje → timeout delayRender. W buildzie produkcyjnym
-  // (DEV=false) wracamy do blob: (działa gdy strona jest pod HTTPS).
-  // Ścieżka musi być zsynchronizowana z MEDIA_SERVER_PREFIX w vite.config.ts.
+  // Media URL resolution. In dev mode, media is served via dev-server
+  // as plain HTTP URLs (MEDIA_SERVER_PREFIX), because blob: in insecure
+  // contexts (http on LAN) is blocked by mobile Chrome/Brave — <Video>
+  // never loads → delayRender timeout. In production builds
+  // (DEV=false) we use blob: (works under HTTPS).
+  // Path must stay in sync with MEDIA_SERVER_PREFIX in vite.config.ts.
   const MEDIA_SERVER_PREFIX = '/__revideeo_media';
   const [mediaHttpUrls, setMediaHttpUrls] = useState<Map<string, string>>(new Map());
   const uploadedRef = useRef<Set<string>>(new Set());
@@ -721,7 +721,7 @@ export default function ReVideeo() {
     return () => revokeMedia();
   }, [revokeMedia]);
 
-  // Przycinanie playheada, gdy długość osi się zmienia
+  // Clamp playhead when timeline length changes
   useEffect(() => {
     if (currentFrame > totalFrames) {
       setCurrentFrame(totalFrames);
@@ -785,7 +785,7 @@ export default function ReVideeo() {
     }
   }, [project, clips, currentFrame, dirty, markers, selectedClipIds, seekTo, totalFrames]);
 
-  // Blokada odświeżenia/zamknięcia przy niezapisanym projekcie
+  // Prevent page refresh/close with unsaved project
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (!dirty) return;
@@ -796,7 +796,7 @@ export default function ReVideeo() {
     return () => window.removeEventListener('beforeunload', handler);
   }, [dirty]);
 
-  // --- Mutacje klipów ---
+  // --- Clip mutations ---
   const updateClip = useCallback(
     (id: string, patch: Partial<StoredClip>) => {
       const current = clipsRef.current.find((clip) => clip.id === id);
@@ -1058,7 +1058,7 @@ export default function ReVideeo() {
     setDirty(true);
   }, [currentFrame]);
 
-  // --- Przejścia ---
+  // --- Transitions ---
   const setTransitionType = useCallback(
     (clipId: string, type: TransitionType) => {
       const current = clipsRef.current.find((clip) => clip.id === clipId);

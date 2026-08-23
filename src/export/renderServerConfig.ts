@@ -1,10 +1,10 @@
 const RENDER_SERVER_PORT = (import.meta.env.VITE_RENDER_SERVER_PORT as string | undefined) || '33623';
 
-// Serwer rendera działa lokalnie na maszynie developera (localhost:33623).
-// Na telefonie w sieci LAN (np. 192.168.x.x) localhost wskazuje na telefon
-// → ERR_CONNECTION_REFUSED. Dlatego gdy host jest adresem LAN, używamy go
-// jako hosta serwera (ten sam LAN co PC z serwerem).
-// Na producji (HTTPS) zawsze localhost — Mixed Content blokuje HTTP z domeny.
+// Render server runs locally on the developer machine (localhost:33623).
+// On a phone on the LAN (e.g. 192.168.x.x), localhost points to the phone
+// → ERR_CONNECTION_REFUSED. So when the host is a LAN address, we use it
+// as the server host (same LAN as the PC running the server).
+// In production (HTTPS), always localhost — mixed content blocks HTTP from a domain.
 const isLocalHost = (h: string) =>
   h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]';
 const isLanIp = (h: string) => /^192\.168\.\d+\.\d+$/.test(h) || /^10\.\d+\.\d+\.\d+$/.test(h);

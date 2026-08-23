@@ -96,7 +96,7 @@ export interface RenderServer {
 }
 
 export interface AppSettings {
-  autoSaveIntervalMinutes: number; // 0 = wyłączony
+  autoSaveIntervalMinutes: number; // 0 = disabled
   language: AppLanguage;
   renderServers: RenderServer[];
   mobileRenderEnabled: boolean;
