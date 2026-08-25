@@ -514,6 +514,18 @@
   "release.eupl.title": "GitHub Social Preview",
   "release.eupl.desc": "Dodano grafikę GitHub social preview oraz zaktualizowano meta tagi Open Graph / Twitter. Informacja o wersji z linkiem GitHub widoczna w ustawieniach aplikacji.",
 
+  "release.bugfixes.title": "Poprawki błędów",
+  "release.bugfixes.desc": "Odśwież klip nie resetuje już klipu — zachowuje wszystkie edycje na osi czasu. Sesje Juicera mają przypisania tylko do bieżącej sesji. Rozszerzenie klipu teraz popchnie kolejne klipy na tym samym torze.",
+
+  "release.juicer-title": "Poprawka osi czasu Juicer",
+  "release.juicer-desc": "Naprawiono Juicer dodający klipy bez przesuwania kolejnych klipów. Zmiana czasu trwania wywołuje teraz ripple edit na tym samym torze. Nazwy torów są zachowywane i nie są nadpisywane nazwami plików.",
+
+  "release.video-thumb-title": "Interfejs osi czasu",
+  "release.video-thumb-desc": "Klipy wideo wyświetlają teraz miniaturki na osi czasu. Tory wideo pokazują wskaźnik typu obok wskaźników audio i obrazów.",
+
+  "release.renderer-title": "Stabilność renderingu",
+  "release.renderer-desc": "Zoptymalizowano pipeline renderingu Remotion: zmemoizowano obiekty stylów, naprawiono nakładanie transition outgoing, ulepszono dekodowanie wideo w Juicerze z poprawnym czasem trwania źródła.",
+
   "import.reading": "Odczytywanie pliku projektu...",
   "import.storing": "Odkurzanie projektu...",
   "import.opening": "Otwieranie projektu..."

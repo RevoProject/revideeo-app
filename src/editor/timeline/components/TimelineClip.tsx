@@ -5,7 +5,7 @@
  */
 
 import type { StoredClip } from '../../../types';
-import { Image, Type, Volume2 } from 'lucide-react';
+import { Film, Image, Type, Volume2 } from 'lucide-react';
 import { ClipThumbnailStrip } from './ClipThumbnailStrip';
 import { ClipTrimHandles } from './ClipTrimHandles';
 import { TransitionHandle } from './TransitionHandle';
@@ -83,6 +83,7 @@ export const TimelineClip = ({
       {clip.type === 'text' && <div className="pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center"><span className="inline-flex max-w-[90%] items-center gap-1 rounded bg-blue-950/80 px-1.5 py-0.5 text-[9px] font-semibold text-blue-100"><Type size={10} />{t('media.text')}</span></div>}
       {clip.type === 'audio' && <div className="pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center"><span className="inline-flex max-w-[90%] items-center gap-1 rounded bg-pink-950/80 px-1.5 py-0.5 text-[9px] font-semibold text-pink-200"><Volume2 size={10} />{t('media.audio')}</span></div>}
       {clip.type === 'image' && <div className="pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center"><span className="inline-flex max-w-[90%] items-center gap-1 rounded bg-amber-950/80 px-1.5 py-0.5 text-[9px] font-semibold text-amber-200"><Image size={10} />{t('media.image')}</span></div>}
+      {clip.type === 'video' && <div className="pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center"><span className="inline-flex max-w-[90%] items-center gap-1 rounded bg-blue-950/80 px-1.5 py-0.5 text-[9px] font-semibold text-blue-200"><Film size={10} />{t('media.video')}</span></div>}
       <ClipTrimHandles disabled={locked} onTrimLeftPointerDown={onTrimLeftPointerDown} onTrimRightPointerDown={onTrimRightPointerDown} />
     </div>
     {hasTransition && <TransitionHandle left={transitionLeft} width={transitionWidth} title={transitionTitle} label={transitionLabel} top="8px" bottom="8px" onPointerDown={onTransitionPointerDown} onDoubleClick={onTransitionDoubleClick} onContextMenu={onTransitionContextMenu} />}

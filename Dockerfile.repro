@@ -1,0 +1,37 @@
+FROM node:24-slim
+
+# Install system dependencies for Remotion + Chromium + testing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget ca-certificates curl \
+    libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
+    libcups2 libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
+    libgbm1 libpango-1.0-0 libcairo2 libasound2 libxshmfence1 \
+    libx11-xcb1 libxcb-dri3-0 libxext6 libxfixes3 libxi6 libxtst6 \
+    ffmpeg python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Chrome for Testing (proper codec support)
+RUN wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends /tmp/chrome.deb \
+    && rm /tmp/chrome.deb \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@11.8.0 --activate
+
+WORKDIR /app
+
+# Copy the ENTIRE project (preserves workspace structure)
+COPY . .
+
+# Install dependencies
+RUN pnpm install --ignore-scripts
+
+EXPOSE 33623
+
+# Point to Google Chrome installed by apt (Remotion needs this for browserExecutable)
+ENV RENDER_SERVER_CHROMIUM_PATH=/usr/bin/google-chrome-stable
+
+CMD ["node", "server/render-server.mjs"]

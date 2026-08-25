@@ -27,7 +27,10 @@ export const getClipStyle = (clip: RenderClip, outgoing: OutgoingTransition | un
     case 'film-burn': opacity = 0.45 + 0.55 * Math.min(1, progress * 3); scale = clip.scale * (1.05 - 0.05 * progress); break;
   }
   if (outgoing && outgoing.transitionIn !== 'none' && outgoing.durationInFrames > 0) {
-    const outProgress = Math.max(0, Math.min(1, (frame - (duration - outgoing.durationInFrames)) / outgoing.durationInFrames));
+    const outStart = (transition !== 'none' && transitionDuration > 0)
+      ? Math.max(duration - outgoing.durationInFrames, transitionDuration)
+      : duration - outgoing.durationInFrames;
+    const outProgress = Math.max(0, Math.min(1, (frame - outStart) / outgoing.durationInFrames));
     opacity *= 1 - outProgress;
     if (outgoing.transitionIn === 'push') translateX -= outProgress * 100;
   }

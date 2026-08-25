@@ -2,13 +2,29 @@ import { describe, expect, it } from 'vitest';
 import {
   safeName,
   serializeName,
-  nextClipOnTrack,
-  computeTransition,
-  getClipTransitionState,
   checkAborted,
   exportVideo,
 } from '../src/export/videoExporter';
+import { getClipStyle } from '../src/editor/composition/transitionStyles';
+import type { OutgoingTransition, RenderClip } from '../src/editor/editorTypes';
 import type { StoredClip, TrackSettings } from '../src/types';
+
+const renderClip = (overrides: Partial<RenderClip> = {}): RenderClip => ({
+  id: 'c1',
+  sourceId: 'a1',
+  startFrame: 0,
+  durationInFrames: 60,
+  offsetInTimeline: 0,
+  trackIndex: 0,
+  posX: 0,
+  width: 100,
+  height: 100,
+  posY: 0,
+  scale: 1,
+  transitionIn: 'none',
+  transitionDurationInFrames: 0,
+  ...overrides,
+});
 
 const clip = (overrides: Partial<StoredClip> = {}): StoredClip => ({
   id: 'c1',
@@ -62,131 +78,119 @@ describe('serializeName', () => {
   });
 });
 
-describe('nextClipOnTrack', () => {
-  it('returns the next clip on the same track', () => {
-    const c1 = clip({ id: 'c1', offsetInTimeline: 0, trackIndex: 0 });
-    const c2 = clip({ id: 'c2', offsetInTimeline: 30, trackIndex: 0 });
-    const c3 = clip({ id: 'c3', offsetInTimeline: 60, trackIndex: 0 });
-    expect(nextClipOnTrack([c1, c2, c3], c1)).toBe(c2);
-    expect(nextClipOnTrack([c1, c2, c3], c2)).toBe(c3);
-  });
-
-  it('returns null when no next clip exists', () => {
-    const c1 = clip({ id: 'c1', offsetInTimeline: 0, trackIndex: 0 });
-    expect(nextClipOnTrack([c1], c1)).toBeNull();
-  });
-
-  it('ignores clips on other tracks', () => {
-    const c1 = clip({ id: 'c1', offsetInTimeline: 0, trackIndex: 0 });
-    const c2 = clip({ id: 'c2', offsetInTimeline: 30, trackIndex: 1 });
-    expect(nextClipOnTrack([c1, c2], c1)).toBeNull();
-  });
-});
-
-describe('computeTransition', () => {
+describe('getClipStyle transition effects', () => {
   it('fade: progress 0 = opacity 0, progress 1 = opacity 1', () => {
-    expect(computeTransition('fade', 0, 1).opacity).toBe(0);
-    expect(computeTransition('fade', 1, 1).opacity).toBe(1);
+    const c = renderClip({ transitionIn: 'fade', transitionDurationInFrames: 1 });
+    expect(getClipStyle(c, undefined, 0).opacity).toBe(0);
+    expect(getClipStyle(c, undefined, 1).opacity).toBe(1);
   });
 
   it('slide: translates from right to center', () => {
-    const start = computeTransition('slide', 0, 1);
-    expect(start.translateX).toBe(100);
-    const end = computeTransition('slide', 1, 1);
-    expect(end.translateX).toBe(0);
+    const c = renderClip({ transitionIn: 'slide', transitionDurationInFrames: 1 });
+    const start = getClipStyle(c, undefined, 0);
+    expect(start.transform).toContain('translateX(100%)');
+    const end = getClipStyle(c, undefined, 1);
+    expect(end.transform).toContain('translateX(0%)');
   });
 
-  it('wipe: clipPathRaw goes from 100 to 0', () => {
-    expect(computeTransition('wipe', 0, 1).clipPathRaw).toBe(100);
-    expect(computeTransition('wipe', 1, 1).clipPathRaw).toBe(0);
+  it('wipe: clipPath inset goes from 100% to 0%', () => {
+    const c = renderClip({ transitionIn: 'wipe', transitionDurationInFrames: 1 });
+    expect(getClipStyle(c, undefined, 0).clipPath).toContain('100%');
+    expect(getClipStyle(c, undefined, 1).clipPath).toContain('0%');
   });
 
   it('none: always full opacity, no transform', () => {
-    const state = computeTransition('none', 0.5, 1);
+    const c = renderClip({ transitionIn: 'none', transitionDurationInFrames: 0 });
+    const state = getClipStyle(c, undefined, 30);
     expect(state.opacity).toBe(1);
-    expect(state.translateX).toBe(0);
-    expect(state.blur).toBe(0);
+    expect(state.filter).toBeUndefined();
   });
 
   it('dreamy-zoom: scales up and blurs at start', () => {
-    const start = computeTransition('dreamy-zoom', 0, 1);
-    expect(start.scale).toBeGreaterThan(1);
-    expect(start.blur).toBeGreaterThan(0);
-    const end = computeTransition('dreamy-zoom', 1, 1);
-    expect(end.scale).toBe(1);
-    expect(end.blur).toBe(0);
+    const c = renderClip({ transitionIn: 'dreamy-zoom', transitionDurationInFrames: 2 });
+    const start = getClipStyle(c, undefined, 0);
+    expect(start.transform).toContain('scale(1.35)');
+    expect(start.filter).toContain('blur');
+    const end = getClipStyle(c, undefined, 2);
+    expect(end.transform).toContain('scale(1)');
+    expect(end.filter).toBeUndefined();
   });
 
   it('linear-blur: starts blurry, ends sharp', () => {
-    const start = computeTransition('linear-blur', 0, 1);
-    expect(start.blur).toBeGreaterThan(0);
-    expect(start.opacity).toBeLessThan(1);
-    const end = computeTransition('linear-blur', 1, 1);
-    expect(end.blur).toBe(0);
+    const c = renderClip({ transitionIn: 'linear-blur', transitionDurationInFrames: 2 });
+    const start = getClipStyle(c, undefined, 0);
+    expect(start.filter).toContain('blur');
+    expect((start.opacity as number)).toBeLessThan(1);
+    const end = getClipStyle(c, undefined, 2);
+    expect(end.filter).toBeUndefined();
     expect(end.opacity).toBe(1);
   });
 
   it('film-burn: starts brighter, scales down', () => {
-    const start = computeTransition('film-burn', 0, 1);
-    expect(start.opacity).toBeLessThan(1);
-    expect(start.scale).toBeGreaterThan(1);
-    const end = computeTransition('film-burn', 1, 1);
+    const c = renderClip({ transitionIn: 'film-burn', transitionDurationInFrames: 2 });
+    const start = getClipStyle(c, undefined, 0);
+    expect((start.opacity as number)).toBeLessThan(1);
+    expect(start.transform).toContain('scale(1.05)');
+    const end = getClipStyle(c, undefined, 2);
     expect(end.opacity).toBe(1);
-    expect(end.scale).toBe(1);
+    expect(end.transform).toContain('scale(1)');
   });
 
   it('cross-zoom: starts larger, fades in', () => {
-    const start = computeTransition('cross-zoom', 0, 1);
-    expect(start.scale).toBeGreaterThan(1);
+    const c = renderClip({ transitionIn: 'cross-zoom', transitionDurationInFrames: 2 });
+    const start = getClipStyle(c, undefined, 0);
+    expect(start.transform).toContain('scale(1.2)');
     expect(start.opacity).toBe(0);
-    const end = computeTransition('cross-zoom', 1, 1);
-    expect(end.scale).toBe(1);
+    const end = getClipStyle(c, undefined, 2);
+    expect(end.transform).toContain('scale(1)');
     expect(end.opacity).toBe(1);
   });
 
   it('push: translates from right', () => {
-    const start = computeTransition('push', 0, 1);
-    expect(start.translateX).toBe(100);
-    const end = computeTransition('push', 1, 1);
-    expect(end.translateX).toBe(0);
+    const c = renderClip({ transitionIn: 'push', transitionDurationInFrames: 1 });
+    const start = getClipStyle(c, undefined, 0);
+    expect(start.transform).toContain('translateX(100%)');
+    const end = getClipStyle(c, undefined, 1);
+    expect(end.transform).toContain('translateX(0%)');
   });
 
   it('applies clipScale to output', () => {
-    const state = computeTransition('none', 0.5, 2);
-    expect(state.scale).toBe(2);
+    const c = renderClip({ transitionIn: 'none', transitionDurationInFrames: 0, scale: 2 });
+    const state = getClipStyle(c, undefined, 30);
+    expect(state.transform).toContain('scale(2)');
   });
 });
 
-describe('getClipTransitionState', () => {
+describe('getClipStyle clip state', () => {
   it('returns full opacity for clip with no transition', () => {
-    const c = clip({ transitionIn: 'none', transitionDurationInFrames: 0 });
-    const state = getClipTransitionState(c, [c], 10);
+    const c = renderClip({ transitionIn: 'none', transitionDurationInFrames: 0 });
+    const state = getClipStyle(c, undefined, 10);
     expect(state.opacity).toBe(1);
   });
 
   it('fade-in: opacity at frame 0 is 0 when transitionDuration is 10', () => {
-    const c = clip({ transitionIn: 'fade', transitionDurationInFrames: 10 });
-    const state = getClipTransitionState(c, [c], 0);
+    const c = renderClip({ transitionIn: 'fade', transitionDurationInFrames: 10 });
+    const state = getClipStyle(c, undefined, 0);
     expect(state.opacity).toBe(0);
   });
 
   it('fade-in: opacity at frame 10 is 1', () => {
-    const c = clip({ transitionIn: 'fade', transitionDurationInFrames: 10 });
-    const state = getClipTransitionState(c, [c], 10);
+    const c = renderClip({ transitionIn: 'fade', transitionDurationInFrames: 10 });
+    const state = getClipStyle(c, undefined, 10);
     expect(state.opacity).toBe(1);
   });
 
   it('fade-in: opacity at frame 5 is ~0.5', () => {
-    const c = clip({ transitionIn: 'fade', transitionDurationInFrames: 10 });
-    const state = getClipTransitionState(c, [c], 5);
+    const c = renderClip({ transitionIn: 'fade', transitionDurationInFrames: 10 });
+    const state = getClipStyle(c, undefined, 5);
     expect(state.opacity).toBeCloseTo(0.5);
   });
 
   it('applies outgoing fade when next clip has fade transition', () => {
-    const c1 = clip({ id: 'c1', durationInFrames: 30, offsetInTimeline: 0, transitionIn: 'none', transitionDurationInFrames: 0 });
-    const c2 = clip({ id: 'c2', durationInFrames: 30, offsetInTimeline: 30, transitionIn: 'fade', transitionDurationInFrames: 10, trackIndex: 0 });
-    const state = getClipTransitionState(c1, [c1, c2], 25);
-    expect(state.opacity).toBeLessThan(1);
+    const c1 = renderClip({ id: 'c1', durationInFrames: 30, offsetInTimeline: 0, transitionIn: 'none', transitionDurationInFrames: 0 });
+    const outgoing: OutgoingTransition = { transitionIn: 'fade', durationInFrames: 10 };
+    const state = getClipStyle(c1, outgoing, 25);
+    expect((state.opacity as number)).toBeLessThan(1);
   });
 });
 

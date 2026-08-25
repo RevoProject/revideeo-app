@@ -514,6 +514,18 @@
   "release.eupl.title": "GitHub Social Preview",
   "release.eupl.desc": "Added GitHub social preview image and updated Open Graph / Twitter meta tags. Version info with GitHub link now visible in Application Settings.",
 
+  "release.bugfixes.title": "Bug Fixes",
+  "release.bugfixes.desc": "Refresh Clip no longer resets the clip — it preserves all timeline edits. Juicer session-scoped attachments: each request only receives the files you attach for that session. Ripple edit: extending a clip now correctly pushes following clips on the same track.",
+
+  "release.juicer-title": "Juicer Timeline Fix",
+  "release.juicer-desc": "Fixed Juicer adding clips without pushing following clips forward. Duration increase now triggers ripple edit on the same track. Track names are preserved and not overwritten by filenames.",
+
+  "release.video-thumb-title": "Timeline UI",
+  "release.video-thumb-desc": "Video clips now display thumbnails on the timeline. Video tracks show the video type indicator alongside audio and image indicators.",
+
+  "release.renderer-title": "Rendering Stability",
+  "release.renderer-desc": "Stabilized Remotion rendering pipeline: memoized style objects to prevent unnecessary DOM updates, fixed outgoing transition overlap, improved video decode in Juicer with correct source duration.",
+
   "import.reading": "Reading project file...",
   "import.storing": "Importing media assets...",
   "import.opening": "Opening project..."

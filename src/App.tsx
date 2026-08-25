@@ -551,7 +551,7 @@ export default function ReVideeo() {
   const library = listProjects();
 
   // Historia undo/redo
-  const historyRef = useRef<{ past: { clips: StoredClip[] }[]; future: { clips: StoredClip[] }[] }>({
+  const historyRef = useRef<{ past: { clips: StoredClip[]; trackCount?: number; trackSettings?: TrackSettings[] }[]; future: { clips: StoredClip[]; trackCount?: number; trackSettings?: TrackSettings[] }[] }>({
     past: [],
     future: [],
   });
@@ -584,10 +584,14 @@ export default function ReVideeo() {
 
   const beginEdit = useCallback(() => {
     const h = historyRef.current;
-    h.past.push({ clips: clipsRef.current });
+    h.past.push({
+      clips: clipsRef.current,
+      trackCount: project?.trackCount,
+      trackSettings: project?.trackSettings,
+    });
     if (h.past.length > 100) h.past.shift();
     h.future = [];
-  }, []);
+  }, [project]);
 
   const undo = useCallback(() => {
     const replacedAsset = replacedAssetsHistoryRef.current.pop();
@@ -606,19 +610,33 @@ export default function ReVideeo() {
     const h = historyRef.current;
     const prev = h.past.pop();
     if (!prev) return;
-    h.future.push({ clips: clipsRef.current });
+    h.future.push({
+      clips: clipsRef.current,
+      trackCount: project?.trackCount,
+      trackSettings: project?.trackSettings,
+    });
     setClips(prev.clips);
+    if (prev.trackCount !== undefined && prev.trackSettings !== undefined) {
+      setProject((p) => p ? { ...p, trackCount: prev.trackCount!, trackSettings: prev.trackSettings! } : p);
+    }
     setDirty(true);
-  }, []);
+  }, [project]);
 
   const redo = useCallback(() => {
     const h = historyRef.current;
     const next = h.future.pop();
     if (!next) return;
-    h.past.push({ clips: clipsRef.current });
+    h.past.push({
+      clips: clipsRef.current,
+      trackCount: project?.trackCount,
+      trackSettings: project?.trackSettings,
+    });
     setClips(next.clips);
+    if (next.trackCount !== undefined && next.trackSettings !== undefined) {
+      setProject((p) => p ? { ...p, trackCount: next.trackCount!, trackSettings: next.trackSettings! } : p);
+    }
     setDirty(true);
-  }, []);
+  }, [project]);
 
   const canUndo =
     historyRef.current.past.length > 0 ||
@@ -810,7 +828,45 @@ export default function ReVideeo() {
         return;
       }
       beginEdit();
-      setClips((prev) => prev.map((clip) => (clip.id === id ? { ...clip, ...patch } : clip)));
+      if (patch.durationInFrames !== undefined && patch.durationInFrames !== current.durationInFrames) {
+        const delta = patch.durationInFrames - current.durationInFrames;
+        const oldEnd = current.offsetInTimeline + current.durationInFrames;
+        setClips((prev) => {
+          const updated = prev.map((clip) => {
+            if (clip.id === id) return { ...clip, ...patch };
+            if (clip.trackIndex === current.trackIndex && clip.offsetInTimeline >= oldEnd) {
+              return { ...clip, offsetInTimeline: clip.offsetInTimeline + delta };
+            }
+            return clip;
+          });
+          // Second pass: snap clips with transitions to their new predecessor
+          // Accumulate results so later clips see already-snapped predecessors
+          const snapped: typeof updated = [];
+          for (const clip of updated) {
+            if (clip.trackIndex !== current.trackIndex || clip.transitionIn === 'none' || clip.transitionDurationInFrames <= 0) {
+              snapped.push(clip);
+              continue;
+            }
+            // Find the latest clip that starts before this clip (the predecessor)
+            let bestStart = -Infinity;
+            let bestClip: StoredClip | null = null;
+            for (const other of snapped) {
+              if (other.trackIndex !== clip.trackIndex) continue;
+              if (other.offsetInTimeline < clip.offsetInTimeline && other.offsetInTimeline > bestStart) {
+                bestStart = other.offsetInTimeline;
+                bestClip = other;
+              }
+            }
+            if (!bestClip) { snapped.push(clip); continue; }
+            const snappedOffset = (bestClip.offsetInTimeline + bestClip.durationInFrames) - clip.transitionDurationInFrames;
+            if (snappedOffset === clip.offsetInTimeline) { snapped.push(clip); continue; }
+            snapped.push({ ...clip, offsetInTimeline: Math.max(0, snappedOffset) });
+          }
+          return snapped;
+        });
+      } else {
+        setClips((prev) => prev.map((clip) => (clip.id === id ? { ...clip, ...patch } : clip)));
+      }
       setDirty(true);
     },
     [beginEdit, isTrackLocked],
@@ -1740,7 +1796,7 @@ export default function ReVideeo() {
 
   const dismissExportReady = useCallback(() => setExportReady(null), []);
 
-  const handleJuicerApply = useCallback((snapshot: JuicerSnapshot) => {
+  const handleJuicerApply = useCallback(async (snapshot: JuicerSnapshot) => {
     const prevState: JuicerSnapshot = {
       clips: [...clipsRef.current],
       trackCount: project?.trackCount ?? DEFAULT_TRACKS,
@@ -1755,17 +1811,18 @@ export default function ReVideeo() {
     const ts = snapshot.trackSettings.length > 0 ? snapshot.trackSettings : [{ name: t('timeline.track', { index: '1' }), locked: false, muted: false, hidden: false }];
     setProject((prev) => prev ? { ...prev, trackCount: tc, trackSettings: ts } : prev);
     if (snapshot.newAssets && snapshot.newAssets.length > 0) {
+      const withThumbnails = await Promise.all(snapshot.newAssets.map(async (a) => ({
+        sourceId: a.sourceId,
+        name: a.name,
+        durationInFrames: a.durationInFrames,
+        blob: a.blob,
+        thumbnails: a.blob.type.startsWith('video/') ? await createVideoThumbnails(a.blob) : [],
+      })));
       setAssets((prev) => {
         const existing = new Set(prev.map((a) => a.sourceId));
-        const fresh = snapshot.newAssets!.filter((a) => !existing.has(a.sourceId));
+        const fresh = withThumbnails.filter((a) => !existing.has(a.sourceId));
         if (fresh.length === 0) return prev;
-        return [...prev, ...fresh.map((a) => ({
-          sourceId: a.sourceId,
-          name: a.name,
-          durationInFrames: a.durationInFrames,
-          blob: a.blob,
-          thumbnails: [],
-        }))];
+        return [...prev, ...fresh];
       });
     }
     setDirty(true);
@@ -2239,23 +2296,10 @@ export default function ReVideeo() {
                 const asset = assets.find((a) => a.sourceId === clip.sourceId);
                 if (!asset) { setContextMenu(null); return; }
                 beginEdit();
-                setClips((prev) => {
-                  const without = prev.filter((c) => c.id !== clip.id);
-                  const isImage = asset.blob.type.startsWith('image/');
-                  const isAudio = asset.blob.type.startsWith('audio/');
-                  const newClip = {
-                    id: makeId(),
-                    type: isImage ? 'image' as const : isAudio ? 'audio' as const : 'video' as const,
-                    sourceId: clip.sourceId,
-                    trackIndex: clip.trackIndex,
-                    offsetInTimeline: clip.offsetInTimeline,
-                    startFrame: 0,
-                    durationInFrames: isImage ? FPS * 5 : asset.durationInFrames > 0 ? asset.durationInFrames : clip.durationInFrames,
-                    scale: 1, posX: 0, posY: 0, width: 100, height: 100,
-                    transitionIn: 'none' as const, transitionDurationInFrames: 0,
-                  };
-                  return [...without, newClip].sort((a, b) => a.offsetInTimeline - b.offsetInTimeline);
-                });
+                const isImage = asset.blob.type.startsWith('image/');
+                const isAudio = asset.blob.type.startsWith('audio/');
+                const type = isImage ? 'image' as const : isAudio ? 'audio' as const : 'video' as const;
+                setClips((prev) => prev.map((c) => c.id === clip.id ? { ...c, type } : c));
                 setContextMenu(null);
               },
             },

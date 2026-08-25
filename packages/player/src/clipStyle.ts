@@ -66,9 +66,12 @@ export function computeClipStyle(
   }
 
   if (outgoing && outgoing.transitionIn !== 'none' && outgoing.durationInFrames > 0) {
+    const outStart = (transition !== 'none' && transitionDuration > 0)
+      ? Math.max(duration - outgoing.durationInFrames, transitionDuration)
+      : duration - outgoing.durationInFrames;
     const outProgress = Math.max(
       0,
-      Math.min(1, (frame - (duration - outgoing.durationInFrames)) / outgoing.durationInFrames),
+      Math.min(1, (frame - outStart) / outgoing.durationInFrames),
     );
     opacity *= 1 - outProgress;
     if (outgoing.transitionIn === 'push') translateX -= outProgress * 100;

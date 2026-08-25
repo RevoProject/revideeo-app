@@ -28,6 +28,7 @@ export interface ExecutionContext {
   orientation?: string;
   attachmentNames?: Record<string, string>;
   attachmentKinds?: Record<string, string>;
+  attachmentDurations?: Record<string, number>;
 }
 
 export interface StepResult {
@@ -74,7 +75,8 @@ const opAddClip = (ctx: ExecutionContext, params: Record<string, unknown>): Step
   let trackIndex = (params.trackIndex as number) ?? 0;
   const offsetInTimeline = (params.offsetInTimeline as number) ?? 0;
   const startFrame = (params.startFrame as number) ?? 0;
-  const durationInFrames = (params.durationInFrames as number) ?? ctx.fps * 3;
+  const knownDuration = ctx.attachmentDurations?.[sourceId];
+  const durationInFrames = (params.durationInFrames as number) ?? knownDuration ?? ctx.fps * 3;
 
   const clipType = (ctx.attachmentKinds?.[sourceId] as StoredClip['type'])
     ?? guessTypeFromFilename(ctx.attachmentNames?.[sourceId] ?? sourceId)
@@ -102,13 +104,7 @@ const opAddClip = (ctx: ExecutionContext, params: Record<string, unknown>): Step
   const name = ctx.attachmentNames?.[sourceId] ?? sourceId;
   const cleanName = name.replace(/\.[^.]+$/, '');
 
-  const newTrackSettings = [...ctx.trackSettings];
-  const existingClipsOnTrack = ctx.clips.filter((c) => c.trackIndex === trackIndex);
-  if (existingClipsOnTrack.length === 0 && trackIndex < newTrackSettings.length && (newTrackSettings[trackIndex].name === `Ścieżka ${trackIndex + 1}` || !newTrackSettings[trackIndex].name)) {
-    newTrackSettings[trackIndex] = { ...newTrackSettings[trackIndex], name: cleanName };
-  }
-
-  return { ...ctx, clips: newClips, trackSettings: newTrackSettings, message: `Dodano ${clipType} ${cleanName} na ścieżce ${trackIndex + 1} (${(durationInFrames / ctx.fps).toFixed(1)}s)` };
+  return { ...ctx, clips: newClips, message: `Dodano ${clipType} ${cleanName} na ścieżce ${trackIndex + 1} (${(durationInFrames / ctx.fps).toFixed(1)}s)` };
 };
 
 const opMoveClip = (ctx: ExecutionContext, params: Record<string, unknown>): StepResult => {
@@ -236,7 +232,8 @@ const opAddAudio = (ctx: ExecutionContext, params: Record<string, unknown>): Ste
 
   const offsetInTimeline = (params.offsetInTimeline as number) ?? 0;
   const startFrame = (params.startFrame as number) ?? 0;
-  const durationInFrames = (params.durationInFrames as number) ?? ctx.fps * 30;
+  const knownDuration = ctx.attachmentDurations?.[sourceId];
+  const durationInFrames = (params.durationInFrames as number) ?? knownDuration ?? ctx.fps * 30;
   const volume = (params.volume as number) ?? 0.8;
 
   const audioName = (ctx.attachmentNames?.[sourceId] ?? sourceId).replace(/\.[^.]+$/, '');
@@ -259,9 +256,7 @@ const opAddAudio = (ctx: ExecutionContext, params: Record<string, unknown>): Ste
 
   const newTrackSettings = [...ctx.trackSettings];
   if (targetTrack >= ctx.trackCount) {
-    newTrackSettings.push({ name: audioName, locked: false, muted: false, hidden: false });
-  } else {
-    newTrackSettings[targetTrack] = { ...newTrackSettings[targetTrack], name: audioName };
+    newTrackSettings.push({ name: `Ścieżka ${targetTrack + 1}`, locked: false, muted: false, hidden: false });
   }
 
   return {
@@ -329,7 +324,7 @@ export const executeOperation = (op: JuicerOperation, ctx: ExecutionContext): St
   return { ...ctx, message: `${op.type} — nieznana operacja, pominięto` };
 };
 
-const resolveClipIds = (operations: JuicerOperation[], attachmentNames?: Record<string, string>): Record<string, string> => {
+const resolveClipIds = (operations: JuicerOperation[], attachmentNames?: Record<string, string>, attachmentDurations?: Record<string, number>, fps: number = 30): Record<string, string> => {
   const mapping: Record<string, string> = {};
   let clipIdx = 0;
   const attachmentKeys = attachmentNames ? Object.keys(attachmentNames).filter((k) => k.startsWith('att_')).sort() : [];
@@ -356,17 +351,19 @@ const resolveClipIds = (operations: JuicerOperation[], attachmentNames?: Record<
       if (!src && clipIdx < attachmentKeys.length) {
         src = attachmentKeys[clipIdx];
         op.params.sourceId = src;
-        if (op.type === 'add_audio') {
-          op.params.durationInFrames = op.params.durationInFrames ?? 900;
-          op.params.volume = op.params.volume ?? 0.25;
-        } else {
-          op.params.durationInFrames = op.params.durationInFrames ?? 90;
-        }
         op.params.trackIndex = op.params.trackIndex ?? (op.type === 'add_audio' ? 2 : 0);
         op.params.offsetInTimeline = op.params.offsetInTimeline ?? 0;
         op.params.startFrame = op.params.startFrame ?? 0;
       }
+
       if (src) {
+        const knownDuration = attachmentDurations?.[src];
+        if (op.type === 'add_audio') {
+          op.params.durationInFrames = op.params.durationInFrames ?? knownDuration ?? 900;
+          op.params.volume = op.params.volume ?? 0.25;
+        } else {
+          op.params.durationInFrames = op.params.durationInFrames ?? knownDuration ?? (fps * 3);
+        }
         clipIdx++;
         mapping[`clip_${String(clipIdx).padStart(3, '0')}`] = src;
         mapping[op.id] = src;
@@ -392,13 +389,13 @@ export const executeOperations = async (
   ctx: ExecutionContext,
   onStep: (index: number, result: StepResult) => void,
 ): Promise<{ clips: StoredClip[]; trackCount: number; trackSettings: TrackSettings[] }> => {
-  const clipMapping = resolveClipIds(operations, ctx.attachmentNames);
+  const clipMapping = resolveClipIds(operations, ctx.attachmentNames, ctx.attachmentDurations, ctx.fps);
   let current: ExecutionContext = { ...ctx };
   for (let i = 0; i < operations.length; i++) {
     const mappedParams = applyClipIdMapping(operations[i].params ?? {}, clipMapping);
     const resolvedOp = { ...operations[i], params: mappedParams };
     const result = executeOperation(resolvedOp, current);
-    current = { clips: result.clips, trackCount: result.trackCount, trackSettings: result.trackSettings, fps: ctx.fps, attachmentNames: ctx.attachmentNames, attachmentKinds: ctx.attachmentKinds };
+    current = { clips: result.clips, trackCount: result.trackCount, trackSettings: result.trackSettings, fps: ctx.fps, attachmentNames: ctx.attachmentNames, attachmentKinds: ctx.attachmentKinds, attachmentDurations: ctx.attachmentDurations };
     onStep(i, result);
     await new Promise((r) => setTimeout(r, 200));
   }

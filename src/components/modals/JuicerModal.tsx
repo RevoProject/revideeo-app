@@ -18,6 +18,7 @@ import { aiProviderRegistry } from '../../ai';
 import { executeOperations, type JuicerOperation } from '../../juicer/stepExecutor';
 import { validateOperations } from '../../juicer/validator';
 import { useTranslation } from '../../i18n';
+import { detectTrueVideoDuration } from '../../utils/videoDuration';
 
 export interface JuicerSnapshot {
   clips: StoredClip[];
@@ -62,6 +63,13 @@ interface PlanChange {
 }
 
 const HISTORY_GLOBAL_KEY = 'revideeo:juicer:history';
+
+const extractFileDuration = (file: File, fps: number): Promise<number> => {
+  if (file.type.startsWith('image/') || file.type.startsWith('text/')) {
+    return Promise.resolve(fps * 5);
+  }
+  return detectTrueVideoDuration(file, fps);
+};
 
 const loadHistory = (scope: 'global' | 'project', projectId?: string): PromptHistoryEntry[] => {
   try {
@@ -404,6 +412,8 @@ export const JuicerModal = ({
 
     const attachmentNames: Record<string, string> = {};
     const attachmentKinds: Record<string, string> = {};
+    const attachmentDurations: Record<string, number> = {};
+    const fps = projectConfig?.fps ?? 30;
     for (let i = 0; i < attachedFiles.length; i++) {
       const f = attachedFiles[i];
       const attId = `att_${String(i).padStart(3, '0')}`;
@@ -412,8 +422,13 @@ export const JuicerModal = ({
       attachmentKinds[attId] = kind;
       attachmentNames[f.name] = f.name;
       attachmentKinds[f.name] = kind;
+      if (f.file) {
+        const duration = await extractFileDuration(f.file, fps);
+        attachmentDurations[attId] = duration;
+        attachmentDurations[f.name] = duration;
+      }
     }
-    const ctx = { clips: clips.map((c) => ({ ...c })), trackCount, trackSettings: trackSettings.map((t) => ({ ...t })), fps: projectConfig?.fps ?? 30, attachmentNames, attachmentKinds };
+    const ctx = { clips: clips.map((c) => ({ ...c })), trackCount, trackSettings: trackSettings.map((t) => ({ ...t })), fps, attachmentNames, attachmentKinds, attachmentDurations };
     const validation = validateOperations(activeSteps, ctx);
     if (!validation.valid) {
       setValidationErrors(validation.errors.map((e) => `[${e.type}] ${e.message}`));
@@ -432,12 +447,15 @@ export const JuicerModal = ({
 
     const newAssets = attachedFiles
       .filter((f) => f.file)
-      .map((f, i) => ({
-        sourceId: `att_${String(i).padStart(3, '0')}`,
-        name: f.name,
-        blob: f.file!,
-        durationInFrames: 90,
-      }));
+      .map((f, i) => {
+        const attId = `att_${String(i).padStart(3, '0')}`;
+        return {
+          sourceId: attId,
+          name: f.name,
+          blob: f.file!,
+          durationInFrames: attachmentDurations[attId] ?? fps * 3,
+        };
+      });
 
     onApplySnapshot({ clips: result.clips, trackCount: result.trackCount, trackSettings: result.trackSettings, newAssets, timestamp: Date.now(), description: input || 'Juicer' });
     setPhase('done');
@@ -726,7 +744,7 @@ export const JuicerModal = ({
                 </div>
               )}
               <div className="flex justify-end gap-2">
-                <button onClick={() => { setPhase('idle'); setChanges(defaultChanges); setClarificationQuestion(null); setProviderError(null); }} className="rounded-lg bg-[#202124] px-4 py-2 text-xs font-semibold text-gray-300 hover:bg-[#2a2b30] transition-colors">
+                <button onClick={() => { setPhase('idle'); setChanges(defaultChanges); setClarificationQuestion(null); setProviderError(null); setAttachedFiles([]); }} className="rounded-lg bg-[#202124] px-4 py-2 text-xs font-semibold text-gray-300 hover:bg-[#2a2b30] transition-colors">
                   {clarificationQuestion || providerError ? t('juicer.back') : t('juicer.cancel')}
                 </button>
                 {!clarificationQuestion && !providerError && (

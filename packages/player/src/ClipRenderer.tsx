@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import type { PlayerClip, OutgoingTransition } from './types.js';
 import { computeClipStyle } from './clipStyle.js';
 
@@ -10,10 +10,18 @@ interface ClipRendererProps {
   playing: boolean;
 }
 
+const hasFrameDependentEffects = (clip: PlayerClip, outgoing?: OutgoingTransition): boolean =>
+  (clip.transitionIn !== 'none' && (clip.transitionDurationInFrames ?? 0) > 0) ||
+  (clip.fadeInFrames ?? 0) > 0 ||
+  (clip.fadeOutFrames ?? 0) > 0 ||
+  Boolean(outgoing && outgoing.transitionIn !== 'none' && outgoing.durationInFrames > 0);
+
 export const ClipRenderer = ({ clip, outgoing, muted, frame, playing }: ClipRendererProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const style = computeClipStyle(clip, outgoing, frame);
+
+  const needsFrame = hasFrameDependentEffects(clip, outgoing);
+  const style = useMemo(() => computeClipStyle(clip, outgoing, frame), needsFrame ? [clip, outgoing, frame] : [clip, outgoing]);
 
   const audioFadeIn = clip.audioFadeInFrames
     ? Math.min(1, frame / clip.audioFadeInFrames)
