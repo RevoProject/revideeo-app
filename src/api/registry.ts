@@ -52,6 +52,8 @@ import { getCapabilities } from '../capabilities';
 import type { StoredClip } from '../types';
 import type { FrameProvider, FrameAPI } from '@revideeo/core/frame';
 import { createFrameContext } from '@revideeo/core/frame';
+import type { MediaProvider, MediaAPI } from '@revideeo/core/media';
+import { createMediaContext } from '@revideeo/core/media';
 
 export type PluginRegistrySnapshot = {
   panels: PanelRegistration[];
@@ -117,6 +119,7 @@ export class PluginRegistry {
     updateClip: (id: string, patch: Partial<StoredClip>) => void;
     removeClip: (id: string) => void;
     getFrameProvider: () => FrameProvider | null;
+    getMediaProvider: () => MediaProvider | null;
   } | null = null;
 
   private projectId = '';
@@ -410,7 +413,15 @@ export class PluginRegistry {
       }
     }
 
-    return { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities(), frame };
+    let media: MediaAPI | undefined;
+    if (hasPermission('media:read')) {
+      const provider = this.projectContext?.getMediaProvider() ?? null;
+      if (provider) {
+        media = createMediaContext(provider);
+      }
+    }
+
+    return { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities(), frame, media };
   }
 
   async registerPlugin(definition: PluginDefinition): Promise<boolean> {

@@ -42,3 +42,8 @@ export type { FrameProvider } from './frame/provider.js';
 export type { FrameAPI } from './frame/api.js';
 export { createFrameContext } from './frame/context.js';
 export type { FrameContextState } from './frame/context.js';
+
+export type { MediaInfo, MediaKind } from './media/types.js';
+export type { MediaProvider } from './media/provider.js';
+export type { MediaAPI } from './media/api.js';
+export { createMediaContext } from './media/context.js';

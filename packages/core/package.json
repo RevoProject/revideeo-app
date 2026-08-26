@@ -10,7 +10,8 @@
     ".": "./src/index.ts",
     "./manifest": "./src/manifest/index.ts",
     "./adapters": "./src/adapters/index.ts",
-    "./frame": "./src/frame/index.ts"
+    "./frame": "./src/frame/index.ts",
+    "./media": "./src/media/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

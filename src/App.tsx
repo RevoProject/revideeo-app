@@ -92,6 +92,7 @@ import { pluginRegistry } from './api';
 import { usePluginRegistry } from './api/usePluginRegistry';
 import { loadBundledPlugins } from './api/pluginLoader';
 import { BrowserFrameProvider } from './frame/browserProvider';
+import { AppMediaProvider } from './media/appMediaProvider';
 import { aiProviderRegistry } from './ai';
 import { AlertModalProvider } from './components/shared/AlertModal';
 import { ConfirmModal } from './components/shared/ConfirmModal';
@@ -764,6 +765,7 @@ export default function ReVideeo() {
   );
 
   const frameProvider = useMemo(() => new BrowserFrameProvider(), []);
+  const mediaProvider = useMemo(() => new AppMediaProvider(() => assets), [assets]);
 
   useEffect(() => {
     if (project) {
@@ -807,11 +809,12 @@ export default function ReVideeo() {
           setDirty(true);
         },
         getFrameProvider: () => frameProvider,
+        getMediaProvider: () => mediaProvider,
       }, project.id);
     } else {
       pluginRegistry.clearProjectContext();
     }
-  }, [project, clips, currentFrame, dirty, markers, selectedClipIds, seekTo, totalFrames, frameProvider]);
+  }, [project, clips, currentFrame, dirty, markers, selectedClipIds, seekTo, totalFrames, frameProvider, mediaProvider]);
 
   // Prevent page refresh/close with unsaved project
   useEffect(() => {
