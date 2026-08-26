@@ -6,6 +6,7 @@
 
 import type { ReactNode } from 'react';
 import type { StoredClip, TransitionType } from '../types';
+import type { FrameAPI } from '@revideeo/core/frame';
 
 export const PLUGIN_API_VERSION = 1;
 
@@ -32,7 +33,8 @@ export type PluginPermission =
   | 'renderer:read'
   | 'juicer:read'
   | 'storage:project'
-  | 'storage:global';
+  | 'storage:global'
+  | 'frame:read';
 
 export interface PluginManifest {
   id: string;
@@ -79,6 +81,7 @@ export interface PluginContext {
   events: PluginEventAPI;
   i18n: PluginI18nAPI;
   capabilities: import('../capabilities').ReVideeoCapabilities;
+  frame?: FrameAPI;
 }
 
 export interface PluginI18nAPI {

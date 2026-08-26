@@ -36,3 +36,9 @@ export type { ResolutionPreset, ValidationResult } from './manifest/index.js';
 export { RemotionAdapter } from './adapters/remotion.js';
 export { FFmpegAdapter } from './adapters/ffmpeg.js';
 export { RevideoAdapter } from './adapters/revideo.js';
+
+export type { FrameContext, ClipFrameInfo } from './frame/types.js';
+export type { FrameProvider } from './frame/provider.js';
+export type { FrameAPI } from './frame/api.js';
+export { createFrameContext } from './frame/context.js';
+export type { FrameContextState } from './frame/context.js';

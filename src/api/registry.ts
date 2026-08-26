@@ -50,6 +50,8 @@ import {
 import { registerPluginTranslations, translatePluginKey, getPluginLang, getAvailablePluginLangs } from './pluginI18n';
 import { getCapabilities } from '../capabilities';
 import type { StoredClip } from '../types';
+import type { FrameProvider, FrameAPI } from '@revideeo/core/frame';
+import { createFrameContext } from '@revideeo/core/frame';
 
 export type PluginRegistrySnapshot = {
   panels: PanelRegistration[];
@@ -114,6 +116,7 @@ export class PluginRegistry {
     addClip: (clip: Omit<StoredClip, 'id'>) => string;
     updateClip: (id: string, patch: Partial<StoredClip>) => void;
     removeClip: (id: string) => void;
+    getFrameProvider: () => FrameProvider | null;
   } | null = null;
 
   private projectId = '';
@@ -345,7 +348,70 @@ export class PluginRegistry {
       getAvailableLangs: () => getAvailablePluginLangs(),
     };
 
-    return { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities() };
+    let frame: FrameAPI | undefined;
+    if (hasPermission('frame:read')) {
+      const provider = registry.projectContext?.getFrameProvider() ?? null;
+      if (provider) {
+        frame = createFrameContext(provider, {
+          getCurrentFrame: () => registry.projectContext?.getCurrentFrame() ?? 0,
+          getTotalFrames: () => registry.projectContext?.getTotalFrames() ?? 0,
+          getFps: () => registry.projectContext?.getConfig().fps ?? 30,
+          getWidth: () => {
+            const cfg = registry.projectContext?.getConfig();
+            if (!cfg) return 1920;
+            const res = cfg.resolutionLabel;
+            const orient = cfg.orientation;
+            if (orient === '9:16' || orient === 'portrait') {
+              if (res === '4K') return 2160;
+              if (res === '2K') return 1440;
+              if (res === '1080p') return 1080;
+              if (res === '720p') return 720;
+              if (res === '480p') return 480;
+              if (res === '360p') return 360;
+              return 720;
+            }
+            if (res === '4K') return 3840;
+            if (res === '2K') return 2560;
+            if (res === '1080p') return 1920;
+            if (res === '720p') return 1280;
+            if (res === '480p') return 854;
+            if (res === '360p') return 640;
+            return 1280;
+          },
+          getHeight: () => {
+            const cfg = registry.projectContext?.getConfig();
+            if (!cfg) return 720;
+            const res = cfg.resolutionLabel;
+            const orient = cfg.orientation;
+            if (orient === '9:16' || orient === 'portrait') {
+              if (res === '4K') return 3840;
+              if (res === '2K') return 2560;
+              if (res === '1080p') return 1920;
+              if (res === '720p') return 1280;
+              if (res === '480p') return 854;
+              if (res === '360p') return 640;
+              return 1280;
+            }
+            if (res === '4K') return 2160;
+            if (res === '2K') return 1440;
+            if (res === '1080p') return 1080;
+            if (res === '720p') return 720;
+            if (res === '480p') return 480;
+            if (res === '360p') return 360;
+            return 720;
+          },
+          getAllClips: () => registry.projectContext?.getAllClips() ?? [],
+          getHiddenTracks: () => {
+            const settings = registry.projectContext?.getTrackSettings() ?? [];
+            const hidden = new Set<number>();
+            settings.forEach((s, i) => { if (s.hidden) hidden.add(i); });
+            return hidden;
+          },
+        });
+      }
+    }
+
+    return { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities(), frame };
   }
 
   async registerPlugin(definition: PluginDefinition): Promise<boolean> {

@@ -9,7 +9,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./manifest": "./src/manifest/index.ts",
-    "./adapters": "./src/adapters/index.ts"
+    "./adapters": "./src/adapters/index.ts",
+    "./frame": "./src/frame/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

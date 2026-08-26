@@ -1,6 +1,7 @@
 import { useRef, useEffect, useMemo } from 'react';
 import type { PlayerClip, OutgoingTransition } from './types.js';
 import { computeClipStyle } from './clipStyle.js';
+import { mediaRegistry } from './mediaRegistry.js';
 
 interface ClipRendererProps {
   clip: PlayerClip;
@@ -19,6 +20,23 @@ const hasFrameDependentEffects = (clip: PlayerClip, outgoing?: OutgoingTransitio
 export const ClipRenderer = ({ clip, outgoing, muted, frame, playing }: ClipRendererProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (clip.type !== 'video') return;
+    const el = videoRef.current;
+    if (!el) return;
+    mediaRegistry.register(clip.id, el);
+    return () => { mediaRegistry.unregister(clip.id); };
+  }, [clip.id, clip.type]);
+
+  const imgCallbackRef = (el: HTMLImageElement | null) => {
+    if (clip.type !== 'image') return;
+    if (el) {
+      mediaRegistry.register(clip.id, el);
+    } else {
+      mediaRegistry.unregister(clip.id);
+    }
+  };
 
   const needsFrame = hasFrameDependentEffects(clip, outgoing);
   const style = useMemo(() => computeClipStyle(clip, outgoing, frame), needsFrame ? [clip, outgoing, frame] : [clip, outgoing]);
@@ -98,7 +116,7 @@ export const ClipRenderer = ({ clip, outgoing, muted, frame, playing }: ClipRend
   }
 
   if (clip.type === 'image') {
-    return <img src={clip.url ?? ''} style={style as React.CSSProperties} alt="" />;
+    return <img ref={imgCallbackRef} src={clip.url ?? ''} style={style as React.CSSProperties} alt="" />;
   }
 
   if (clip.type === 'audio') {

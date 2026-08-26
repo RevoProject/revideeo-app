@@ -91,6 +91,7 @@ import { useRenderServersStatus, type RenderServerOption } from './export/useRen
 import { pluginRegistry } from './api';
 import { usePluginRegistry } from './api/usePluginRegistry';
 import { loadBundledPlugins } from './api/pluginLoader';
+import { BrowserFrameProvider } from './frame/browserProvider';
 import { aiProviderRegistry } from './ai';
 import { AlertModalProvider } from './components/shared/AlertModal';
 import { ConfirmModal } from './components/shared/ConfirmModal';
@@ -762,6 +763,8 @@ export default function ReVideeo() {
     [totalFrames],
   );
 
+  const frameProvider = useMemo(() => new BrowserFrameProvider(), []);
+
   useEffect(() => {
     if (project) {
       pluginRegistry.setProjectContext({
@@ -803,11 +806,12 @@ export default function ReVideeo() {
           setClips((prev) => prev.filter((c) => c.id !== id));
           setDirty(true);
         },
+        getFrameProvider: () => frameProvider,
       }, project.id);
     } else {
       pluginRegistry.clearProjectContext();
     }
-  }, [project, clips, currentFrame, dirty, markers, selectedClipIds, seekTo, totalFrames]);
+  }, [project, clips, currentFrame, dirty, markers, selectedClipIds, seekTo, totalFrames, frameProvider]);
 
   // Prevent page refresh/close with unsaved project
   useEffect(() => {
