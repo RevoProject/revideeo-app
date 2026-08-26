@@ -1,4 +1,4 @@
 {
-  "version": "0.2.1",
-  "changelog": "Open source release! Code now available on GitHub."
+  "version": "0.2.2",
+  "changelog": "Bug fixes: Juicer timeline, refresh clip, video thumbnails, rendering stability."
 }
