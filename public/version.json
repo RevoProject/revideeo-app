@@ -1,4 +1,4 @@
 {
-  "version": "0.2.2",
-  "changelog": "Bug fixes: Juicer timeline, refresh clip, video thumbnails, rendering stability."
+  "version": "0.2.3",
+  "changelog": "Media API, Frame API, oxlint fixes."
 }
