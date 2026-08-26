@@ -12,5 +12,4 @@ export interface MediaInfo {
   readonly kind: MediaKind;
   readonly durationInFrames: number;
   readonly loaded: boolean;
-  readonly thumbnail?: string;
 }

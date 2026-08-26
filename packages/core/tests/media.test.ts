@@ -97,20 +97,10 @@ describe('MediaContext', () => {
     it('includes loaded status', () => {
       const api = createMediaContext(makeProvider([
         video({ id: 'loaded', loaded: true }),
-        video({ id: ' unloaded', loaded: false }),
+        video({ id: 'unloaded', loaded: false }),
       ]));
       expect(api.get('loaded')!.loaded).toBe(true);
-      expect(api.get(' unloaded')!.loaded).toBe(false);
-    });
-
-    it('includes thumbnail when present', () => {
-      const api = createMediaContext(makeProvider([video({ thumbnail: 'data:image/jpeg;base64,abc' })]));
-      expect(api.get('v1')!.thumbnail).toBe('data:image/jpeg;base64,abc');
-    });
-
-    it('thumbnail is undefined when not present', () => {
-      const api = createMediaContext(makeProvider([video()]));
-      expect(api.get('v1')!.thumbnail).toBeUndefined();
+      expect(api.get('unloaded')!.loaded).toBe(false);
     });
   });
 

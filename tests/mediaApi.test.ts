@@ -78,16 +78,16 @@ describe('AppMediaProvider', () => {
     expect(provider.getById('empty')!.loaded).toBe(false);
   });
 
-  it('includes first thumbnail when available', () => {
-    const asset = makeAsset({ thumbnails: ['thumb1.jpg', 'thumb2.jpg'] });
+  it('handles unknown MIME type as image', () => {
+    const asset = makeAsset({ sourceId: 'x1', name: 'unknown.xyz', blob: new Blob(['data'], { type: 'application/octet-stream' }) });
     const provider = new AppMediaProvider(() => [asset]);
-    expect(provider.getById('a1')!.thumbnail).toBe('thumb1.jpg');
+    expect(provider.getById('x1')!.kind).toBe('image');
   });
 
-  it('thumbnail is undefined when no thumbnails', () => {
-    const asset = makeAsset({ thumbnails: undefined });
+  it('handles empty MIME type as image', () => {
+    const asset = makeAsset({ sourceId: 'x2', name: 'no-ext', blob: new Blob(['data'], { type: '' }) });
     const provider = new AppMediaProvider(() => [asset]);
-    expect(provider.getById('a1')!.thumbnail).toBeUndefined();
+    expect(provider.getById('x2')!.kind).toBe('image');
   });
 });
 
@@ -114,5 +114,41 @@ describe('Media API integration', () => {
   it('permission enforcement: media API is undefined without media:read', () => {
     const context = { media: undefined };
     expect(context.media).toBeUndefined();
+  });
+
+  it('list() does not mutate source state', () => {
+    const assets = [makeAsset({ sourceId: 'v1' }), makeAsset({ sourceId: 'v2' })];
+    const provider = new AppMediaProvider(() => assets);
+    const api = createMediaContext(provider);
+    api.list();
+    api.list();
+    expect(assets).toHaveLength(2);
+    expect(assets[0].sourceId).toBe('v1');
+  });
+
+  it('repeated get() returns consistent metadata', () => {
+    const provider = new AppMediaProvider(() => [makeAsset({ sourceId: 'v1', name: 'clip.mp4' })]);
+    const api = createMediaContext(provider);
+    const a = api.get('v1');
+    const b = api.get('v1');
+    expect(a).toEqual(b);
+  });
+
+  it('repeated list() is deterministic', () => {
+    const assets = [makeAsset({ sourceId: 'v1' }), makeAsset({ sourceId: 'a1' })];
+    const provider = new AppMediaProvider(() => assets);
+    const api = createMediaContext(provider);
+    const a = api.list();
+    const b = api.list();
+    expect(a).toEqual(b);
+  });
+
+  it('list() with many assets does not degrade', () => {
+    const assets = Array.from({ length: 100 }, (_, i) => makeAsset({ sourceId: `m${i}`, name: `media${i}.mp4` }));
+    const provider = new AppMediaProvider(() => assets);
+    const api = createMediaContext(provider);
+    const list = api.list();
+    expect(list).toHaveLength(100);
+    expect(list[99].id).toBe('m99');
   });
 });

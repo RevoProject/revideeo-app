@@ -10,33 +10,40 @@ import type { MediaAsset } from '../editor/editorTypes';
 function inferKind(mimeType: string): MediaKind {
   if (mimeType.startsWith('video/')) return 'video';
   if (mimeType.startsWith('audio/')) return 'audio';
+  if (mimeType.startsWith('image/')) return 'image';
   return 'image';
-}
-
-function assetToInfo(asset: MediaAsset): MediaInfo {
-  return {
-    id: asset.sourceId,
-    name: asset.name,
-    kind: inferKind(asset.blob.type),
-    durationInFrames: asset.durationInFrames,
-    loaded: asset.blob.size > 0,
-    thumbnail: asset.thumbnails?.[0],
-  };
 }
 
 export class AppMediaProvider implements MediaProvider {
   private getAssets: () => MediaAsset[];
+  private cache: MediaInfo[] = [];
+  private cacheKey = '';
 
   constructor(getAssets: () => MediaAsset[]) {
     this.getAssets = getAssets;
   }
 
+  private snapshot(): MediaInfo[] {
+    const assets = this.getAssets();
+    const key = assets.map((a) => a.sourceId).join(',');
+    if (key !== this.cacheKey) {
+      this.cacheKey = key;
+      this.cache = assets.map((a) => ({
+        id: a.sourceId,
+        name: a.name,
+        kind: inferKind(a.blob.type),
+        durationInFrames: a.durationInFrames,
+        loaded: a.blob.size > 0,
+      }));
+    }
+    return this.cache;
+  }
+
   getById(id: string): MediaInfo | null {
-    const asset = this.getAssets().find((a) => a.sourceId === id);
-    return asset ? assetToInfo(asset) : null;
+    return this.snapshot().find((m) => m.id === id) ?? null;
   }
 
   getAll(): readonly MediaInfo[] {
-    return this.getAssets().map(assetToInfo);
+    return this.snapshot();
   }
 }
