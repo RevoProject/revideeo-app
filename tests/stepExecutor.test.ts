@@ -1,11 +1,11 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   executeOperations,
   executeOperation,
   type ExecutionContext,
   type JuicerOperation,
 } from '../src/juicer/stepExecutor';
-import type { StoredClip, TrackSettings } from '../src/types';
+import type { StoredClip } from '../src/types';
 
 const defaultCtx: ExecutionContext = {
   clips: [],

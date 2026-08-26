@@ -136,105 +136,104 @@ export class PluginRegistry {
   }
 
   private buildContext(pluginId: string): PluginContext {
-    const registry = this;
     const hasPermission = (perm: string) => {
-      const plugin = registry.plugins.get(pluginId);
+      const plugin = this.plugins.get(pluginId);
       return plugin?.manifest.permissions.includes(perm as never) ?? false;
     };
 
     const ui: PluginUIAPI = {
       registerPanel: (options: PanelRegistration) => {
         if (!hasPermission('ui:panels')) return;
-        registry.snapshot.panels.push(options);
-        registry.bus.emit('ui:panels-changed');
+        this.snapshot.panels.push(options);
+        this.bus.emit('ui:panels-changed');
       },
       registerTab: (options: TabRegistration) => {
         if (!hasPermission('ui:tabs')) return;
-        registry.snapshot.tabs.push(options);
-        registry.bus.emit('ui:tabs-changed');
+        this.snapshot.tabs.push(options);
+        this.bus.emit('ui:tabs-changed');
       },
       registerTool: (options: ToolRegistration) => {
         if (!hasPermission('ui:tools')) return;
-        registry.snapshot.tools.push(options);
-        registry.bus.emit('ui:tools-changed');
+        this.snapshot.tools.push(options);
+        this.bus.emit('ui:tools-changed');
       },
       registerContextMenuItems: (options: ContextMenuRegistration) => {
         if (!hasPermission('ui:context-menus')) return;
-        registry.snapshot.contextMenus.push(options);
-        registry.bus.emit('ui:context-menus-changed');
+        this.snapshot.contextMenus.push(options);
+        this.bus.emit('ui:context-menus-changed');
       },
       registerHeaderButton: (options: HeaderButtonRegistration) => {
         if (!hasPermission('ui:header')) return;
-        registry.snapshot.headerButtons.push(options);
-        registry.bus.emit('ui:header-changed');
+        this.snapshot.headerButtons.push(options);
+        this.bus.emit('ui:header-changed');
       },
       registerFloatingButton: (options: import('./types').FloatingButtonRegistration) => {
         if (!hasPermission('ui:header')) return;
-        registry.snapshot.floatingButtons.push(options);
-        registry.bus.emit('ui:floating-buttons-changed');
+        this.snapshot.floatingButtons.push(options);
+        this.bus.emit('ui:floating-buttons-changed');
       },
       registerBottomBar: (options: import('./types').BottomBarRegistration) => {
         if (!hasPermission('ui:header')) return;
-        registry.snapshot.bottomBar.push(options);
-        registry.bus.emit('ui:bottom-bar-changed');
+        this.snapshot.bottomBar.push(options);
+        this.bus.emit('ui:bottom-bar-changed');
       },
       registerSettingsSection: (options: SettingsSectionRegistration) => {
         if (!hasPermission('ui:settings')) return;
-        registry.snapshot.settingsSections.push(options);
-        registry.bus.emit('ui:settings-changed');
+        this.snapshot.settingsSections.push(options);
+        this.bus.emit('ui:settings-changed');
       },
       registerPropertySection: (options: PropertySectionRegistration) => {
         if (!hasPermission('ui:panels')) return;
-        registry.snapshot.propertySections.push(options);
-        registry.bus.emit('ui:property-sections-changed');
+        this.snapshot.propertySections.push(options);
+        this.bus.emit('ui:property-sections-changed');
       },
       showDialog: (options: DialogOptions) => {
-        registry.snapshot.dialogQueue.push(options);
-        registry.bus.emit('ui:dialog', options);
+        this.snapshot.dialogQueue.push(options);
+        this.bus.emit('ui:dialog', options);
       },
     };
 
     const project: PluginProjectAPI = {
-      getName: () => registry.projectContext?.getName() ?? '',
-      getConfig: () => registry.projectContext?.getConfig() ?? { resolutionLabel: '720p', orientation: '16:9', fps: 30 },
-      getTrackCount: () => registry.projectContext?.getTrackCount() ?? 0,
-      getTrackSettings: () => registry.projectContext?.getTrackSettings() ?? [],
-      isDirty: () => registry.projectContext?.isDirty() ?? false,
-      markDirty: () => registry.projectContext?.markDirty(),
+      getName: () => this.projectContext?.getName() ?? '',
+      getConfig: () => this.projectContext?.getConfig() ?? { resolutionLabel: '720p', orientation: '16:9', fps: 30 },
+      getTrackCount: () => this.projectContext?.getTrackCount() ?? 0,
+      getTrackSettings: () => this.projectContext?.getTrackSettings() ?? [],
+      isDirty: () => this.projectContext?.isDirty() ?? false,
+      markDirty: () => this.projectContext?.markDirty(),
     };
 
     const timeline: PluginTimelineAPI = {
-      getCurrentFrame: () => registry.projectContext?.getCurrentFrame() ?? 0,
-      seekTo: (frame: number) => registry.projectContext?.seekTo(frame),
-      getTotalFrames: () => registry.projectContext?.getTotalFrames() ?? 0,
-      addMarker: (frame: number) => registry.projectContext?.addMarker(frame),
-      removeMarker: (id: string) => registry.projectContext?.removeMarker(id),
-      getMarkers: () => registry.projectContext?.getMarkers() ?? [],
+      getCurrentFrame: () => this.projectContext?.getCurrentFrame() ?? 0,
+      seekTo: (frame: number) => this.projectContext?.seekTo(frame),
+      getTotalFrames: () => this.projectContext?.getTotalFrames() ?? 0,
+      addMarker: (frame: number) => this.projectContext?.addMarker(frame),
+      removeMarker: (id: string) => this.projectContext?.removeMarker(id),
+      getMarkers: () => this.projectContext?.getMarkers() ?? [],
     };
 
     const clips: PluginClipsAPI = {
-      getAll: () => registry.projectContext?.getAllClips() ?? [],
-      getById: (id: string) => (registry.projectContext?.getAllClips() ?? []).find((c) => c.id === id) ?? null,
+      getAll: () => this.projectContext?.getAllClips() ?? [],
+      getById: (id: string) => (this.projectContext?.getAllClips() ?? []).find((c) => c.id === id) ?? null,
       getSelected: () => {
-        const all = registry.projectContext?.getAllClips() ?? [];
-        const selected = registry.projectContext?.getSelectedClipIds() ?? [];
+        const all = this.projectContext?.getAllClips() ?? [];
+        const selected = this.projectContext?.getSelectedClipIds() ?? [];
         return all.filter((c) => selected.includes(c.id));
       },
-      add: (clip) => registry.projectContext?.addClip(clip) ?? '',
-      update: (id, patch) => registry.projectContext?.updateClip(id, patch),
-      remove: (id) => registry.projectContext?.removeClip(id),
+      add: (clip) => this.projectContext?.addClip(clip) ?? '',
+      update: (id, patch) => this.projectContext?.updateClip(id, patch),
+      remove: (id) => this.projectContext?.removeClip(id),
       duplicate: (id) => {
-        const clip = (registry.projectContext?.getAllClips() ?? []).find((c) => c.id === id);
+        const clip = (this.projectContext?.getAllClips() ?? []).find((c) => c.id === id);
         if (!clip) return null;
-        return registry.projectContext?.addClip({ ...clip, offsetInTimeline: clip.offsetInTimeline + clip.durationInFrames, transitionIn: 'none' }) ?? null;
+        return this.projectContext?.addClip({ ...clip, offsetInTimeline: clip.offsetInTimeline + clip.durationInFrames, transitionIn: 'none' }) ?? null;
       },
       split: (id, frame) => {
-        const clip = (registry.projectContext?.getAllClips() ?? []).find((c) => c.id === id);
+        const clip = (this.projectContext?.getAllClips() ?? []).find((c) => c.id === id);
         if (!clip) return null;
         if (frame <= clip.offsetInTimeline || frame >= clip.offsetInTimeline + clip.durationInFrames) return null;
         const cutLength = frame - clip.offsetInTimeline;
-        registry.projectContext?.updateClip(id, { durationInFrames: cutLength });
-        return registry.projectContext?.addClip({
+        this.projectContext?.updateClip(id, { durationInFrames: cutLength });
+        return this.projectContext?.addClip({
           ...clip,
           startFrame: clip.startFrame + cutLength,
           offsetInTimeline: frame,
@@ -247,48 +246,48 @@ export class PluginRegistry {
     const effects: PluginEffectsAPI = {
       registerEffect: (effect: EffectDefinition) => {
         if (!hasPermission('effects:register')) return;
-        registry.snapshot.effects.push(effect);
-        registry.bus.emit('effects:changed');
+        this.snapshot.effects.push(effect);
+        this.bus.emit('effects:changed');
       },
       registerFilter: (filter: FilterDefinition) => {
         if (!hasPermission('effects:register')) return;
-        registry.snapshot.filters.push(filter);
-        registry.bus.emit('effects:changed');
+        this.snapshot.filters.push(filter);
+        this.bus.emit('effects:changed');
       },
-      getEffects: () => registry.snapshot.effects,
-      getFilters: () => registry.snapshot.filters,
+      getEffects: () => this.snapshot.effects,
+      getFilters: () => this.snapshot.filters,
     };
 
     const transitions: PluginTransitionsAPI = {
       registerTransition: (transition: TransitionDefinition) => {
         if (!hasPermission('transitions:register')) return;
-        registry.snapshot.transitions.push(transition);
-        registry.bus.emit('transitions:changed');
+        this.snapshot.transitions.push(transition);
+        this.bus.emit('transitions:changed');
       },
-      getTransitions: () => registry.snapshot.transitions,
+      getTransitions: () => this.snapshot.transitions,
     };
 
     const exportApi: PluginExportAPI = {
       registerFormat: (format: ExportFormatDefinition) => {
         if (!hasPermission('export:register')) return;
-        registry.snapshot.exportFormats.push(format);
-        registry.bus.emit('export:formats-changed');
+        this.snapshot.exportFormats.push(format);
+        this.bus.emit('export:formats-changed');
       },
-      getFormats: () => registry.snapshot.exportFormats,
+      getFormats: () => this.snapshot.exportFormats,
     };
 
     const assets: PluginAssetsAPI = {
-      getGlobalAssets: () => registry.snapshot.globalAssets,
+      getGlobalAssets: () => this.snapshot.globalAssets,
       addGlobalAsset: (asset: GlobalAsset) => {
         if (!hasPermission('assets:write')) return;
-        const exists = registry.snapshot.globalAssets.some((a) => a.id === asset.id);
-        if (!exists) registry.snapshot.globalAssets.push(asset);
-        registry.bus.emit('assets:changed');
+        const exists = this.snapshot.globalAssets.some((a) => a.id === asset.id);
+        if (!exists) this.snapshot.globalAssets.push(asset);
+        this.bus.emit('assets:changed');
       },
       removeGlobalAsset: (id: string) => {
         if (!hasPermission('assets:write')) return;
-        registry.snapshot.globalAssets = registry.snapshot.globalAssets.filter((a) => a.id !== id);
-        registry.bus.emit('assets:changed');
+        this.snapshot.globalAssets = this.snapshot.globalAssets.filter((a) => a.id !== id);
+        this.bus.emit('assets:changed');
       },
     };
 
@@ -300,26 +299,26 @@ export class PluginRegistry {
     const juicer: PluginJuicerAPI = {
       registerJuicerExtension: (extension: JuicerExtension) => {
         if (!hasPermission('juicer:read')) return;
-        registry.snapshot.juicerExtensions.push(extension);
-        registry.bus.emit('juicer:changed');
+        this.snapshot.juicerExtensions.push(extension);
+        this.bus.emit('juicer:changed');
       },
-      getJuicerExtensions: () => registry.snapshot.juicerExtensions,
+      getJuicerExtensions: () => this.snapshot.juicerExtensions,
       registerPromptTemplate: (template) => {
         if (!hasPermission('juicer:read')) return;
-        registry.snapshot.juicerPromptTemplates.push(template);
-        registry.bus.emit('juicer:changed');
+        this.snapshot.juicerPromptTemplates.push(template);
+        this.bus.emit('juicer:changed');
       },
-      getPromptTemplates: () => registry.snapshot.juicerPromptTemplates,
+      getPromptTemplates: () => this.snapshot.juicerPromptTemplates,
     };
 
     const storage: PluginStorageAPI = {
       getProjectData: <T = unknown>(key: string) => {
         if (!hasPermission('storage:project')) return null;
-        return getPluginProjectData<T>(pluginId, registry.projectId, key);
+        return getPluginProjectData<T>(pluginId, this.projectId, key);
       },
       setProjectData: <T = unknown>(key: string, value: T) => {
         if (!hasPermission('storage:project')) return;
-        setPluginProjectData<T>(pluginId, registry.projectId, key, value);
+        setPluginProjectData<T>(pluginId, this.projectId, key, value);
       },
       getGlobalData: <T = unknown>(key: string) => {
         if (!hasPermission('storage:global')) return null;
@@ -332,9 +331,9 @@ export class PluginRegistry {
     };
 
     const events: PluginEventAPI = {
-      on: (event, handler) => registry.eventBus.on(event, handler),
-      off: (event, handler) => registry.eventBus.off(event, handler),
-      emit: (event, ...args) => registry.eventBus.emit(event, ...args),
+      on: (event, handler) => this.eventBus.on(event, handler),
+      off: (event, handler) => this.eventBus.off(event, handler),
+      emit: (event, ...args) => this.eventBus.emit(event, ...args),
     };
 
     const i18n = {
@@ -350,14 +349,14 @@ export class PluginRegistry {
 
     let frame: FrameAPI | undefined;
     if (hasPermission('frame:read')) {
-      const provider = registry.projectContext?.getFrameProvider() ?? null;
+      const provider = this.projectContext?.getFrameProvider() ?? null;
       if (provider) {
         frame = createFrameContext(provider, {
-          getCurrentFrame: () => registry.projectContext?.getCurrentFrame() ?? 0,
-          getTotalFrames: () => registry.projectContext?.getTotalFrames() ?? 0,
-          getFps: () => registry.projectContext?.getConfig().fps ?? 30,
+          getCurrentFrame: () => this.projectContext?.getCurrentFrame() ?? 0,
+          getTotalFrames: () => this.projectContext?.getTotalFrames() ?? 0,
+          getFps: () => this.projectContext?.getConfig().fps ?? 30,
           getWidth: () => {
-            const cfg = registry.projectContext?.getConfig();
+            const cfg = this.projectContext?.getConfig();
             if (!cfg) return 1920;
             const res = cfg.resolutionLabel;
             const orient = cfg.orientation;
@@ -379,7 +378,7 @@ export class PluginRegistry {
             return 1280;
           },
           getHeight: () => {
-            const cfg = registry.projectContext?.getConfig();
+            const cfg = this.projectContext?.getConfig();
             if (!cfg) return 720;
             const res = cfg.resolutionLabel;
             const orient = cfg.orientation;
@@ -400,9 +399,9 @@ export class PluginRegistry {
             if (res === '360p') return 360;
             return 720;
           },
-          getAllClips: () => registry.projectContext?.getAllClips() ?? [],
+          getAllClips: () => this.projectContext?.getAllClips() ?? [],
           getHiddenTracks: () => {
-            const settings = registry.projectContext?.getTrackSettings() ?? [];
+            const settings = this.projectContext?.getTrackSettings() ?? [];
             const hidden = new Set<number>();
             settings.forEach((s, i) => { if (s.hidden) hidden.add(i); });
             return hidden;
@@ -531,11 +530,10 @@ export class PluginRegistry {
   }
 
   getEvents(): PluginEventAPI {
-    const registry = this;
     return {
-      on: (event, handler) => registry.eventBus.on(event, handler),
-      off: (event, handler) => registry.eventBus.off(event, handler),
-      emit: (event, ...args) => registry.eventBus.emit(event, ...args),
+      on: (event, handler) => this.eventBus.on(event, handler),
+      off: (event, handler) => this.eventBus.off(event, handler),
+      emit: (event, ...args) => this.eventBus.emit(event, ...args),
     };
   }
 

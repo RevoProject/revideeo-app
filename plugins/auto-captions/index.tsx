@@ -36,6 +36,7 @@ const formatTime = (s: number) => {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
 };
 
+/* eslint-disable react/only-export-components */
 const CaptionsTab = ({ context }: { context: PluginContext }) => {
   const [lang, setLang] = React.useState('pl');
   const [model, setModel] = React.useState('small');
@@ -184,6 +185,7 @@ const CaptionsTab = ({ context }: { context: PluginContext }) => {
     </div>
   );
 };
+/* eslint-enable react/only-export-components */
 
 const autoCaptionsPlugin: PluginDefinition = {
   manifest: {

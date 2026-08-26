@@ -18,7 +18,7 @@ const makeClip = (overrides: Partial<PlayerClip> = {}): PlayerClip => ({
   ...overrides,
 });
 
-const defaultTracks: PlayerTrackSettings[] = [
+const _defaultTracks: PlayerTrackSettings[] = [
   { name: 'Track 1', locked: false, muted: false, hidden: false },
   { name: 'Track 2', locked: false, muted: false, hidden: false },
 ];

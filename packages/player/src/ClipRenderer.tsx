@@ -11,12 +11,6 @@ interface ClipRendererProps {
   playing: boolean;
 }
 
-const hasFrameDependentEffects = (clip: PlayerClip, outgoing?: OutgoingTransition): boolean =>
-  (clip.transitionIn !== 'none' && (clip.transitionDurationInFrames ?? 0) > 0) ||
-  (clip.fadeInFrames ?? 0) > 0 ||
-  (clip.fadeOutFrames ?? 0) > 0 ||
-  Boolean(outgoing && outgoing.transitionIn !== 'none' && outgoing.durationInFrames > 0);
-
 export const ClipRenderer = ({ clip, outgoing, muted, frame, playing }: ClipRendererProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -38,8 +32,7 @@ export const ClipRenderer = ({ clip, outgoing, muted, frame, playing }: ClipRend
     }
   };
 
-  const needsFrame = hasFrameDependentEffects(clip, outgoing);
-  const style = useMemo(() => computeClipStyle(clip, outgoing, frame), needsFrame ? [clip, outgoing, frame] : [clip, outgoing]);
+  const style = useMemo(() => computeClipStyle(clip, outgoing, frame), [clip, outgoing, frame]);
 
   const audioFadeIn = clip.audioFadeInFrames
     ? Math.min(1, frame / clip.audioFadeInFrames)

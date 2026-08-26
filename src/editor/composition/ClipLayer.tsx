@@ -10,17 +10,18 @@ import type { OutgoingTransition, RenderClip } from '../editorTypes';
 import { getClipStyle } from './transitionStyles';
 import { useTranslation } from '../../i18n';
 
+/* eslint-disable react/only-export-components -- used by renderStability.test.ts */
 export const hasFrameDependentEffects = (clip: RenderClip, outgoing?: OutgoingTransition): boolean =>
   (clip.transitionIn !== 'none' && (clip.transitionDurationInFrames ?? 0) > 0) ||
   (clip.fadeInFrames ?? 0) > 0 ||
   (clip.fadeOutFrames ?? 0) > 0 ||
   Boolean(outgoing && outgoing.transitionIn !== 'none' && outgoing.durationInFrames > 0);
+/* eslint-enable react/only-export-components */
 
 export const ClipLayer = ({ clip, outgoing, muted, frame }: { clip: RenderClip; outgoing?: OutgoingTransition; muted: boolean; frame: number }) => {
   const { t } = useTranslation();
 
-  const needsFrame = hasFrameDependentEffects(clip, outgoing);
-  const style = useMemo(() => getClipStyle(clip, outgoing, frame), needsFrame ? [clip, outgoing, frame] : [clip, outgoing]);
+  const style = useMemo(() => getClipStyle(clip, outgoing, frame), [clip, outgoing, frame]);
 
   if (clip.type === 'text') {
     return <div style={{ ...style, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: clip.textAlign === 'left' ? 'flex-start' : clip.textAlign === 'right' ? 'flex-end' : 'center', color: clip.textColor ?? '#ffffff', fontFamily: clip.fontFamily ?? 'Inter, sans-serif', fontSize: clip.fontSize ?? 64, fontWeight: clip.fontWeight ?? 600, textAlign: clip.textAlign ?? 'center', backgroundColor: clip.textBackground ?? 'transparent', whiteSpace: 'pre-wrap', lineHeight: 1.1, padding: '0 12px', pointerEvents: 'none' }}>{clip.text ?? t('props.standardText')}</div>;

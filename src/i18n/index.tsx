@@ -20,6 +20,7 @@ const LANG_KEYS: AppLanguage[] = ['pl', 'en', 'de'];
 
 const LANG_STORAGE_KEY = 'revideeo:lang';
 
+/* eslint-disable react/only-export-components */
 export const detectLanguage = (): AppLanguage => {
   const langPref = localStorage.getItem(LANG_STORAGE_KEY);
   if (langPref && LANG_KEYS.includes(langPref as AppLanguage)) return langPref as AppLanguage;
@@ -36,6 +37,7 @@ export const detectLanguage = (): AppLanguage => {
   if (lower.startsWith('pl')) return 'pl';
   return 'en';
 };
+/* eslint-enable react/only-export-components */
 
 interface I18nContextValue {
   lang: AppLanguage;
@@ -86,14 +88,16 @@ export const I18nProvider = ({ children, defaultLang }: { children: ReactNode; d
     return value;
   }, [lang]);
 
-  const value = useMemo(() => ({ lang, setLang, t }), [lang, t]);
+  const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 };
 
+/* eslint-disable react/only-export-components */
 export const useTranslation = () => useContext(I18nContext);
 
 export const useT = () => {
   const { t } = useContext(I18nContext);
   return t;
 };
+/* eslint-enable react/only-export-components */

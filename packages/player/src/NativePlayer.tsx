@@ -105,7 +105,7 @@ export const NativePlayer = forwardRef<NativePlayerHandle, NativePlayerProps>(
 
       rafRef.current = requestAnimationFrame(loop);
       return () => cancelAnimationFrame(rafRef.current);
-    }, [playing, fps, durationInFrames]);
+    }, [playing, fps, durationInFrames, onFrameChange, onPlayStateChange]);
 
     useImperativeHandle(
       ref,

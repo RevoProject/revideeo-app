@@ -26,7 +26,7 @@ describe('transition styles', () => {
 });
 
 describe('A → B boundary produces exactly one transition', () => {
-  const fps = 30;
+  const _fps = 30;
   const transitionDuration = 15;
 
   it('fade: clip A opacity is monotonically decreasing during outgoing', () => {

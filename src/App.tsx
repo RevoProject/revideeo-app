@@ -1028,7 +1028,7 @@ export default function ReVideeo() {
     } catch (err) {
       showAlert(t('ctx.replaceError'), t('ctx.replaceErrorMessage') + String(err));
     }
-  }, [assets, FPS]);
+  }, [assets, FPS, t]);
 
   const insertTrack = useCallback((trackIndex: number, above: boolean) => {
     if (!project || project.trackCount >= getMaxTracks()) return;
@@ -1042,7 +1042,7 @@ export default function ReVideeo() {
     });
     setSelectedTrack(insertAt);
     setDirty(true);
-  }, [project]);
+  }, [project, t]);
 
   const moveTrack = useCallback((trackIndex: number, direction: 1 | -1) => {
     if (!project) return;
@@ -1063,7 +1063,7 @@ export default function ReVideeo() {
     });
     setSelectedTrack(targetIndex);
     setDirty(true);
-  }, [beginEdit, project]);
+  }, [beginEdit, project, t]);
 
   const removeTrack = useCallback((trackIndex: number) => {
     if (!project || project.trackCount <= 1) return;
@@ -1079,7 +1079,7 @@ export default function ReVideeo() {
     });
     setSelectedTrack(Math.max(0, Math.min(trackIndex, project.trackCount - 2)));
     setDirty(true);
-  }, [beginEdit, project]);
+  }, [beginEdit, project, t]);
 
   const splitClipAt = useCallback(
     (frame: number) => {
@@ -1432,7 +1432,7 @@ export default function ReVideeo() {
     setSelectedClipIds([clip.id]);
     setShowTransformOverlay(true);
     setDirty(true);
-  }, [FPS, beginEdit, clips, currentFrame, isTrackLocked, project, selectedTrack]);
+  }, [FPS, beginEdit, clips, currentFrame, isTrackLocked, project, selectedTrack, t]);
 
   // --- Klawiatura ---
   useEffect(() => {
@@ -1525,7 +1525,7 @@ export default function ReVideeo() {
     } catch (err) {
       showAlert(t('ctx.saveError'), t('ctx.saveErrorMessage') + String(err));
     }
-  }, [project, clips, assets, markers]);
+  }, [project, clips, assets, markers, t]);
 
   const saveProjectRef = useRef(saveProject);
   saveProjectRef.current = saveProject;
@@ -1592,7 +1592,7 @@ export default function ReVideeo() {
         setLoading(null);
       }
     },
-    [revokeMedia, resetHistory],
+    [revokeMedia, resetHistory, t],
   );
 
   const createProject = (name: string, config: ProjectConfig) => {
@@ -1952,7 +1952,7 @@ export default function ReVideeo() {
       return { ...prev, trackSettings: nextSettings };
     });
     setDirty(true);
-  }, []);
+  }, [t]);
 
   const renameTrack = useCallback((trackIndex: number, name: string) => {
     setProject((prev) => {
@@ -1962,7 +1962,7 @@ export default function ReVideeo() {
       return { ...prev, trackSettings: nextSettings };
     });
     setDirty(true);
-  }, []);
+  }, [t]);
 
   if (!appReady) {
     return (

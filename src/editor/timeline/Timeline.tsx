@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { NativePlayerHandle } from '@revideeo/player';
 import { ArrowRightLeft } from 'lucide-react';
 import type { StoredClip, TimelineMarker, TrackSettings } from '../../types';
@@ -101,13 +101,13 @@ export const Timeline = ({
   const trackClips = useMemo(() => groupByTrack(clips), [clips]);
   // Render the highest layer at the top while keeping Track 1 at the bottom.
   const tracks = Array.from({ length: trackCount }, (_, index) => trackCount - 1 - index);
-  const pct = (value: number) => `${(value / totalFrames) * 100}%`;
+  const pct = useCallback((value: number) => `${(value / totalFrames) * 100}%`, [totalFrames]);
 
   useEffect(() => {
     if (!isPlaying && playheadRef.current) {
       playheadRef.current.style.left = pct(currentFrame);
     }
-  }, [currentFrame, isPlaying, totalFrames]);
+  }, [currentFrame, isPlaying, pct]);
 
   const seekFromEvent = (event: React.MouseEvent<HTMLElement> | React.PointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -266,7 +266,7 @@ export const Timeline = ({
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
-  }, [clips, onBeginEdit, onSelectClips, onTransitionDrop, onTransitionResize, onUpdateClipFromDrag, onClipDragEnd, rowHeight, totalFrames, trackCount]);
+  }, [clips, onBeginEdit, onSelectClips, onTransitionDrop, onTransitionResize, onUpdateClipFromDrag, onClipDragEnd, rowHeight, totalFrames, trackCount, areaWidth]);
 
   const handleMediaDrop = (event: React.DragEvent, trackIndex: number) => {
     event.preventDefault();

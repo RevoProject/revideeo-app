@@ -228,7 +228,7 @@ export const JuicerModal = ({
       const interval = setInterval(() => setAiThinking((p) => (p + 1) % msgs.length), 2000);
       return () => clearInterval(interval);
     }
-  }, [phase, aiProgress]);
+  }, [phase, aiProgress, t]);
 
   useEffect(() => () => {
     if (analyzeTimerRef.current) clearTimeout(analyzeTimerRef.current);
@@ -302,7 +302,7 @@ export const JuicerModal = ({
       base += ` Użyj materiałów z projektu: ${assetNames.join(', ')}.`;
     }
     return base;
-  }, [input, pickerValues, useProjectFiles, assetNames]);
+  }, [input, pickerValues, useProjectFiles, assetNames, pluginTemplates]);
 
   const handleExecute = async () => {
     if (!input.trim() && !isDemo) return;
