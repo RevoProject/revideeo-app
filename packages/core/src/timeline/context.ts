@@ -16,7 +16,7 @@ export function createTimelineContext(provider: TimelineProvider): TimelineAPI {
     const key = clips.map((c) => c.id).join(',');
     if (key !== clipsCacheKey) {
       clipsCacheKey = key;
-      clipsCache = clips;
+      clipsCache = clips.map((c) => ({ ...c }));
     }
     return clipsCache;
   }
@@ -57,7 +57,7 @@ export function createTimelineContext(provider: TimelineProvider): TimelineAPI {
     },
 
     getTracks(): readonly TimelineTrackInfo[] {
-      return provider.getTracks();
+      return provider.getTracks().map((t) => ({ ...t }));
     },
 
     getTrack(index: number): TimelineTrackInfo | null {
