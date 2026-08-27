@@ -12,6 +12,7 @@ import {
   FolderOpen, ChevronRight, CircleAlert,
 } from 'lucide-react';
 import type { StoredClip, TrackSettings } from '../../types';
+import type { MediaAPI } from '@revideeo/core';
 import { showAlert } from '../shared/showAlert';
 import { showConfirm } from '../shared/showConfirm';
 import { aiProviderRegistry } from '../../ai';
@@ -44,6 +45,7 @@ interface JuicerProps {
   assetNames?: string[];
   projectConfig?: { resolutionLabel: string; orientation: string; fps: number };
   assetCount?: number;
+  publicApi?: { frame?: { getContext(): { fps: number; durationInFrames: number } }; media?: MediaAPI; timelineApi?: { getState(): { frame: number; time: number; fps: number; durationInFrames: number; durationInSeconds: number; contentDurationInFrames: number; contentDurationInSeconds: number; isPlaying: boolean }; getClips?(): readonly { id: string; type: string; sourceId: string; trackIndex: number; offsetInTimeline: number; startFrame: number; durationInFrames: number; transitionIn: string }[]; getTracks?(): readonly { index: number; name: string; locked: boolean; muted: boolean; hidden: boolean }[]; seekTo(f: number): void; play(): void; pause(): void; toggle(): void } };
 }
 
 interface PromptHistoryEntry {
@@ -127,7 +129,7 @@ const capabilitiesList = [
 
 export const JuicerModal = ({
   onClose, clips, trackCount, trackSettings, onApplySnapshot, onUndoSnapshot, hasSnapshot,
-  pluginPickerFields = [], projectId, assetNames = [], projectConfig, assetCount = 0,
+  pluginPickerFields = [], projectId, assetNames = [], projectConfig, assetCount = 0, publicApi,
 }: JuicerProps) => {
   const { t, lang } = useTranslation();
   const quickActions = getQuickActions(t);
@@ -275,8 +277,6 @@ export const JuicerModal = ({
     return `[${file.type || 'binarny'}: ${file.name}, ${(file.size / 1024).toFixed(0)} KB]`;
   };
 
-  const isDemo = input.trim().toUpperCase() === 'DEMO_PROMPT';
-
   const addToHistory = useCallback((text: string, scope: 'global' | 'project', pv: Record<string, string>) => {
     if (!text) return;
     const entry: PromptHistoryEntry = { id: `${Date.now()}`, text, pickerValues: { ...pv }, timestamp: Date.now(), scope };
@@ -305,7 +305,7 @@ export const JuicerModal = ({
   }, [input, pickerValues, useProjectFiles, assetNames, pluginTemplates]);
 
   const handleExecute = async () => {
-    if (!input.trim() && !isDemo) return;
+    if (!input.trim()) return;
     const fullPrompt = buildFullPrompt();
     addToHistory(input.trim(), saveToProject && projectId ? 'project' : 'global', pickerValues);
     setProviderError(null);
@@ -314,10 +314,31 @@ export const JuicerModal = ({
     setClarificationQuestion(null);
     setPhase('analyzing');
 
-    if (!isDemo && currentProvider) {
+    if (currentProvider) {
       currentProvider.onProgress = (event) => setAiProgress(event);
       try {
-        const clipsContext = clips.map((c) => ({ sourceId: c.sourceId, name: assetNames[clips.indexOf(c)] ?? c.sourceId, durationInFrames: c.durationInFrames }));
+        const fps = publicApi?.frame?.getContext().fps ?? projectConfig?.fps ?? 30;
+        const mediaList = publicApi?.media?.list() ?? [];
+        const timelineState = publicApi?.timelineApi?.getState();
+        const timelineClips = publicApi?.timelineApi?.getClips?.() ?? [];
+        const timelineTracks = publicApi?.timelineApi?.getTracks?.() ?? [];
+
+        const clipsContext = clips.map((c) => ({
+          sourceId: c.sourceId,
+          name: mediaList.find((m) => m.id === c.sourceId)?.name ?? c.sourceId,
+          durationInFrames: c.durationInFrames,
+          durationSeconds: +(c.durationInFrames / fps).toFixed(1),
+        }));
+
+        const mediaInventory = mediaList.map((m) => ({
+          id: m.id,
+          name: m.name,
+          kind: m.kind,
+          durationInFrames: m.durationInFrames,
+          durationSeconds: +(m.durationInFrames / fps).toFixed(1),
+          loaded: m.loaded,
+        }));
+
         const attachmentsContext = attachedFiles.map((f) => f.name);
         const fileContents: string[] = [];
         for (const f of attachedFiles) {
@@ -326,17 +347,34 @@ export const JuicerModal = ({
             if (!content.startsWith('[')) fileContents.push(`--- ${f.name} ---\n${content}\n---`);
           }
         }
+
+        const timelineSummary = timelineState
+          ? [
+              `Duration: ${timelineState.durationInFrames} frames (${timelineState.durationInSeconds.toFixed(1)}s)`,
+              `Content: ${timelineState.contentDurationInFrames} frames (${timelineState.contentDurationInSeconds.toFixed(1)}s)`,
+              `Tracks: ${timelineTracks.length}`,
+              `Clips: ${timelineClips.length}`,
+            ].join(', ')
+          : '';
+
+        const mediaSummary = mediaInventory.length > 0
+          ? `\nAvailable media (${mediaInventory.length}): ${mediaInventory.map((m) => `${m.name} (${m.kind}, ${m.durationInFrames}f, ${m.durationSeconds}s)`).join('; ')}`
+          : '';
+
         const enrichedPrompt = fullPrompt
-          + (clipsContext.length > 0 ? `\nMateriały w projekcie: ${clipsContext.map((c) => `${c.name} (${(c.durationInFrames / (projectConfig?.fps ?? 30)).toFixed(1)}s)`).join(', ')}` : '')
-          + (attachmentsContext.length > 0 ? `\nZałączone pliki: ${attachmentsContext.join(', ')}` : '')
-          + (fileContents.length > 0 ? `\n\nZawartość załączonych plików:\n${fileContents.join('\n')}` : '')
-          + (assetCount > 0 && clipsContext.length === 0 ? `\nW projekcie jest ${assetCount} plików multimedialnych (brak na osi czasu)` : '');
+          + (clipsContext.length > 0 ? `\nTimeline clips (${clipsContext.length}): ${clipsContext.map((c) => `${c.name} (${c.durationInFrames}f, ${c.durationSeconds}s)`).join(', ')}` : '')
+          + mediaSummary
+          + (timelineSummary ? `\nTimeline: ${timelineSummary}` : '')
+          + (attachmentsContext.length > 0 ? `\nAttached files: ${attachmentsContext.join(', ')}` : '')
+          + (fileContents.length > 0 ? `\n\nFile contents:\n${fileContents.join('\n')}` : '')
+          + (mediaInventory.length > 0 && clipsContext.length === 0 ? `\nProject has ${mediaInventory.length} media files (none on timeline)` : '');
+
         const planResult = await currentProvider.generatePlan({
           prompt: enrichedPrompt,
           context: {
             clips: clipsContext,
-            trackCount,
-            fps: projectConfig?.fps ?? 30,
+            trackCount: timelineTracks.length || trackCount,
+            fps,
             resolution: projectConfig?.resolutionLabel ?? '720p',
             orientation: projectConfig?.orientation ?? '16:9',
           },
@@ -373,8 +411,6 @@ export const JuicerModal = ({
         setChanges([]);
         setAiProgress(null);
       }
-    } else {
-      setChanges(defaultChanges);
     }
     setPhase('plan');
   };
@@ -386,34 +422,15 @@ export const JuicerModal = ({
     setExecutedSteps([]);
     setCurrentStep(0);
 
-    if (isDemo || activeSteps.length === 0) {
-      const demoSteps = [
-        { icon: <Scissors size={14} className="text-green-400" />, text: 'Przeanalizowano materiały' },
-        { icon: <Film size={14} className="text-green-400" />, text: 'Wybrano najlepsze fragmenty' },
-        { icon: <Sparkles size={14} className="text-green-400" />, text: 'Dodano animacje' },
-        { icon: <Shuffle size={14} className="text-green-400" />, text: 'Dodano przejścia' },
-      ];
-      let idx = 0;
-      const run = () => {
-        if (idx < demoSteps.length) {
-          setExecutedSteps((prev) => [...prev, demoSteps[idx]]);
-          idx++;
-          executeTimerRef.current = setTimeout(run, 500);
-        } else {
-          executeTimerRef.current = setTimeout(() => {
-            onApplySnapshot({ clips: [...clips], trackCount, trackSettings: [...trackSettings], timestamp: Date.now(), description: isDemo ? 'DEMO' : (input || 'Juicer') });
-            setPhase('done');
-          }, 300);
-        }
-      };
-      run();
+    if (activeSteps.length === 0) {
+      setPhase('plan');
       return;
     }
 
     const attachmentNames: Record<string, string> = {};
     const attachmentKinds: Record<string, string> = {};
     const attachmentDurations: Record<string, number> = {};
-    const fps = projectConfig?.fps ?? 30;
+    const fps = publicApi?.frame?.getContext().fps ?? projectConfig?.fps ?? 30;
     for (let i = 0; i < attachedFiles.length; i++) {
       const f = attachedFiles[i];
       const attId = `att_${String(i).padStart(3, '0')}`;
@@ -527,7 +544,6 @@ export const JuicerModal = ({
                     ))}
                   </div>
                 )}
-                {isDemo && <p className="mt-2 text-[10px] text-blue-400">{t('juicer.demoMode')}</p>}
                 <div className="mt-2 flex items-center gap-2 border-t border-[#2c2d33] pt-3">
                   <button onClick={toggleRecording}
                     className={`rounded-lg p-2 transition-colors ${isRecording ? 'bg-red-600/20 text-red-400 animate-pulse' : 'text-gray-500 hover:bg-[#2a2b30] hover:text-gray-300'}`}
@@ -654,7 +670,7 @@ export const JuicerModal = ({
 
           {phase === 'analyzing' && (
             <div className="flex flex-col gap-5 py-4">
-              <div className="flex items-center gap-2 text-sm text-gray-300"><Loader2 size={16} className="animate-spin text-blue-400" />{aiProgress?.step ?? (isDemo ? thinkingMsgs[aiThinking] : thinkingMsgs[aiThinking])}</div>
+                <div className="flex items-center gap-2 text-sm text-gray-300"><Loader2 size={16} className="animate-spin text-blue-400" />{aiProgress?.step ?? thinkingMsgs[aiThinking]}</div>
               {aiProgress && (
                 <div className="flex flex-col gap-1.5">
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#202124]">
@@ -830,8 +846,8 @@ export const JuicerModal = ({
                   </div>
                 )}
               </div>
-              <button onClick={() => void handleExecute()} disabled={!input.trim() && !isDemo}
-                className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all disabled:cursor-not-allowed ${(input.trim() || isDemo) ? 'bg-blue-500 text-white hover:bg-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.5)]' : 'bg-[#202124] text-gray-600 disabled:opacity-40'}`}>
+              <button onClick={() => void handleExecute()} disabled={!input.trim()}
+                className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all disabled:cursor-not-allowed ${input.trim() ? 'bg-blue-500 text-white hover:bg-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.5)]' : 'bg-[#202124] text-gray-600 disabled:opacity-40'}`}>
                 <Wand2 size={14} /> {t('juicer.execute')}
               </button>
             </div>

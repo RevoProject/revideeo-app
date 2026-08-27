@@ -312,7 +312,7 @@ const describeOperation = (type: string, params: Record<string, unknown>, attach
   }
 };
 
-const describeOperationDetail = (type: string, params: Record<string, unknown>): string => {
+const describeOperationDetail = (type: string, params: Record<string, unknown>, fps = 30): string => {
   const p = params;
   switch (type) {
     case 'add_clip': {
@@ -320,7 +320,7 @@ const describeOperationDetail = (type: string, params: Record<string, unknown>):
       const start = (p.startFrame as number) ?? 0;
       const parts = [`ścieżka ${(Number(p.trackIndex) || 0) + 1}`];
       if (start > 0) parts.push(`od klatki ${start}`);
-      if (dur > 0) parts.push(`${(dur / 30).toFixed(1)}s`);
+      if (dur > 0) parts.push(`${(dur / fps).toFixed(1)}s`);
       return parts.join(', ');
     }
     case 'add_audio': {
@@ -329,7 +329,7 @@ const describeOperationDetail = (type: string, params: Record<string, unknown>):
     }
     case 'add_transition': {
       const dur = (p.durationInFrames as number) ?? 15;
-      return `${p.type ?? 'fade'}, ${(dur / 30).toFixed(1)}s`;
+      return `${p.type ?? 'fade'}, ${(dur / fps).toFixed(1)}s`;
     }
     case 'create_text': {
       const size = (p.fontSize as number) ?? 48;
@@ -343,8 +343,8 @@ const describeOperationDetail = (type: string, params: Record<string, unknown>):
       if (changes.opacity != null) parts.push(`przezroczystość ${Math.round((changes.opacity as number) * 100)}%`);
       if (changes.rotation) parts.push(`obrót ${changes.rotation}°`);
       if (changes.volume != null) parts.push(`głośność ${Math.round((changes.volume as number) * 100)}%`);
-      if (changes.fadeInFrames) parts.push(`fade-in ${(changes.fadeInFrames as number) / 30}s`);
-      if (changes.fadeOutFrames) parts.push(`fade-out ${(changes.fadeOutFrames as number) / 30}s`);
+      if (changes.fadeInFrames) parts.push(`fade-in ${(changes.fadeInFrames as number) / fps}s`);
+      if (changes.fadeOutFrames) parts.push(`fade-out ${(changes.fadeOutFrames as number) / fps}s`);
       return parts.join(', ') || 'zmiana właściwości';
     }
     case 'trim_clip': {
@@ -478,7 +478,7 @@ class ServerAIProvider implements AIProvider {
           id: op.id,
           type: op.type as AIPlanResponse['steps'][number]['type'],
           title: describeOperation(op.type, op.params, atts),
-          description: describeOperationDetail(op.type, op.params),
+          description: describeOperationDetail(op.type, op.params, request.context.fps),
           params: op.params,
           required: true,
         }));

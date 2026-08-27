@@ -784,6 +784,21 @@ export default function ReVideeo() {
     playerRef,
   }), [currentFrame, FPS, totalFrames, contentFrames, isPlaying, clips, project?.trackSettings, seekTo, playerRef]);
 
+  const juicerPublicApi = useMemo(() => ({
+    frame: { getContext: () => ({ frame: currentFrame, time: FPS > 0 ? currentFrame / FPS : 0, fps: FPS, width: 1920, height: 1080, durationInFrames: totalFrames }) },
+    media: {
+      get: (id: string) => { const a = assets.find((x) => x.sourceId === id); return a ? { id: a.sourceId, name: a.name, kind: (a.blob.type.startsWith('video/') ? 'video' : a.blob.type.startsWith('audio/') ? 'audio' : 'image') as 'video' | 'audio' | 'image', durationInFrames: a.durationInFrames, loaded: a.blob.size > 0 } : null; },
+      list: () => assets.map((a) => ({ id: a.sourceId, name: a.name, kind: (a.blob.type.startsWith('video/') ? 'video' : a.blob.type.startsWith('audio/') ? 'audio' : 'image') as 'video' | 'audio' | 'image', durationInFrames: a.durationInFrames, loaded: a.blob.size > 0 })),
+    },
+    timelineApi: {
+      getState: () => ({ frame: currentFrame, time: FPS > 0 ? currentFrame / FPS : 0, fps: FPS, durationInFrames: totalFrames, durationInSeconds: FPS > 0 ? totalFrames / FPS : 0, contentDurationInFrames: contentFrames, contentDurationInSeconds: FPS > 0 ? contentFrames / FPS : 0, isPlaying }),
+      getClips: () => clips.map((c) => ({ id: c.id, type: (c.type ?? 'video') as 'video' | 'text' | 'audio' | 'image', sourceId: c.sourceId, trackIndex: c.trackIndex, offsetInTimeline: c.offsetInTimeline, startFrame: c.startFrame, durationInFrames: c.durationInFrames, transitionIn: c.transitionIn })),
+      getTracks: () => (project?.trackSettings ?? []).map((s, i) => ({ index: i, name: s.name, locked: s.locked, muted: s.muted, hidden: s.hidden })),
+      seekTo, play: () => playerRef.current?.toggle(), pause: () => playerRef.current?.toggle(), toggle: () => playerRef.current?.toggle(),
+      getClipById: () => null, getClipsAtFrame: () => [],
+    },
+  }), [currentFrame, FPS, totalFrames, contentFrames, isPlaying, clips, assets, project?.trackSettings, seekTo, playerRef]);
+
   useEffect(() => {
     if (project) {
       pluginRegistry.setProjectContext({
@@ -2475,12 +2490,7 @@ export default function ReVideeo() {
       {modal === 'juicer' && (
         <JuicerModal
           onClose={() => setModal(null)}
-          clips={clips.length > 0 ? clips : assets.map((a, i) => ({
-            id: a.sourceId, type: a.blob.type.startsWith('audio/') ? 'audio' as const : a.blob.type.startsWith('image/') ? 'image' as const : 'video' as const,
-            sourceId: a.sourceId, trackIndex: 0, offsetInTimeline: clips.reduce((sum, c) => sum + c.durationInFrames, 0) + i * a.durationInFrames,
-            startFrame: 0, durationInFrames: a.durationInFrames, scale: 1, posX: 0, posY: 0,
-            transitionIn: 'none' as const, transitionDurationInFrames: 0,
-          }))}
+          clips={clips}
           trackCount={project?.trackCount ?? DEFAULT_TRACKS}
           trackSettings={trackSettings}
           onApplySnapshot={handleJuicerApply}
@@ -2491,6 +2501,7 @@ export default function ReVideeo() {
           assetNames={assets.map((a) => a.name)}
           assetCount={assets.length}
           projectConfig={project ? { resolutionLabel: project.config.resolutionLabel, orientation: project.config.orientation, fps: FPS } : undefined}
+          publicApi={juicerPublicApi}
         />
       )}
       {modal === 'export-film' && (
