@@ -2,6 +2,8 @@ import { useRef, useEffect, forwardRef, useImperativeHandle, useMemo, useState }
 import type { NativePlayerProps, NativePlayerHandle, PlayerClip, OutgoingTransition } from './types.js';
 import { ClipRenderer } from './ClipRenderer.js';
 
+const PREWARM_FRAMES = 30;
+
 const groupByTrack = (clips: readonly PlayerClip[]): Map<number, PlayerClip[]> => {
   const grouped = new Map<number, PlayerClip[]>();
   for (const clip of clips) {
@@ -17,6 +19,19 @@ const groupByTrack = (clips: readonly PlayerClip[]): Map<number, PlayerClip[]> =
   }
   return grouped;
 };
+
+function getMountedClipIds(clips: readonly PlayerClip[], displayFrame: number): Set<string> {
+  const mounted = new Set<string>();
+  for (const clip of clips) {
+    const end = clip.offsetInTimeline + clip.durationInFrames;
+    const isActive = displayFrame >= clip.offsetInTimeline && displayFrame < end;
+    const isPrewarm = displayFrame >= clip.offsetInTimeline - PREWARM_FRAMES && displayFrame < clip.offsetInTimeline;
+    if (isActive || isPrewarm) {
+      mounted.add(clip.id);
+    }
+  }
+  return mounted;
+}
 
 export const NativePlayer = forwardRef<NativePlayerHandle, NativePlayerProps>(
   (
@@ -40,12 +55,14 @@ export const NativePlayer = forwardRef<NativePlayerHandle, NativePlayerProps>(
     const lastTimeRef = useRef(0);
     const frameRef = useRef(currentFrame);
     const [displayFrame, setDisplayFrame] = useState(currentFrame);
+    const [seekVersion, setSeekVersion] = useState(0);
 
     if (!playingRef.current) {
       frameRef.current = currentFrame;
     }
 
     const tracks = useMemo(() => groupByTrack(clips), [clips]);
+    const mountedClipIds = useMemo(() => getMountedClipIds(clips, displayFrame), [clips, displayFrame]);
 
     const isPortrait = compositionHeight > compositionWidth;
     const clipScale = isPortrait ? 1.2 : 1.15;
@@ -128,6 +145,7 @@ export const NativePlayer = forwardRef<NativePlayerHandle, NativePlayerProps>(
           const clamped = Math.max(0, Math.min(frame, durationInFrames));
           frameRef.current = clamped;
           setDisplayFrame(clamped);
+          setSeekVersion((v) => v + 1);
           updateDOM(clamped, durationInFrames);
           onFrameChange(clamped);
         },
@@ -196,10 +214,12 @@ export const NativePlayer = forwardRef<NativePlayerHandle, NativePlayerProps>(
               }}
             >
               {trackClips.map((clip, index) => {
-                const isVisible =
+                const isMounted = mountedClipIds.has(clip.id);
+                if (!isMounted) return null;
+
+                const isActive =
                   displayFrame >= clip.offsetInTimeline &&
                   displayFrame < clip.offsetInTimeline + clip.durationInFrames;
-                if (!isVisible) return null;
 
                 const next = trackClips[index + 1];
                 const outgoing: OutgoingTransition | undefined =
@@ -224,6 +244,8 @@ export const NativePlayer = forwardRef<NativePlayerHandle, NativePlayerProps>(
                     style={{
                       position: 'absolute',
                       inset: 0,
+                      opacity: isActive ? 1 : 0,
+                      pointerEvents: 'none',
                     }}
                   >
                     <ClipRenderer
@@ -231,8 +253,9 @@ export const NativePlayer = forwardRef<NativePlayerHandle, NativePlayerProps>(
                       outgoing={outgoing}
                       muted={track?.muted ?? false}
                       frame={localFrame}
-                      playing={playingRef.current}
+                      playing={isActive && playingRef.current}
                       fps={fps}
+                      seekVersion={seekVersion}
                     />
                   </div>
                 );

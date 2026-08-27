@@ -10,11 +10,15 @@ interface ClipRendererProps {
   frame: number;
   playing: boolean;
   fps: number;
+  seekVersion: number;
 }
 
-export const ClipRenderer = ({ clip, outgoing, muted, frame, playing, fps }: ClipRendererProps) => {
+export const ClipRenderer = ({ clip, outgoing, muted, frame, playing, fps, seekVersion }: ClipRendererProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const seekGenerationRef = useRef(0);
+  const lastSyncedGenerationRef = useRef(-1);
 
   useEffect(() => {
     if (clip.type !== 'video') return;
@@ -43,40 +47,52 @@ export const ClipRenderer = ({ clip, outgoing, muted, frame, playing, fps }: Cli
     : 1;
   const volume = muted ? 0 : (clip.volume ?? 1) * audioFadeIn * audioFadeOut;
 
+  const desiredTime = (clip.startFrame + frame) / fps;
+
+  useEffect(() => {
+    seekGenerationRef.current += 1;
+  }, [clip.startFrame, clip.url, seekVersion]);
+
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
+
     const rate = clip.playbackRate ?? 1;
-    el.playbackRate = rate;
-    const desired = (clip.startFrame + frame) / fps;
+    if (el.playbackRate !== rate) {
+      el.playbackRate = rate;
+    }
+
+    const needsSync = lastSyncedGenerationRef.current !== seekGenerationRef.current;
+
     if (playing) {
-      if (Math.abs(el.currentTime - desired) > 0.02) {
-        el.currentTime = desired;
+      if (needsSync) {
+        el.currentTime = desiredTime;
+        lastSyncedGenerationRef.current = seekGenerationRef.current;
       }
       el.play().catch(() => {});
     } else {
       el.pause();
-      el.currentTime = desired;
+      el.currentTime = desiredTime;
+      lastSyncedGenerationRef.current = seekGenerationRef.current;
     }
-  }, [playing, frame, clip.startFrame, clip.playbackRate, fps]);
+  }, [playing, desiredTime, clip.playbackRate]);
 
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
     const rate = clip.playbackRate ?? 1;
-    el.playbackRate = rate;
-    const desired = (clip.startFrame + frame) / fps;
+    if (el.playbackRate !== rate) el.playbackRate = rate;
     el.volume = Math.max(0, Math.min(1, volume));
     if (playing) {
-      if (Math.abs(el.currentTime - desired) > 0.02) {
-        el.currentTime = desired;
+      if (Math.abs(el.currentTime - desiredTime) > 0.5) {
+        el.currentTime = desiredTime;
       }
       el.play().catch(() => {});
     } else {
       el.pause();
-      el.currentTime = desired;
+      el.currentTime = desiredTime;
     }
-  }, [playing, frame, clip.startFrame, clip.playbackRate, volume, fps]);
+  }, [playing, desiredTime, clip.playbackRate, volume]);
 
   if (clip.type === 'text') {
     return (
