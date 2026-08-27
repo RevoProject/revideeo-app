@@ -54,6 +54,8 @@ import type { FrameProvider, FrameAPI } from '@revideeo/core/frame';
 import { createFrameContext } from '@revideeo/core/frame';
 import type { MediaProvider, MediaAPI } from '@revideeo/core/media';
 import { createMediaContext } from '@revideeo/core/media';
+import type { TimelineProvider, TimelineAPI } from '@revideeo/core/timeline';
+import { createTimelineContext } from '@revideeo/core/timeline';
 
 export type PluginRegistrySnapshot = {
   panels: PanelRegistration[];
@@ -120,6 +122,9 @@ export class PluginRegistry {
     removeClip: (id: string) => void;
     getFrameProvider: () => FrameProvider | null;
     getMediaProvider: () => MediaProvider | null;
+    getIsPlaying: () => boolean;
+    getContentFrames: () => number;
+    getTimelineProvider: () => TimelineProvider | null;
   } | null = null;
 
   private projectId = '';
@@ -421,7 +426,15 @@ export class PluginRegistry {
       }
     }
 
-    return { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities(), frame, media };
+    let timelineApi: TimelineAPI | undefined;
+    if (hasPermission('timeline:read')) {
+      const provider = this.projectContext?.getTimelineProvider() ?? null;
+      if (provider) {
+        timelineApi = createTimelineContext(provider);
+      }
+    }
+
+    return { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities(), frame, media, timelineApi };
   }
 
   async registerPlugin(definition: PluginDefinition): Promise<boolean> {

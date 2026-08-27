@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import type { StoredClip, TransitionType } from '../types';
 import type { FrameAPI } from '@revideeo/core/frame';
 import type { MediaAPI } from '@revideeo/core/media';
+import type { TimelineAPI } from '@revideeo/core/timeline';
 
 export const PLUGIN_API_VERSION = 1;
 
@@ -85,6 +86,7 @@ export interface PluginContext {
   capabilities: import('../capabilities').ReVideeoCapabilities;
   frame?: FrameAPI;
   media?: MediaAPI;
+  timelineApi?: TimelineAPI;
 }
 
 export interface PluginI18nAPI {

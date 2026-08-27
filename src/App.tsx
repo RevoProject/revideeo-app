@@ -93,6 +93,7 @@ import { usePluginRegistry } from './api/usePluginRegistry';
 import { loadBundledPlugins } from './api/pluginLoader';
 import { BrowserFrameProvider } from './frame/browserProvider';
 import { AppMediaProvider } from './media/appMediaProvider';
+import { AppTimelineProvider } from './timeline/appTimelineProvider';
 import { aiProviderRegistry } from './ai';
 import { AlertModalProvider } from './components/shared/AlertModal';
 import { ConfirmModal } from './components/shared/ConfirmModal';
@@ -766,6 +767,22 @@ export default function ReVideeo() {
 
   const frameProvider = useMemo(() => new BrowserFrameProvider(), []);
   const mediaProvider = useMemo(() => new AppMediaProvider(() => assets), [assets]);
+  const timelineProvider = useMemo(() => new AppTimelineProvider({
+    getStateSnapshot: () => ({
+      frame: currentFrame,
+      time: FPS > 0 ? currentFrame / FPS : 0,
+      fps: FPS,
+      durationInFrames: totalFrames,
+      durationInSeconds: FPS > 0 ? totalFrames / FPS : 0,
+      contentDurationInFrames: contentFrames,
+      contentDurationInSeconds: FPS > 0 ? contentFrames / FPS : 0,
+      isPlaying,
+    }),
+    getStoredClips: () => clips,
+    getTrackSettings: () => project?.trackSettings ?? [],
+    seekTo,
+    playerRef,
+  }), [currentFrame, FPS, totalFrames, contentFrames, isPlaying, clips, project?.trackSettings, seekTo, playerRef]);
 
   useEffect(() => {
     if (project) {
@@ -810,11 +827,14 @@ export default function ReVideeo() {
         },
         getFrameProvider: () => frameProvider,
         getMediaProvider: () => mediaProvider,
+        getIsPlaying: () => isPlaying,
+        getContentFrames: () => contentFrames,
+        getTimelineProvider: () => timelineProvider,
       }, project.id);
     } else {
       pluginRegistry.clearProjectContext();
     }
-  }, [project, clips, currentFrame, dirty, markers, selectedClipIds, seekTo, totalFrames, frameProvider, mediaProvider]);
+  }, [project, clips, currentFrame, dirty, markers, selectedClipIds, seekTo, totalFrames, frameProvider, mediaProvider, timelineProvider, isPlaying, contentFrames]);
 
   // Prevent page refresh/close with unsaved project
   useEffect(() => {

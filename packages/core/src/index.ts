@@ -47,3 +47,8 @@ export type { MediaInfo, MediaKind } from './media/types.js';
 export type { MediaProvider } from './media/provider.js';
 export type { MediaAPI } from './media/api.js';
 export { createMediaContext } from './media/context.js';
+
+export type { TimelineState, TimelineClipInfo, TimelineTrackInfo } from './timeline/types.js';
+export type { TimelineProvider } from './timeline/provider.js';
+export type { TimelineAPI } from './timeline/api.js';
+export { createTimelineContext } from './timeline/context.js';
