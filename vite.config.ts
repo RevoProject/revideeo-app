@@ -120,8 +120,24 @@ function revideeoMediaServer(): Plugin {
   }
 }
 
+function swVersionPlugin(): Plugin {
+  return {
+    name: 'sw-version',
+    apply: 'build',
+    async generateBundle() {
+      const pkg = JSON.parse(await readFile(join(process.cwd(), 'package.json'), 'utf8'))
+      const version: string = pkg.version
+      const swTemplate = await readFile(join(process.cwd(), 'public', 'sw.js'), 'utf8')
+      const sw = swTemplate
+        .replace("const CACHE_NAME = 'revideeo-v4'", `const CACHE_NAME = 'revideeo-v${version}'`)
+        .replace("const STATIC_CACHE = 'revideeo-static-v4'", `const STATIC_CACHE = 'revideeo-static-v${version}'`)
+      this.emitFile({ type: 'asset', fileName: 'sw.js', source: sw })
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), revideeoMediaServer()],
+  plugins: [react(), tailwindcss(), revideeoMediaServer(), swVersionPlugin()],
   build: {
     rollupOptions: {
       output: {
