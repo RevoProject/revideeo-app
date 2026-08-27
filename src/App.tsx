@@ -432,7 +432,7 @@ export default function ReVideeo() {
   });
   const [showRelease, setShowRelease] = useState(() => {
     const lastSeen = localStorage.getItem('revideeo:lastSeenVersion');
-    return lastSeen !== '0.3.0';
+    return lastSeen !== '0.3.1';
   });
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const { setLang, t } = useTranslation();
@@ -2604,7 +2604,7 @@ export default function ReVideeo() {
         <WelcomeModal onDismiss={() => { localStorage.setItem('revideeo:welcomed', '1'); setShowWelcome(false); }} />
       )}
       {!showWelcome && showRelease && (
-        <ReleaseChangesModal version="0.3.0" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.3.0'); setShowRelease(false); }} />
+        <ReleaseChangesModal version="0.3.1" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.3.1'); setShowRelease(false); }} />
       )}
     </div>
   );

@@ -10,9 +10,10 @@ describe('PWA service worker versioning', () => {
   });
 
   it('dist/sw.js contains version-injected cache names after build', () => {
+    const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8'));
     const sw = readFileSync(join(process.cwd(), 'dist', 'sw.js'), 'utf8');
-    expect(sw).toContain("CACHE_NAME = 'revideeo-v0.3.0'");
-    expect(sw).toContain("STATIC_CACHE = 'revideeo-static-v0.3.0'");
+    expect(sw).toContain(`CACHE_NAME = 'revideeo-v${pkg.version}'`);
+    expect(sw).toContain(`STATIC_CACHE = 'revideeo-static-v${pkg.version}'`);
     expect(sw).not.toContain('revideeo-v4');
   });
 

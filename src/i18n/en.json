@@ -525,12 +525,12 @@
 
   "release.title": "What's New",
   "release.understand": "Got it!",
-  "release.migration.title": "Plugin APIs",
-  "release.migration.desc": "New Frame API, Media API, and Timeline API give plugins stable access to project state, media metadata, playback, and frame data. Auto Captions and Juicer now use these public APIs.",
-  "release.fixes.title": "Real Auto Captions",
-  "release.fixes.desc": "Auto Captions now transcribe real project media using a local Whisper server. No demo data — actual speech-to-text with frame-accurate caption clips. Requires Whisper installed on the render server.",
-  "release.eupl.title": "Juicer Migration",
-  "release.eupl.desc": "Juicer now uses public APIs for FPS, media metadata, and timeline context. Demo execution paths removed. Internal AI context uses normalized English terminology for better AI interpretation.",
+  "release.migration.title": "Playback Stability",
+  "release.migration.desc": "Fixed video/audio speed controls and timeline clip overlap on duration changes. Browser preview frame accuracy improved with correct FPS and playbackRate propagation.",
+  "release.fixes.title": "Plugin & Auto Captions Fixes",
+  "release.fixes.desc": "Auto Captions now correctly discovers media assets when plugins activate before a project loads. Juicer media registration fixed. Missing mobile and plugin translation keys resolved.",
+  "release.eupl.title": "Cache & Documentation",
+  "release.eupl.desc": "Service worker cache now invalidates correctly across releases. Documentation remastered with canonical API references for Frame, Media, and Timeline APIs.",
 
   "release.bugfixes.title": "Bug Fixes",
   "release.bugfixes.desc": "Refresh Clip no longer resets the clip — it preserves all timeline edits. Juicer session-scoped attachments: each request only receives the files you attach for that session. Ripple edit: extending a clip now correctly pushes following clips on the same track.",

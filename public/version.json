@@ -1,4 +1,4 @@
 {
-  "version": "0.3.0",
-  "changelog": "Frame API, Media API, Timeline API, Auto Captions with real Whisper transcription, Juicer public API migration, Marketplace plugin installer."
+  "version": "0.3.1",
+  "changelog": "Browser playback stability fixes, FPS/speed corrections, timeline ripple behavior, Auto Captions media discovery fix, PWA cache invalidation, documentation remaster."
 }
