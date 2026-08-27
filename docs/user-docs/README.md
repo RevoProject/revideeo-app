@@ -8,7 +8,7 @@
 
 Welcome to ReVideeo — the browser-based video editor that puts professional editing in your hands without installing anything.
 
-**Version:** 0.2.0 · **License:** EUPL-1.2
+**Version:** 0.3.0 · **License:** EUPL-1.2
 
 ## Documentation
 

@@ -73,12 +73,15 @@ System uprawnień kontroluje dostęp pluginów do zasobów edytora. Pluginy musz
 | `ui:settings` | Rejestrowanie sekcji ustawień | — |
 | `ui:header` | Rejestrowanie przycisków w nagłówku | — |
 
-### Renderer i Juicer
+### Renderer, Juicer i Media
 
 | Uprawnienie | Opis | Wymaga |
 |-------------|------|--------|
 | `renderer:read` | Odczyt informacji o serwerach renderu | — |
 | `juicer:read` | Rejestrowanie rozszerzeń Juicera | — |
+| `frame:read` | API Frame — stan kompozycji, dostęp do pikseli | — |
+| `media:read` | API Media — metadane i odkrywanie zasobów | — |
+| `processing:execute` | Przetwarzanie mediów — przetwarzanie po stronie serwera | `media:read` |
 
 ### Przechowywanie
 

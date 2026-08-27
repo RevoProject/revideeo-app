@@ -8,7 +8,7 @@
 
 This documentation is designed for AI agents working with the ReVideeo codebase.
 
-**Version:** 0.2.0 · **License:** EUPL-1.2
+**Version:** 0.3.0 · **License:** EUPL-1.2
 
 ## Modules
 
@@ -47,7 +47,6 @@ The Juicer is the AI-powered editing assistant. It operates through 5 phases:
 - **Prompt history** — persisted in localStorage with tabs (Wszystkie / Projekt)
 - **Picker fields** — `Jestem {x}` extensible via plugins
 - **Individual change removal** — with confirmation in "Zobacz zmiany" dialog
-- **DEMO_PROMPT mode** — simulation mode for testing without API calls
 - **Plugin prompt templates** — plugins can register templates via `registerPromptTemplate`
 
 ### Capabilities System
@@ -77,7 +76,7 @@ All user-facing dialogs use dedicated modal components instead of browser `alert
 ### Plugin System
 
 Plugins extend ReVideeo via the PluginAPI with:
-- 21 permissions including `juicer:read`
+- 24 permissions including `frame:read`, `media:read`, `processing:execute`
 - i18n support (`registerTranslations`, `t()`, `getLang()`)
 - Juicer prompt template registration
 - "Zobacz pluginy" button in PropertiesPanel plugins view

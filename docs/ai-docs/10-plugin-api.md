@@ -156,9 +156,43 @@ PluginRegistry (singleton)
   },
   "juicer": {
     "_description": "Juicer integration APIs (requires juicer:read permission)",
-    "registerPromptTemplate": "(template: PromptTemplateRegistration) => void",
-    "getPromptHistory": "() => PromptHistoryEntry[]",
-    "registerPickerField": "(field: PickerFieldRegistration) => void"
+    "registerJuicerExtension": "(extension: JuicerExtension) => void",
+    "getJuicerExtensions": "() => JuicerExtension[]",
+    "registerPromptTemplate": "(template: JuicerPromptTemplate) => void",
+    "getPromptTemplates": "() => JuicerPromptTemplate[]"
+  },
+  "frame?": {
+    "_description": "Frame API — requires 'frame:read' permission",
+    "_version": "0.3.0+",
+    "getContext": "() => FrameContext",
+    "getClipFrame": "(clipId: string, frame?: number) => Promise<ImageBitmap | null>",
+    "getClipInfo": "(clipId: string, frame?: number) => ClipFrameInfo | null",
+    "getVisibleClips": "(frame?: number) => readonly ClipFrameInfo[]"
+  },
+  "media?": {
+    "_description": "Media API — requires 'media:read' permission",
+    "_version": "0.3.0+",
+    "get": "(id: string) => MediaInfo | null",
+    "list": "() => readonly MediaInfo[]"
+  },
+  "timelineApi?": {
+    "_description": "Timeline API — requires 'timeline:read' permission",
+    "_version": "0.3.0+",
+    "getState": "() => TimelineState",
+    "seekTo": "(frame: number) => void",
+    "play": "() => void",
+    "pause": "() => void",
+    "toggle": "() => void",
+    "getClips": "() => readonly TimelineClipInfo[]",
+    "getClipById": "(id: string) => TimelineClipInfo | null",
+    "getClipsAtFrame": "(frame: number) => readonly TimelineClipInfo[]",
+    "getTracks": "() => readonly TimelineTrackInfo[]",
+    "getTrack": "(index: number) => TimelineTrackInfo | null"
+  },
+  "processing?": {
+    "_description": "Media Processing — requires 'processing:execute' + 'media:read' permissions",
+    "_version": "0.3.0+",
+    "processMedia": "(mediaIds: string[], processor: string, params?: Record<string, unknown>) => Promise<MediaProcessingResult>"
   }
 }
 ```

@@ -180,6 +180,12 @@ interface PluginContext {
   events: PluginEventAPI;
   i18n: PluginI18nAPI;
   capabilities: ReVideeoCapabilities;
+
+  // v0.3.0+ — z prawami dostępu (opcjonalne)
+  frame?: FrameAPI;             // wymaga 'frame:read'
+  media?: MediaAPI;             // wymaga 'media:read'
+  timelineApi?: TimelineAPI;    // wymaga 'timeline:read'
+  processing?: PluginMediaProcessingAPI; // wymaga 'processing:execute' + 'media:read'
 }
 ```
 
@@ -580,42 +586,46 @@ activate: (context) => {
 
 API Juicera pozwala pluginom rozszerzać system generowania promptów Juicera.
 
-#### `registerPromptTemplate(options)**
+#### `registerPromptTemplate(options)`
 
 Rejestruje niestandardowy szablon promptu, który może być używany przez Juicera.
 
 ```typescript
 context.juicer.registerPromptTemplate({
   id: 'my-plugin:summarize',
-  name: 'Summarize',
-  description: 'Podsumuj wybrane klipy',
-  icon: '📝',
-  variables: [
-    {
-      name: 'style',
-      label: 'Styl podsumowania',
-      type: 'select',
-      options: [
-        { value: 'brief', label: 'Zwięzły' },
-        { value: 'detailed', label: 'Szczegółowy' },
-      ],
-      default: 'brief',
-    },
-  ],
-  render: (variables) => {
-    return `Podsumuj następujące klipy w sposób ${variables.style}.`;
-  },
+  label: 'Summarize',
+  prompt: 'Podsumuj następujące klipy w sposób {style}.',
 });
 ```
 
-#### Typy zmiennych szablonu
+#### `getPromptTemplates()`
 
-| Typ zmiennej | Opis |
-|--------------|------|
-| `'text'` | Wprowadzenie dowolnego tekstu |
-| `'select'` | Wybór z listy rozwijanej |
-| `'number'` | Wprowadzenie liczby |
-| `'boolean'` | Przełącznik |
+Zwraca wszystkie zarejestrowane szablony promptów.
+
+```typescript
+const templates = context.juicer.getPromptTemplates();
+```
+
+#### `registerJuicerExtension(extension)`
+
+Rejestruje rozszerzenie Juicera do niestandarowej obsługi.
+
+```typescript
+context.juicer.registerJuicerExtension({
+  id: 'my-plugin:ext',
+  name: 'Niestandardowe rozszerzenie',
+  type: 'generator',
+  process: (input) => { /* przetwórz dane wejściowe */ },
+});
+```
+
+#### `getJuicerExtensions()`
+
+Zwraca wszystkie zarejestrowane rozszerzenia Juicera.
+
+```typescript
+const extensions = context.juicer.getJuicerExtensions();
+```
 
 ---
 
@@ -623,7 +633,11 @@ context.juicer.registerPromptTemplate({
 
 Pluginy muszą deklarować wymagane uprawnienia w manifeście.
 
-### Dostępne uprawnienia
+Aby zobaczyć pełną i aktualną listę uprawnień (24 uprawnienia), zobacz:
+
+→ [Uprawnienia](../../api/permissions.md)
+
+### Podsumowanie
 
 | Uprawnienie | Opis |
 |-------------|------|
@@ -648,6 +662,9 @@ Pluginy muszą deklarować wymagane uprawnienia w manifeście.
 | `juicer:read` | Rejestrowanie rozszerzeń Juicera |
 | `storage:project` | Przechowywanie danych per-projekt |
 | `storage:global` | Przechowywanie danych globalnych |
+| `frame:read` | API Frame — stan kompozycji, dostęp do pikseli (v0.3.0+) |
+| `media:read` | API Media — metadane i odkrywanie zasobów (v0.3.0+) |
+| `processing:execute` | Przetwarzanie mediów — przetwarzanie po stronie serwera (v0.3.0+) |
 
 ### Przykład manifestu z uprawnieniami
 

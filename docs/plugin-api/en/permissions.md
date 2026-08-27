@@ -73,12 +73,15 @@ The permissions system controls plugin access to editor resources. Plugins must 
 | `ui:settings` | Register settings sections | — |
 | `ui:header` | Register header buttons | — |
 
-### Renderer and Juicer
+### Renderer, Juicer, and Media
 
 | Permission | Description | Requires |
 |------------|-------------|----------|
 | `renderer:read` | Read render server info | — |
 | `juicer:read` | Register Juicer extensions | — |
+| `frame:read` | Frame API — composition state, pixel access | — |
+| `media:read` | Media API — asset metadata and discovery | — |
+| `processing:execute` | Media Processing — server-side processing | `media:read` |
 
 ### Storage
 
@@ -116,7 +119,8 @@ The permissions system controls plugin access to editor resources. Plugins must 
     "effects:register", "transitions:register", "export:register",
     "ui:panels", "ui:tabs", "ui:tools", "ui:context-menus", "ui:settings", "ui:header",
     "renderer:read", "juicer:read",
-    "storage:project", "storage:global"
+    "storage:project", "storage:global",
+    "frame:read", "media:read", "processing:execute"
   ]
 }
 ```

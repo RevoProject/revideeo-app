@@ -162,7 +162,7 @@ await pluginRegistry.removePlugin('com.example.my-plugin');
 
 ### PluginContext
 
-The object passed to the plugin's `activate` function. Contains all sub-APIs.
+The object passed to the plugin's `activate` function. Provides access to all registered public APIs. Some APIs require specific permissions and are only available when declared in the manifest.
 
 ```typescript
 interface PluginContext {
@@ -180,6 +180,12 @@ interface PluginContext {
   events: PluginEventAPI;
   i18n: PluginI18nAPI;
   capabilities: ReVideeoCapabilities;
+
+  // v0.3.0+ — permission-gated (optional)
+  frame?: FrameAPI;             // requires 'frame:read'
+  media?: MediaAPI;             // requires 'media:read'
+  timelineApi?: TimelineAPI;    // requires 'timeline:read'
+  processing?: PluginMediaProcessingAPI; // requires 'processing:execute' + 'media:read'
 }
 ```
 
@@ -587,35 +593,39 @@ Registers a custom prompt template that can be used by Juicer.
 ```typescript
 context.juicer.registerPromptTemplate({
   id: 'my-plugin:summarize',
-  name: 'Summarize',
-  description: 'Summarize the selected clips',
-  icon: '📝',
-  variables: [
-    {
-      name: 'style',
-      label: 'Summary Style',
-      type: 'select',
-      options: [
-        { value: 'brief', label: 'Brief' },
-        { value: 'detailed', label: 'Detailed' },
-      ],
-      default: 'brief',
-    },
-  ],
-  render: (variables) => {
-    return `Summarize the following clips in a ${variables.style} manner.`;
-  },
+  label: 'Summarize',
+  prompt: 'Summarize the selected clips in a {style} manner.',
 });
 ```
 
-#### Template Variables
+#### `getPromptTemplates()`
 
-| Variable Type | Description |
-|---------------|-------------|
-| `'text'` | Free text input |
-| `'select'` | Dropdown selection |
-| `'number'` | Numeric input |
-| `'boolean'` | Toggle switch |
+Returns all registered prompt templates.
+
+```typescript
+const templates = context.juicer.getPromptTemplates();
+```
+
+#### `registerJuicerExtension(extension)`
+
+Registers a Juicer extension for custom processing.
+
+```typescript
+context.juicer.registerJuicerExtension({
+  id: 'my-plugin:ext',
+  name: 'Custom Extension',
+  type: 'generator',
+  process: (input) => { /* process input */ },
+});
+```
+
+#### `getJuicerExtensions()`
+
+Returns all registered Juicer extensions.
+
+```typescript
+const extensions = context.juicer.getJuicerExtensions();
+```
 
 ---
 
@@ -623,7 +633,11 @@ context.juicer.registerPromptTemplate({
 
 Plugins must declare required permissions in the manifest.
 
-### Available Permissions
+For the complete and current permission reference (24 permissions), see:
+
+→ [Permissions](../../api/permissions.md)
+
+### Summary
 
 | Permission | Description |
 |------------|-------------|
@@ -648,6 +662,9 @@ Plugins must declare required permissions in the manifest.
 | `juicer:read` | Register Juicer extensions |
 | `storage:project` | Store per-project data |
 | `storage:global` | Store global data |
+| `frame:read` | Frame API — composition state, pixel access (v0.3.0+) |
+| `media:read` | Media API — asset metadata, discovery (v0.3.0+) |
+| `processing:execute` | Media Processing — server-side processing (v0.3.0+) |
 
 ### Example Manifest with Permissions
 
@@ -667,6 +684,23 @@ Plugins must declare required permissions in the manifest.
   "entry": "index.js"
 }
 ```
+
+---
+
+## Public APIs (v0.3.0+)
+
+In addition to the APIs above, v0.3.0 introduced new permission-gated APIs for plugin access to frame data, media assets, timeline state, and server-side processing:
+
+| API | Context Property | Permission | Documentation |
+|-----|-----------------|------------|---------------|
+| Frame API | `context.frame` | `frame:read` | [Frame API](../../api/frame.md) |
+| Media API | `context.media` | `media:read` | [Media API](../../api/media.md) |
+| Timeline API | `context.timelineApi` | `timeline:read` | [Timeline API](../../api/timeline.md) |
+| Media Processing | `context.processing` | `processing:execute` | [Media Processing](../../api/media-processing.md) |
+
+These APIs are optional — they are `undefined` when the required permission is not declared in the manifest. Use optional chaining to access them safely.
+
+For detailed API documentation, see [Public API](../../API.md).
 
 ---
 

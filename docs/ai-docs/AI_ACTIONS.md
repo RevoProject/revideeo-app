@@ -66,14 +66,9 @@ Example Juicer behavior:
 - Later, `maxTracks` is increased to 15
 - Same request → Juicer responds: "Added 3 new tracks. Now using 8/15."
 
-## DEMO_PROMPT Mode
+## ~~DEMO_PROMPT Mode~~ (Removed in v0.3.0)
 
-The Juicer supports a `DEMO_PROMPT` mode for testing and simulation without making actual API calls. In this mode:
-
-- The Juicer simulates responses based on predefined templates
-- No external API calls are made
-- Useful for development, testing, and demonstrations
-- Enabled via environment variable or settings toggle
+> The DEMO_PROMPT simulation mode was removed from the production codebase in v0.3.0. All Juicer operations now require a real AI provider connection.
 
 ## Juicer Phases
 
