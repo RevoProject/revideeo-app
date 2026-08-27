@@ -507,12 +507,12 @@
 
   "release.title": "Co nowego",
   "release.understand": "Rozumiem!",
-  "release.migration.title": "Open Source!",
-  "release.migration.desc": "ReVideeo jest oficjalnie open source na licencji EUPL-1.2. Pełny kod źródłowy dostępny na GitHubie: github.com/RevoProject/revideeo-app",
-  "release.fixes.title": "Publiccode i zgodność",
-  "release.fixes.desc": "publiccode.yml dla EU Open Source Solutions Catalogue, pełny tekst licencji EUPL-1.2, plik NOTICE z zawiadomieniami o zależnościach trzecich oraz nagłówki EUPL na wszystkich plikach źródłowych.",
-  "release.eupl.title": "GitHub Social Preview",
-  "release.eupl.desc": "Dodano grafikę GitHub social preview oraz zaktualizowano meta tagi Open Graph / Twitter. Informacja o wersji z linkiem GitHub widoczna w ustawieniach aplikacji.",
+  "release.migration.title": "API dla pluginów",
+  "release.migration.desc": "Nowe API ramki, mediów i osi czasu umożliwia pluginom stabilny dostęp do stanu projektu, metadanych mediów, odtwarzania i danych klatek. Auto Captions i Juicer korzystają z tych publicznych API.",
+  "release.fixes.title": "Prawdziwe Auto Captions",
+  "release.fixes.desc": "Auto Captions teraz transkrybuje prawdziwe media projektu przy użyciu lokalnego serwera Whisper. Bez danych demo — rzeczywiste rozpoznawanie mowy z precyzyjnymi klatkami napisów. Wymaga Whisper zainstalowanego na serwerze renderującym.",
+  "release.eupl.title": "Migracja Juicera",
+  "release.eupl.desc": "Juicer teraz korzysta z publicznych API dla FPS, metadanych mediów i kontekstu osi czasu. Usunięto ścieżki wykonania demo. Wewnętrzny kontekst AI używa znormalizowanej terminologii angielskiej dla lepszej interpretacji przez AI.",
 
   "release.bugfixes.title": "Poprawki błędów",
   "release.bugfixes.desc": "Odśwież klip nie resetuje już klipu — zachowuje wszystkie edycje na osi czasu. Sesje Juicera mają przypisania tylko do bieżącej sesji. Rozszerzenie klipu teraz popchnie kolejne klipy na tym samym torze.",

@@ -507,12 +507,12 @@
 
   "release.title": "Neuigkeiten",
   "release.understand": "Verstanden!",
-  "release.migration.title": "Open Source!",
-  "release.migration.desc": "ReVideeo ist jetzt offiziell Open Source unter EUPL-1.2. Der vollständige Quellcode ist auf GitHub verfügbar: github.com/RevoProject/revideeo-app",
-  "release.fixes.title": "Publiccode & Compliance",
-  "release.fixes.desc": "publiccode.yml für EU Open Source Solutions Catalogue, vollständiger EUPL-1.2-Lizenztext, NOTICE-Datei mit Drittanbieter-Attributionen und EUPL-Copyright-Header in allen Quelldateien.",
-  "release.eupl.title": "GitHub Social Preview",
-  "release.eupl.desc": "GitHub Social Preview-Bild hinzugefügt und Open Graph / Twitter Meta-Tags aktualisiert. Versionsinfo mit GitHub-Link in den Application Settings sichtbar.",
+  "release.migration.title": "Plugin-APIs",
+  "release.migration.desc": "Neue Frame-, Media- und Timeline-APIs geben Plugins stabilen Zugriff auf Projektzustand, Medienmetadaten, Wiedergabe und Frame-Daten. Auto Captions und Juicer nutzen jetzt diese öffentlichen APIs.",
+  "release.fixes.title": "Echte Auto Captions",
+  "release.fixes.desc": "Auto Captions transkribiert jetzt echte Projektmedien über einen lokalen Whisper-Server. Keine Demo-Daten — echte Spracherkennung mit frame-genauen Caption-Clips. Erfordert Whisper auf dem Render-Server.",
+  "release.eupl.title": "Juicer-Migration",
+  "release.eupl.desc": "Juicer nutzt jetzt öffentliche APIs für FPS, Medienmetadaten und Timeline-Kontext. Demo-Ausführungspfade entfernt. Interner AI-Kontext verwendet normalisierte englische Terminologie für bessere AI-Interpretation.",
 
   "import.reading": "Projektdatei wird gelesen...",
   "import.storing": "Medien werden importiert...",

@@ -1,4 +1,4 @@
 {
-  "version": "0.2.3",
-  "changelog": "Media API, Frame API, oxlint fixes."
+  "version": "0.3.0",
+  "changelog": "Frame API, Media API, Timeline API, Auto Captions with real Whisper transcription, Juicer public API migration, Marketplace plugin installer."
 }
