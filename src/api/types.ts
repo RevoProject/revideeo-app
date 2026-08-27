@@ -37,7 +37,8 @@ export type PluginPermission =
   | 'storage:project'
   | 'storage:global'
   | 'frame:read'
-  | 'media:read';
+  | 'media:read'
+  | 'processing:execute';
 
 export interface PluginManifest {
   id: string;
@@ -87,6 +88,7 @@ export interface PluginContext {
   frame?: FrameAPI;
   media?: MediaAPI;
   timelineApi?: TimelineAPI;
+  processing?: PluginMediaProcessingAPI;
 }
 
 export interface PluginI18nAPI {
@@ -377,4 +379,31 @@ export interface RegisteredPlugin {
   context: PluginContext | null;
   error?: string;
   registeredAt: number;
+}
+
+export const VALID_PROCESSORS = ['transcribe'] as const;
+export type ProcessorName = (typeof VALID_PROCESSORS)[number];
+
+export interface MediaProcessingSuccess {
+  readonly ok: true;
+  readonly processor: string;
+  readonly data: unknown;
+  readonly metadata?: Record<string, unknown>;
+}
+
+export interface MediaProcessingError {
+  readonly ok: false;
+  readonly processor: string;
+  readonly error: string;
+  readonly code: string;
+}
+
+export type MediaProcessingResult = MediaProcessingSuccess | MediaProcessingError;
+
+export interface PluginMediaProcessingAPI {
+  processMedia(
+    mediaIds: string[],
+    processor: ProcessorName,
+    params?: Record<string, unknown>,
+  ): Promise<MediaProcessingResult>;
 }

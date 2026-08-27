@@ -56,6 +56,11 @@ import type { MediaProvider, MediaAPI } from '@revideeo/core/media';
 import { createMediaContext } from '@revideeo/core/media';
 import type { TimelineProvider, TimelineAPI } from '@revideeo/core/timeline';
 import { createTimelineContext } from '@revideeo/core/timeline';
+import type {
+  PluginMediaProcessingAPI,
+  MediaProcessingResult,
+} from './types';
+import { VALID_PROCESSORS } from './types';
 
 export type PluginRegistrySnapshot = {
   panels: PanelRegistration[];
@@ -125,6 +130,8 @@ export class PluginRegistry {
     getIsPlaying: () => boolean;
     getContentFrames: () => number;
     getTimelineProvider: () => TimelineProvider | null;
+    getAssets: () => { sourceId: string; name: string; blob: Blob }[];
+    getServerUrl: () => string | null;
   } | null = null;
 
   private projectId = '';
@@ -434,7 +441,57 @@ export class PluginRegistry {
       }
     }
 
-    return { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities(), frame, media, timelineApi };
+    let processing: PluginMediaProcessingAPI | undefined;
+    if (hasPermission('processing:execute') && hasPermission('media:read')) {
+      const getAssets = () => this.projectContext?.getAssets?.() ?? [];
+      const getServerUrl = () => this.projectContext?.getServerUrl?.() ?? null;
+      processing = {
+        processMedia: async (mediaIds, processor, params): Promise<MediaProcessingResult> => {
+          if (!(VALID_PROCESSORS as readonly string[]).includes(processor)) {
+            return { ok: false, processor, error: `Unknown processor: ${processor}`, code: 'UNKNOWN_PROCESSOR' };
+          }
+          const serverUrl = getServerUrl();
+          if (!serverUrl) {
+            return { ok: false, processor, error: 'No render server configured', code: 'NO_SERVER' };
+          }
+          const allAssets = getAssets();
+          for (const mediaId of mediaIds) {
+            const asset = allAssets.find((a: { sourceId: string }) => a.sourceId === mediaId);
+            if (!asset) {
+              return { ok: false, processor, error: `Media not found: ${mediaId}`, code: 'MEDIA_NOT_FOUND' };
+            }
+            if (asset.blob.size === 0) {
+              return { ok: false, processor, error: `Media not loaded: ${mediaId}`, code: 'MEDIA_NOT_LOADED' };
+            }
+          }
+          try {
+            const results: MediaProcessingResult[] = [];
+            for (const mediaId of mediaIds) {
+              const asset = allAssets.find((a: { sourceId: string }) => a.sourceId === mediaId);
+              if (!asset) continue;
+              const formData = new FormData();
+              formData.append('file', asset.blob, asset.name);
+              formData.append('processor', processor);
+              formData.append('mediaId', mediaId);
+              if (params) formData.append('params', JSON.stringify(params));
+              const response = await fetch(`${serverUrl}/api/process`, { method: 'POST', body: formData });
+              if (!response.ok) {
+                const errBody = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
+                return { ok: false, processor, error: errBody.error ?? `Server error: ${response.status}`, code: 'SERVER_ERROR' };
+              }
+              const result = await response.json() as MediaProcessingResult;
+              results.push(result);
+            }
+            if (results.length === 1) return results[0];
+            return { ok: true, processor, data: results.map((r) => r.ok ? r.data : r), metadata: { count: results.length } };
+          } catch (err) {
+            return { ok: false, processor, error: err instanceof Error ? err.message : 'Unknown error', code: 'NETWORK_ERROR' };
+          }
+        },
+      };
+    }
+
+    return { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities(), frame, media, timelineApi, processing };
   }
 
   async registerPlugin(definition: PluginDefinition): Promise<boolean> {

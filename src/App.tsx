@@ -830,11 +830,13 @@ export default function ReVideeo() {
         getIsPlaying: () => isPlaying,
         getContentFrames: () => contentFrames,
         getTimelineProvider: () => timelineProvider,
+        getAssets: () => assets,
+        getServerUrl: () => settings.renderServers[0]?.url ?? null,
       }, project.id);
     } else {
       pluginRegistry.clearProjectContext();
     }
-  }, [project, clips, currentFrame, dirty, markers, selectedClipIds, seekTo, totalFrames, frameProvider, mediaProvider, timelineProvider, isPlaying, contentFrames]);
+  }, [project, clips, currentFrame, dirty, markers, selectedClipIds, seekTo, totalFrames, frameProvider, mediaProvider, timelineProvider, isPlaying, contentFrames, settings, assets]);
 
   // Prevent page refresh/close with unsaved project
   useEffect(() => {

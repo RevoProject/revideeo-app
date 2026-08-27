@@ -1,7 +1,7 @@
 {
   "id": "auto-captions",
   "name": "Auto Captions",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Automatyczne generowanie napisów z materiałów wideo za pomocą Whisper AI.",
   "author": "ReVideeo",
   "icon": "cc",
@@ -10,6 +10,9 @@
     "clips:read",
     "clips:write",
     "timeline:read",
+    "frame:read",
+    "media:read",
+    "processing:execute",
     "ui:tabs",
     "ui:panels",
     "storage:project"
