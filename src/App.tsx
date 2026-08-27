@@ -922,7 +922,43 @@ export default function ReVideeo() {
       if (!current || isTrackLocked(current.trackIndex) || (patch.trackIndex !== undefined && isTrackLocked(patch.trackIndex))) {
         return;
       }
-      setClips((prev) => prev.map((clip) => (clip.id === id ? { ...clip, ...patch } : clip)));
+      if (patch.durationInFrames !== undefined && patch.durationInFrames !== current.durationInFrames) {
+        const delta = patch.durationInFrames - current.durationInFrames;
+        const oldEnd = current.offsetInTimeline + current.durationInFrames;
+        setClips((prev) => {
+          const updated = prev.map((clip) => {
+            if (clip.id === id) return { ...clip, ...patch };
+            if (clip.trackIndex === current.trackIndex && clip.offsetInTimeline >= oldEnd) {
+              return { ...clip, offsetInTimeline: clip.offsetInTimeline + delta };
+            }
+            return clip;
+          });
+          const snapped: typeof updated = [];
+          for (const clip of updated) {
+            if (clip.trackIndex !== current.trackIndex || clip.transitionIn === 'none' || clip.transitionDurationInFrames <= 0) {
+              snapped.push(clip);
+              continue;
+            }
+            let bestStart = -Infinity;
+            let bestClip: StoredClip | null = null;
+            for (const other of snapped) {
+              if (other.trackIndex !== clip.trackIndex) continue;
+              if (other.offsetInTimeline < clip.offsetInTimeline && other.offsetInTimeline > bestStart) {
+                bestStart = other.offsetInTimeline;
+                bestClip = other;
+              }
+            }
+            if (!bestClip) { snapped.push(clip); continue; }
+            const snappedOffset = (bestClip.offsetInTimeline + bestClip.durationInFrames) - clip.transitionDurationInFrames;
+            if (snappedOffset === clip.offsetInTimeline) { snapped.push(clip); continue; }
+            snapped.push({ ...clip, offsetInTimeline: Math.max(0, snappedOffset) });
+          }
+          return snapped;
+        });
+      } else {
+        setClips((prev) => prev.map((clip) => (clip.id === id ? { ...clip, ...patch } : clip)));
+      }
+      setDirty(true);
     },
     [isTrackLocked],
   );
@@ -1850,11 +1886,20 @@ export default function ReVideeo() {
     };
     juicerSnapshotRef.current = prevState;
     beginEdit();
-    setClips(snapshot.clips);
-    const tc = Math.max(1, snapshot.trackCount);
-    const ts = snapshot.trackSettings.length > 0 ? snapshot.trackSettings : [{ name: t('timeline.track', { index: '1' }), locked: false, muted: false, hidden: false }];
-    setProject((prev) => prev ? { ...prev, trackCount: tc, trackSettings: ts } : prev);
     if (snapshot.newAssets && snapshot.newAssets.length > 0) {
+      const immediate = snapshot.newAssets.map((a) => ({
+        sourceId: a.sourceId,
+        name: a.name,
+        durationInFrames: a.durationInFrames,
+        blob: a.blob,
+        thumbnails: [] as string[],
+      }));
+      setAssets((prev) => {
+        const existing = new Set(prev.map((a) => a.sourceId));
+        const fresh = immediate.filter((a) => !existing.has(a.sourceId));
+        if (fresh.length === 0) return prev;
+        return [...prev, ...fresh];
+      });
       const withThumbnails = await Promise.all(snapshot.newAssets.map(async (a) => ({
         sourceId: a.sourceId,
         name: a.name,
@@ -1863,12 +1908,22 @@ export default function ReVideeo() {
         thumbnails: a.blob.type.startsWith('video/') ? await createVideoThumbnails(a.blob) : [],
       })));
       setAssets((prev) => {
-        const existing = new Set(prev.map((a) => a.sourceId));
-        const fresh = withThumbnails.filter((a) => !existing.has(a.sourceId));
-        if (fresh.length === 0) return prev;
-        return [...prev, ...fresh];
+        const existing = new Map(prev.map((a) => [a.sourceId, a]));
+        for (const a of withThumbnails) {
+          const existingAsset = existing.get(a.sourceId);
+          if (existingAsset && a.thumbnails.length > 0) {
+            existing.set(a.sourceId, { ...existingAsset, thumbnails: a.thumbnails });
+          }
+        }
+        return [...existing.values()];
       });
     }
+    setClips(snapshot.clips);
+    const tc = Math.max(1, snapshot.trackCount);
+    const ts = snapshot.trackSettings.length > 0 ? snapshot.trackSettings : [{ name: t('timeline.track', { index: '1' }), locked: false, muted: false, hidden: false }];
+    setProject((prev) => prev ? { ...prev, trackCount: tc, trackSettings: ts } : prev);
+    setCurrentFrame(0);
+    playerRef.current?.seekTo(0);
     setDirty(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [beginEdit]);

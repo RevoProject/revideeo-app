@@ -9,9 +9,10 @@ interface ClipRendererProps {
   muted: boolean;
   frame: number;
   playing: boolean;
+  fps: number;
 }
 
-export const ClipRenderer = ({ clip, outgoing, muted, frame, playing }: ClipRendererProps) => {
+export const ClipRenderer = ({ clip, outgoing, muted, frame, playing, fps }: ClipRendererProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -45,37 +46,37 @@ export const ClipRenderer = ({ clip, outgoing, muted, frame, playing }: ClipRend
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-    const desired = (clip.startFrame + frame) / 30;
+    const rate = clip.playbackRate ?? 1;
+    el.playbackRate = rate;
+    const desired = (clip.startFrame + frame) / fps;
     if (playing) {
-      if (Math.abs(el.currentTime - desired) > 0.15) {
+      if (Math.abs(el.currentTime - desired) > 0.02) {
         el.currentTime = desired;
       }
       el.play().catch(() => {});
     } else {
       el.pause();
-      if (Math.abs(el.currentTime - desired) > 0.15) {
-        el.currentTime = desired;
-      }
+      el.currentTime = desired;
     }
-  }, [playing, frame, clip.startFrame]);
+  }, [playing, frame, clip.startFrame, clip.playbackRate, fps]);
 
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
-    const desired = (clip.startFrame + frame) / 30;
+    const rate = clip.playbackRate ?? 1;
+    el.playbackRate = rate;
+    const desired = (clip.startFrame + frame) / fps;
     el.volume = Math.max(0, Math.min(1, volume));
     if (playing) {
-      if (Math.abs(el.currentTime - desired) > 0.15) {
+      if (Math.abs(el.currentTime - desired) > 0.02) {
         el.currentTime = desired;
       }
       el.play().catch(() => {});
     } else {
       el.pause();
-      if (Math.abs(el.currentTime - desired) > 0.15) {
-        el.currentTime = desired;
-      }
+      el.currentTime = desired;
     }
-  }, [playing, frame, clip.startFrame, volume]);
+  }, [playing, frame, clip.startFrame, clip.playbackRate, volume, fps]);
 
   if (clip.type === 'text') {
     return (

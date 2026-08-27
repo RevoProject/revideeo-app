@@ -50,16 +50,13 @@ import {
 import { registerPluginTranslations, translatePluginKey, getPluginLang, getAvailablePluginLangs } from './pluginI18n';
 import { getCapabilities } from '../capabilities';
 import type { StoredClip } from '../types';
-import type { FrameProvider, FrameAPI } from '@revideeo/core/frame';
+import type { FrameProvider } from '@revideeo/core/frame';
 import { createFrameContext } from '@revideeo/core/frame';
-import type { MediaProvider, MediaAPI } from '@revideeo/core/media';
+import type { MediaProvider } from '@revideeo/core/media';
 import { createMediaContext } from '@revideeo/core/media';
-import type { TimelineProvider, TimelineAPI } from '@revideeo/core/timeline';
+import type { TimelineProvider } from '@revideeo/core/timeline';
 import { createTimelineContext } from '@revideeo/core/timeline';
-import type {
-  PluginMediaProcessingAPI,
-  MediaProcessingResult,
-} from './types';
+import type { MediaProcessingResult, ProcessorName } from './types';
 import { VALID_PROCESSORS } from './types';
 
 export type PluginRegistrySnapshot = {
@@ -139,6 +136,19 @@ export class PluginRegistry {
   setProjectContext(ctx: PluginRegistry['projectContext'], projectId: string): void {
     this.projectContext = ctx;
     this.projectId = projectId;
+    this.refreshAllContexts();
+  }
+
+  private refreshAllContexts(): void {
+    for (const [id, plugin] of this.plugins) {
+      if (plugin.state === 'active' && this.projectContext) {
+        try {
+          plugin.context = this.buildContext(id);
+        } catch (err) {
+          console.error(`[PluginRegistry] Failed to refresh context for "${id}":`, err);
+        }
+      }
+    }
   }
 
   clearProjectContext(): void {
@@ -151,6 +161,8 @@ export class PluginRegistry {
   }
 
   private buildContext(pluginId: string): PluginContext {
+    // eslint-disable-next-line typescript/no-this-alias -- needed for Proxy handler to access class instance
+    const self = this;
     const hasPermission = (perm: string) => {
       const plugin = this.plugins.get(pluginId);
       return plugin?.manifest.permissions.includes(perm as never) ?? false;
@@ -362,136 +374,74 @@ export class PluginRegistry {
       getAvailableLangs: () => getAvailablePluginLangs(),
     };
 
-    let frame: FrameAPI | undefined;
-    if (hasPermission('frame:read')) {
-      const provider = this.projectContext?.getFrameProvider() ?? null;
-      if (provider) {
-        frame = createFrameContext(provider, {
-          getCurrentFrame: () => this.projectContext?.getCurrentFrame() ?? 0,
-          getTotalFrames: () => this.projectContext?.getTotalFrames() ?? 0,
-          getFps: () => this.projectContext?.getConfig().fps ?? 30,
-          getWidth: () => {
-            const cfg = this.projectContext?.getConfig();
-            if (!cfg) return 1920;
-            const res = cfg.resolutionLabel;
-            const orient = cfg.orientation;
-            if (orient === '9:16' || orient === 'portrait') {
-              if (res === '4K') return 2160;
-              if (res === '2K') return 1440;
-              if (res === '1080p') return 1080;
-              if (res === '720p') return 720;
-              if (res === '480p') return 480;
-              if (res === '360p') return 360;
-              return 720;
-            }
-            if (res === '4K') return 3840;
-            if (res === '2K') return 2560;
-            if (res === '1080p') return 1920;
-            if (res === '720p') return 1280;
-            if (res === '480p') return 854;
-            if (res === '360p') return 640;
-            return 1280;
-          },
-          getHeight: () => {
-            const cfg = this.projectContext?.getConfig();
-            if (!cfg) return 720;
-            const res = cfg.resolutionLabel;
-            const orient = cfg.orientation;
-            if (orient === '9:16' || orient === 'portrait') {
-              if (res === '4K') return 3840;
-              if (res === '2K') return 2560;
-              if (res === '1080p') return 1920;
-              if (res === '720p') return 1280;
-              if (res === '480p') return 854;
-              if (res === '360p') return 640;
-              return 1280;
-            }
-            if (res === '4K') return 2160;
-            if (res === '2K') return 1440;
-            if (res === '1080p') return 1080;
-            if (res === '720p') return 720;
-            if (res === '480p') return 480;
-            if (res === '360p') return 360;
-            return 720;
-          },
-          getAllClips: () => this.projectContext?.getAllClips() ?? [],
-          getHiddenTracks: () => {
-            const settings = this.projectContext?.getTrackSettings() ?? [];
-            const hidden = new Set<number>();
-            settings.forEach((s, i) => { if (s.hidden) hidden.add(i); });
-            return hidden;
-          },
-        });
-      }
-    }
-
-    let media: MediaAPI | undefined;
-    if (hasPermission('media:read')) {
-      const provider = this.projectContext?.getMediaProvider() ?? null;
-      if (provider) {
-        media = createMediaContext(provider);
-      }
-    }
-
-    let timelineApi: TimelineAPI | undefined;
-    if (hasPermission('timeline:read')) {
-      const provider = this.projectContext?.getTimelineProvider() ?? null;
-      if (provider) {
-        timelineApi = createTimelineContext(provider);
-      }
-    }
-
-    let processing: PluginMediaProcessingAPI | undefined;
-    if (hasPermission('processing:execute') && hasPermission('media:read')) {
-      const getAssets = () => this.projectContext?.getAssets?.() ?? [];
-      const getServerUrl = () => this.projectContext?.getServerUrl?.() ?? null;
-      processing = {
-        processMedia: async (mediaIds, processor, params): Promise<MediaProcessingResult> => {
-          if (!(VALID_PROCESSORS as readonly string[]).includes(processor)) {
-            return { ok: false, processor, error: `Unknown processor: ${processor}`, code: 'UNKNOWN_PROCESSOR' };
+    return new Proxy(
+      { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities() },
+      {
+        get(target, prop, receiver) {
+          if (prop === 'frame') {
+            if (!hasPermission('frame:read')) return undefined;
+            const p = self.projectContext?.getFrameProvider() ?? null;
+            if (!p) return undefined;
+            return createFrameContext(p, {
+              getCurrentFrame: () => self.projectContext?.getCurrentFrame() ?? 0,
+              getTotalFrames: () => self.projectContext?.getTotalFrames() ?? 0,
+              getFps: () => self.projectContext?.getConfig().fps ?? 30,
+              getWidth: () => { const cfg = self.projectContext?.getConfig(); const r = cfg?.resolutionLabel ?? '720p'; const o = cfg?.orientation ?? '16:9'; const portrait = o === '9:16' || o === 'portrait'; if (portrait) { if (r === '4K') return 2160; if (r === '2K') return 1440; if (r === '1080p') return 1080; if (r === '720p') return 720; if (r === '480p') return 480; if (r === '360p') return 360; return 720; } if (r === '4K') return 3840; if (r === '2K') return 2560; if (r === '1080p') return 1920; if (r === '720p') return 1280; if (r === '480p') return 854; if (r === '360p') return 640; return 1280; },
+              getHeight: () => { const cfg = self.projectContext?.getConfig(); const r = cfg?.resolutionLabel ?? '720p'; const o = cfg?.orientation ?? '16:9'; const portrait = o === '9:16' || o === 'portrait'; if (portrait) { if (r === '4K') return 3840; if (r === '2K') return 2560; if (r === '1080p') return 1920; if (r === '720p') return 1280; if (r === '480p') return 854; if (r === '360p') return 640; return 1280; } if (r === '4K') return 2160; if (r === '2K') return 1440; if (r === '1080p') return 1080; if (r === '720p') return 720; if (r === '480p') return 480; if (r === '360p') return 360; return 720; },
+              getAllClips: () => self.projectContext?.getAllClips() ?? [],
+              getHiddenTracks: () => { const settings = self.projectContext?.getTrackSettings() ?? []; const hidden = new Set<number>(); settings.forEach((s: { hidden: boolean }, i: number) => { if (s.hidden) hidden.add(i); }); return hidden; },
+            });
           }
-          const serverUrl = getServerUrl();
-          if (!serverUrl) {
-            return { ok: false, processor, error: 'No render server configured', code: 'NO_SERVER' };
+          if (prop === 'media') {
+            if (!hasPermission('media:read')) return undefined;
+            const p = self.projectContext?.getMediaProvider() ?? null;
+            if (!p) return undefined;
+            return createMediaContext(p);
           }
-          const allAssets = getAssets();
-          for (const mediaId of mediaIds) {
-            const asset = allAssets.find((a: { sourceId: string }) => a.sourceId === mediaId);
-            if (!asset) {
-              return { ok: false, processor, error: `Media not found: ${mediaId}`, code: 'MEDIA_NOT_FOUND' };
-            }
-            if (asset.blob.size === 0) {
-              return { ok: false, processor, error: `Media not loaded: ${mediaId}`, code: 'MEDIA_NOT_LOADED' };
-            }
+          if (prop === 'timelineApi') {
+            if (!hasPermission('timeline:read')) return undefined;
+            const p = self.projectContext?.getTimelineProvider() ?? null;
+            if (!p) return undefined;
+            return createTimelineContext(p);
           }
-          try {
-            const results: MediaProcessingResult[] = [];
-            for (const mediaId of mediaIds) {
-              const asset = allAssets.find((a: { sourceId: string }) => a.sourceId === mediaId);
-              if (!asset) continue;
-              const formData = new FormData();
-              formData.append('file', asset.blob, asset.name);
-              formData.append('processor', processor);
-              formData.append('mediaId', mediaId);
-              if (params) formData.append('params', JSON.stringify(params));
-              const response = await fetch(`${serverUrl}/api/process`, { method: 'POST', body: formData });
-              if (!response.ok) {
-                const errBody = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
-                return { ok: false, processor, error: errBody.error ?? `Server error: ${response.status}`, code: 'SERVER_ERROR' };
-              }
-              const result = await response.json() as MediaProcessingResult;
-              results.push(result);
-            }
-            if (results.length === 1) return results[0];
-            return { ok: true, processor, data: results.map((r) => r.ok ? r.data : r), metadata: { count: results.length } };
-          } catch (err) {
-            return { ok: false, processor, error: err instanceof Error ? err.message : 'Unknown error', code: 'NETWORK_ERROR' };
+          if (prop === 'processing') {
+            if (!hasPermission('processing:execute') || !hasPermission('media:read')) return undefined;
+            return {
+              processMedia: async (mediaIds: string[], processor: ProcessorName, params?: Record<string, unknown>): Promise<MediaProcessingResult> => {
+                if (!(VALID_PROCESSORS as readonly string[]).includes(processor)) return { ok: false, processor, error: `Unknown processor: ${processor}`, code: 'UNKNOWN_PROCESSOR' };
+                const serverUrl = self.projectContext?.getServerUrl?.() ?? null;
+                if (!serverUrl) return { ok: false, processor, error: 'No render server configured', code: 'NO_SERVER' };
+                const allAssets = self.projectContext?.getAssets?.() ?? [];
+                for (const mediaId of mediaIds) {
+                  const asset = allAssets.find((a: { sourceId: string }) => a.sourceId === mediaId);
+                  if (!asset) return { ok: false, processor, error: `Media not found: ${mediaId}`, code: 'MEDIA_NOT_FOUND' };
+                  if (asset.blob.size === 0) return { ok: false, processor, error: `Media not loaded: ${mediaId}`, code: 'MEDIA_NOT_LOADED' };
+                }
+                try {
+                  const results: MediaProcessingResult[] = [];
+                  for (const mediaId of mediaIds) {
+                    const asset = allAssets.find((a: { sourceId: string }) => a.sourceId === mediaId);
+                    if (!asset) continue;
+                    const formData = new FormData();
+                    formData.append('file', asset.blob, asset.name);
+                    formData.append('processor', processor);
+                    formData.append('mediaId', mediaId);
+                    if (params) formData.append('params', JSON.stringify(params));
+                    const response = await fetch(`${serverUrl}/api/process`, { method: 'POST', body: formData });
+                    if (!response.ok) { const errBody = await response.json().catch(() => ({ error: `Server error: ${response.status}` })); return { ok: false, processor, error: errBody.error ?? `Server error: ${response.status}`, code: 'SERVER_ERROR' }; }
+                    const result = await response.json() as MediaProcessingResult;
+                    results.push(result);
+                  }
+                  if (results.length === 1) return results[0];
+                  return { ok: true, processor, data: results.map((r) => r.ok ? r.data : r), metadata: { count: results.length } };
+                } catch (err) { return { ok: false, processor, error: err instanceof Error ? err.message : 'Unknown error', code: 'NETWORK_ERROR' }; }
+              },
+            };
           }
+          return Reflect.get(target, prop, receiver);
         },
-      };
-    }
-
-    return { ui, project, timeline, clips, effects, transitions, export: exportApi, assets, renderer, juicer, storage, events, i18n, capabilities: getCapabilities(), frame, media, timelineApi, processing };
+      },
+    );
   }
 
   async registerPlugin(definition: PluginDefinition): Promise<boolean> {

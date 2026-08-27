@@ -93,10 +93,8 @@ export const NativePlayer = forwardRef<NativePlayerHandle, NativePlayerProps>(
         updateDOM(newFrame, durationInFrames);
 
         frameCount++;
-        if (frameCount % 3 === 0) {
-          setDisplayFrame(newFrame);
-        }
-        if (frameCount % 6 === 0) {
+        setDisplayFrame(newFrame);
+        if (frameCount % 2 === 0) {
           onFrameChange(newFrame);
         }
 
@@ -234,6 +232,7 @@ export const NativePlayer = forwardRef<NativePlayerHandle, NativePlayerProps>(
                       muted={track?.muted ?? false}
                       frame={localFrame}
                       playing={playingRef.current}
+                      fps={fps}
                     />
                   </div>
                 );
