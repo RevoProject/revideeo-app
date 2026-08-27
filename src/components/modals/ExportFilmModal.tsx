@@ -8,6 +8,24 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, Loader2, Server, ServerOff, TriangleAlert, Video, X } from 'lucide-react';
 import type { VideoExportFormat } from '../../export/videoExporter';
 import type { RenderServer } from '../../types';
+
+function EditableNumber({ value, min, max, disabled, onChange, className }: { value: number; min?: number; max?: number; disabled?: boolean; onChange: (v: number) => void; className?: string }) {
+  const [local, setLocal] = useState(String(value));
+  useEffect(() => { const s = String(value); setLocal((prev) => prev === s ? prev : s); }, [value]);
+  return (
+    <input
+      type="number"
+      min={min}
+      max={max}
+      value={local}
+      disabled={disabled}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={() => { const p = Number(local); if (!isNaN(p)) onChange(p); else setLocal(String(value)); }}
+      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); const p = Number(local); if (!isNaN(p)) onChange(p); else setLocal(String(value)); e.currentTarget.blur(); } }}
+      className={className}
+    />
+  );
+}
 import { RENDER_SERVER_BASE_URL } from '../../export/renderServerConfig';
 import { useRenderServersStatus, type RenderServerOption } from '../../export/useRenderServersStatus';
 import { useTranslation } from '../../i18n';
@@ -251,13 +269,12 @@ export const ExportFilmModal = ({
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <input
-                        type="number"
+                      <EditableNumber
                         min={1}
                         max={totalFrames}
                         value={endFrame}
-                        onChange={(e) => setEnd(Number(e.target.value))}
                         disabled={busy}
+                        onChange={(v) => setEnd(v)}
                         className="flex-1 rounded-lg border border-[#2c2d33] bg-[#202124] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500"
                       />
                       <span className="whitespace-nowrap text-[10px] text-gray-500">{t('export.time')}</span>
@@ -300,23 +317,21 @@ export const ExportFilmModal = ({
                     <span>{t('export.frameRange')}</span>
                     <div className="flex items-center gap-2">
                       <span className="whitespace-nowrap text-[10px] text-gray-500">{t('export.fromShort')}</span>
-                      <input
-                        type="number"
+                      <EditableNumber
                         min={1}
                         max={endFrame}
                         value={startFrame}
-                        onChange={(e) => setStart(Number(e.target.value))}
                         disabled={busy}
+                        onChange={(v) => setStart(v)}
                         className="w-20 rounded-lg border border-[#2c2d33] bg-[#202124] px-2 py-2 text-sm text-gray-200 outline-none focus:border-blue-500"
                       />
                       <span className="whitespace-nowrap text-[10px] text-gray-500">{t('export.toShort')}</span>
-                      <input
-                        type="number"
+                      <EditableNumber
                         min={startFrame}
                         max={totalFrames}
                         value={endFrame}
-                        onChange={(e) => setEnd(Number(e.target.value))}
                         disabled={busy}
+                        onChange={(v) => setEnd(v)}
                         className="w-20 rounded-lg border border-[#2c2d33] bg-[#202124] px-2 py-2 text-sm text-gray-200 outline-none focus:border-blue-500"
                       />
                       <button

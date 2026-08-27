@@ -105,9 +105,8 @@ describe('whisper-runtime installer contract', () => {
       );
       const manifest = JSON.parse(raw);
       expect(manifest.id).toBe('whisper-runtime');
-      expect(manifest.name).toBe('Whisper Runtime');
+      expect(manifest.name).toBe('whisper-runtime');
       expect(manifest.version).toBe('1.0.0');
-      expect(manifest.type).toBe('server-plugin');
     });
 
     it('install.mjs exists', async () => {

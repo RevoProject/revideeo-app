@@ -444,6 +444,7 @@ export default function ReVideeo() {
   }, []);
 
   const [modal, setModal] = useState<'start' | 'new' | 'settings' | 'app-settings' | 'library' | 'shortcuts' | 'export-film' | 'export-project' | 'replace-asset' | 'plugins' | 'juicer' | null>('start');
+  const previousModalRef = useRef<typeof modal>(null);
   const [replacementSourceId, setReplacementSourceId] = useState<string | null>(null);
   const [propertiesOpen, setPropertiesOpen] = useState(false);
   const [toolView, setToolView] = useState<ToolView>('properties');
@@ -846,7 +847,7 @@ export default function ReVideeo() {
         getContentFrames: () => contentFrames,
         getTimelineProvider: () => timelineProvider,
         getAssets: () => assets,
-        getServerUrl: () => settings.renderServers[0]?.url ?? null,
+        getServerUrl: () => { const s = getSettings(); return s.renderServers[0]?.url ?? null; },
       }, project.id);
     } else {
       pluginRegistry.clearProjectContext();
@@ -2118,7 +2119,7 @@ export default function ReVideeo() {
              onSave={() => void (projectSource === 'remote' ? exportProjectToServer() : saveProject())}
             onImport={() => importFileRef.current?.click()}
             onJuicer={() => setModal('juicer')}
-            onExtensions={() => setModal('plugins')}
+            onExtensions={() => { previousModalRef.current = modal; setModal('plugins'); }}
             floatingButtons={pluginSnapshot.floatingButtons.map((b) => ({ id: b.id, label: b.label, icon: <span className="text-xs font-bold">{b.icon}</span>, onClick: b.onClick }))}
             bottomBarActions={pluginSnapshot.bottomBar.map((b) => ({ id: b.id, label: b.label, icon: <span className="text-sm font-bold">{b.icon}</span>, onClick: b.onClick }))}
             onExportFilm={handleExportFilm}
@@ -2163,7 +2164,7 @@ export default function ReVideeo() {
                 onOpenAudio={() => mobileShellRef.current?.openSheet({ kind: 'tools', view: 'audio' })}
                 onOpenAnimations={() => mobileShellRef.current?.openSheet({ kind: 'tools', view: 'animations' })}
                 onOpenPlugins={() => mobileShellRef.current?.openSheet({ kind: 'tools', view: 'plugins' })}
-                onOpenPluginsModal={() => setModal('plugins')}
+                onOpenPluginsModal={() => { previousModalRef.current = modal; setModal('plugins'); }}
                 pluginContent={view === 'plugins' && pluginSnapshot.tools.length > 0 ? (
                   <div className="flex flex-col gap-3">
                     {pluginSnapshot.tools.map((tool) => (
@@ -2303,7 +2304,7 @@ export default function ReVideeo() {
           onOpenAudio={() => { setToolView('audio'); setPropertiesOpen(true); }}
           onOpenAnimations={() => { setToolView('animations'); setPropertiesOpen(true); }}
           onOpenPlugins={() => { setToolView('plugins'); setPropertiesOpen(true); }}
-          onOpenPluginsModal={() => setModal('plugins')}
+          onOpenPluginsModal={() => { previousModalRef.current = modal; setModal('plugins'); }}
           pluginContent={toolView === 'plugins' && pluginSnapshot.tools.length > 0 ? (
             <div className="flex flex-col gap-3">
               {pluginSnapshot.tools.map((tool) => (
@@ -2536,12 +2537,12 @@ export default function ReVideeo() {
            onConfirm={handleSaveAppSettings}
            onClose={() => setModal(project ? null : 'start')}
            onOpenProjectSettings={project ? () => setModal('settings') : undefined}
-           onOpenPlugins={() => setModal('plugins')}
+            onOpenPlugins={() => { previousModalRef.current = modal; setModal('plugins'); }}
            mobile={isMobileDevice}
         />
       )}
       {modal === 'shortcuts' && <ShortcutsModal onClose={() => setModal(null)} />}
-      {modal === 'plugins' && <PluginsModal onClose={() => setModal(null)} />}
+      {modal === 'plugins' && <PluginsModal onClose={() => { setModal(previousModalRef.current ?? null); previousModalRef.current = null; }} />}
       {modal === 'juicer' && (
         <JuicerModal
           onClose={() => setModal(null)}

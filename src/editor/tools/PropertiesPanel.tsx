@@ -33,12 +33,20 @@ const Slider = ({ label, value, min, max, step = 1, suffix = '', onChange }: { l
   </label>
 );
 
-const NumberInput = ({ value, suffix, onChange }: { value: number; suffix?: string; onChange: (value: number) => void }) => (
-  <div className="flex items-center rounded-md bg-[#202124] px-2">
-    <input type="number" value={value} onChange={(event) => onChange(Number(event.target.value) || 0)} className="min-w-0 flex-1 bg-transparent py-1.5 text-xs text-gray-200 outline-none" />
-    {suffix && <span className="text-[10px] text-gray-500">{suffix}</span>}
-  </div>
-);
+const NumberInput = ({ value, suffix, onChange }: { value: number; suffix?: string; onChange: (value: number) => void }) => {
+  const [local, setLocal] = useState(String(value));
+  useEffect(() => { const s = String(value); setLocal((prev) => prev === s ? prev : s); }, [value]);
+  return (
+    <div className="flex items-center rounded-md bg-[#202124] px-2">
+      <input type="number" value={local}
+        onChange={(event) => setLocal(event.target.value)}
+        onBlur={() => { const parsed = Number(local); if (!isNaN(parsed)) onChange(parsed); else setLocal(String(value)); }}
+        onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); const parsed = Number(local); if (!isNaN(parsed)) onChange(parsed); else setLocal(String(value)); event.currentTarget.blur(); } }}
+        className="min-w-0 flex-1 bg-transparent py-1.5 text-xs text-gray-200 outline-none" />
+      {suffix && <span className="text-[10px] text-gray-500">{suffix}</span>}
+    </div>
+  );
+};
 
 const formatTimelineTime = (frames: number, fps: number): string => {
   const seconds = Math.max(0, Math.round(frames / fps));
@@ -110,12 +118,12 @@ export const PropertiesPanel = ({ activeClip, clipIndex, fps, totalFrames, asset
         {([['cropLeft', t('props.cropLeft')], ['cropTop', t('props.top')], ['cropRight', t('props.cropRight')], ['cropBottom', t('props.bottom')]] as const).map(([key, label]) => <Slider key={key} label={label} value={Number(clip[key] ?? 0)} min={0} max={49} suffix="%" onChange={(next) => patch({ [key]: next })} />)}
       </Section>
       <Section title={t('props.videoSection')} icon={<FileVideo size={14} />} visible={clip.type !== 'text' && clip.type !== 'audio'} open={sections.video} onToggle={() => toggle('video')}>
-        <Slider label={t('props.playbackSpeed')} value={clip.playbackRate ?? 1} min={0.25} max={4} step={0.05} suffix="x" onChange={(value) => patch({ playbackRate: value })} />
+        <Slider label={t('props.playbackSpeed')} value={clip.playbackRate ?? 1} min={0.25} max={4} step={0.05} suffix="x" onChange={(value) => { const oldRate = clip.playbackRate ?? 1; const newDuration = Math.max(1, Math.round(clip.durationInFrames * oldRate / value)); patch({ playbackRate: value, durationInFrames: newDuration }); }} />
         <Slider label={t('props.fadeIn')} value={(clip.fadeInFrames ?? 0) / fps} min={0} max={5} step={0.1} suffix="s" onChange={(value) => patch({ fadeInFrames: Math.round(value * fps) })} />
         <Slider label={t('props.fadeOut')} value={(clip.fadeOutFrames ?? 0) / fps} min={0} max={5} step={0.1} suffix="s" onChange={(value) => patch({ fadeOutFrames: Math.round(value * fps) })} />
       </Section>
       <Section title={t('props.audioSection')} icon={<Volume2 size={14} />} visible={clip.type !== 'text'} open={sections.audio} onToggle={() => toggle('audio')}>
-        {clip.type === 'audio' && <Slider label={t('props.playbackSpeed')} value={clip.playbackRate ?? 1} min={0.25} max={4} step={0.05} suffix="x" onChange={(value) => patch({ playbackRate: value })} />}
+        {clip.type === 'audio' && <Slider label={t('props.playbackSpeed')} value={clip.playbackRate ?? 1} min={0.25} max={4} step={0.05} suffix="x" onChange={(value) => { const oldRate = clip.playbackRate ?? 1; const newDuration = Math.max(1, Math.round(clip.durationInFrames * oldRate / value)); patch({ playbackRate: value, durationInFrames: newDuration }); }} />}
         <Slider label={t('props.volume')} value={(clip.volume ?? 1) * 100} min={0} max={200} suffix="%" onChange={(value) => patch({ volume: value / 100 })} />
         <Slider label={t('props.fadeIn')} value={(clip.audioFadeInFrames ?? 0) / fps} min={0} max={5} step={0.1} suffix="s" onChange={(value) => patch({ audioFadeInFrames: Math.round(value * fps) })} />
         <Slider label={t('props.fadeOut')} value={(clip.audioFadeOutFrames ?? 0) / fps} min={0} max={5} step={0.1} suffix="s" onChange={(value) => patch({ audioFadeOutFrames: Math.round(value * fps) })} />
