@@ -1,6 +1,6 @@
 # ReVideeo Public API
 
-> Version: 0.3.0
+> Version: 0.3.1
 
 The public plugin API is accessed through `PluginContext` in the `activate(context)` callback. Each sub-API is permission-gated and available as an optional property on the context.
 

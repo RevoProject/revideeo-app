@@ -1,6 +1,6 @@
 # ReVideeo Documentation
 
-> Version: 0.3.0 — Public APIs, Auto Captions with Whisper, Juicer Migration
+> Version: 0.3.1 — Public APIs, Auto Captions with Whisper, Juicer Migration
 
 ## Navigation
 
