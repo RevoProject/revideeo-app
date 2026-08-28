@@ -1,0 +1,240 @@
+Tak — i tutaj różnica może być naprawdę duża. **Dzisiejszy Juicer jest przede wszystkim operatorem timeline'u sterowanym przez AI; jutrzejszy może stać się agentem, który rozumie materiał, obraz i strukturę projektu.**
+
+### Juicer: teraz vs po integracji
+
+| Obszar                 | Teraz                               | Po `v0.3.0`                                            |
+| ---------------------- | ----------------------------------- | ------------------------------------------------------ |
+| Materiały              | ograniczony kontekst projektu       | **Media API** → realne assety, typ, duration, metadata |
+| Obraz                  | praktycznie brak dostępu do pikseli | **Frame API** → rzeczywiste klatki                     |
+| Timeline               | własna logika / ograniczony dostęp  | **Timeline API** → oficjalny kontrakt                  |
+| Decyzje                | głównie na podstawie stanu/promptu  | kontekst materiału + obrazu + timeline'u               |
+| Cięcia                 | może generować operacje             | może je wykonywać przez API                            |
+| Przejścia              | ograniczone                         | może świadomie dobrać miejsce i typ                    |
+| Auto Captions          | static/mock → UI                    | **realne dane Whisper → timeline**                     |
+| Analiza obrazu         | ograniczona                         | Frame API → możliwość CV/AI                            |
+| Praca na wielu klipach | bardziej „command based”            | **projekt jako całość**                                |
+| Plugin ecosystem       | API istnieje                        | Juicer sam staje się klientem tych API                 |
+
+Najważniejsza zmiana jest jednak mentalna:
+
+**teraz:**
+
+> „Juicer, dodaj A, B i C.”
+
+**po integracji:**
+
+> „Juicer, przeanalizuj te materiały, znajdź interesujące fragmenty, dopasuj je do struktury projektu i wykonaj montaż.”
+
+A jeszcze później:
+
+> „Zrób dynamiczny montaż pod beat.”
+
+I wtedy Audio API może dostarczyć rytm, Frame API obraz, Media API materiały, a Timeline API wykonanie.
+
+---
+
+## I wtedy `v0.3.0` faktycznie ma sens jako moment nagłośnienia
+
+Ja bym zrobił z tego **pierwszy „public story milestone”**, ale nie reklamowałbym jeszcze ReVideeo jako „konkurenta CapCuta”. Lepiej:
+
+> **Open-source, local-first video editor with an extensible plugin architecture and AI-assisted editing.**
+
+To jest dużo bardziej wiarygodne.
+
+### `v0.3.0`
+
+**AI + API milestone**
+
+* Frame API
+* Media API
+* Timeline API
+* realne Auto Captions
+* Juicer wykorzystujący nowe API
+* poprawiona stabilność
+* pełna regresja/testy
+
+I wtedy zaczynasz wysyłać press release do miejsc typu PurePC, Antyweb, Spider's Web, dobre kanały technologiczne itd.
+
+Nie musisz czekać na `v1.0`.
+
+---
+
+## A `v0.4.0` może być jeszcze ciekawszy
+
+Tu już masz bardzo fajny **moment demonstracyjny**:
+
+**Basic Motion jako bundled/internal plugin.**
+
+I rozumiem Twój model:
+
+```text
+ReVideeo
+├── Core
+├── Frame API
+├── Media API
+├── Timeline API
+└── Bundled plugins
+      └── Basic Motion
+```
+
+Czyli użytkownik **nie instaluje Basic Motion osobno**. Plugin jest dostarczany razem z ReVideeo i po prostu korzysta z publicznego API.
+
+To jest świetne jako demonstrator architektury:
+
+> „Zobaczcie — ta funkcja nie musi być częścią monolitycznego core. Jest pluginem, ale użytkownik nawet nie musi wiedzieć, że nim jest.”
+
+I wtedy możesz zrobić:
+
+### 🎬 Film #1 — Motion Design
+
+Krótki, efektowny:
+
+**Figma → ReVideeo → Basic Motion → final video**
+
+Bez gadania albo z minimalnym voice-overem.
+
+### 🎥 Film #2 — Polski review, ~5–8 min
+
+Tutaj już pokazujesz:
+
+* czym jest ReVideeo,
+* local-first/privacy,
+* Juicer,
+* Auto Captions,
+* plugin architecture,
+* Frame API,
+* Basic Motion,
+* jak wygląda workflow.
+
+I na końcu:
+
+> **„ReVideeo jest rozwijane w Polsce jako open-source'owy, rozszerzalny edytor wideo.”**
+
+To jest materiał, który ma znacznie większą wartość dla mediów niż samo:
+
+> „wydaliśmy nową wersję”.
+
+### I Press iTVT
+
+To też bym zsynchronizował z premierą.
+
+Nie:
+
+> „Hej, mamy fajny projekt, napiszcie o nim.”
+
+Tylko gotowy pakiet:
+
+**v0.4.0 → demo → review → screenshots → GitHub → press release → changelog.**
+
+Wtedy dziennikarz dostaje **historię gotową do opowiedzenia**.
+
+---
+
+I jeszcze jedna rzecz: **nie czekałbym z pierwszym kontaktem do mediów na gwarancję viralu**. `v0.3.0` może być pierwszym soft launch'em, a `v0.4.0 + Basic Motion + świetny film` może być właściwym dużym uderzeniem.
+
+Czyli:
+
+**0.2.3** — fundament pluginów
+↓
+**0.3.0** — 🧠 *„ReVideeo zaczyna naprawdę rozumieć projekt”*
+↓
+**0.4.0** — 🎨 *„Pluginy mogą robić rzeczy, które wyglądają profesjonalnie”*
+↓
+**film + review + press**
+↓
+**community / issues / PR / pierwsze pluginy**
+
+To jest moim zdaniem znacznie mocniejsza historia niż próba wrzucenia całego marketingu już przy `v0.2.3`.
+
+============================================================================
+============================================================================
+
+Tak — **ale nie wysyłałbym identycznego „spamu prasowego” do wszystkich naraz**. 😄
+
+Dla `v0.3.0` zrobiłbym jeden główny **Press Pack**, a potem lekko personalizował wiadomość pod redakcję.
+
+### Press Pack v0.3.0
+
+W środku:
+
+* krótki opis ReVideeo — 2–3 zdania,
+* **co nowego w v0.3.0**,
+* Frame API / Media API / Timeline API,
+* Juicer + real Auto Captions,
+* local-first / privacy,
+* EUPL / open source,
+* link do działającego demo,
+* GitHub,
+* screenshots,
+* 30–60 s demo video,
+* logo / materiały prasowe,
+* krótka historia **iTVT Poland Group / projektu**,
+* kontakt prasowy,
+* roadmapa z `v0.4.0 / Basic Motion`.
+
+I najważniejsze: **nie każ im przekopywać GitHuba, żeby zrozumieć, dlaczego to jest ciekawe.**
+
+### A wysyłka?
+
+**PurePC**
+
+> „Polski, open-source'owy edytor wideo rozwijany jako rozszerzalna platforma…”
+
+**Spider's Web**
+
+> mocniej: *local-first + AI + plugin ecosystem + polski projekt*
+
+**Dobreprogramy / Komputer Świat**
+
+> *darmowa/open-source alternatywa dla popularnych edytorów*
+
+**Benchmark / ITHardware**
+
+> *technologia: Frame API, własny core, PWA, render server, plugin architecture*
+
+Czyli **jeden Press Pack, różne leady**.
+
+I zrobiłbym to dopiero, gdy `v0.3.0` jest faktycznie gotowe i masz **działające demo**, bo wtedy redaktor może kliknąć → odpalić → zobaczyć → napisać.
+
+A potem `v0.4.0` z Basic Motion dostaje **drugi, dużo bardziej wizualny press push**:
+
+> **„ReVideeo właśnie pokazało, że jego rozszerzenia mogą działać jak pluginy w IDE — oto Basic Motion.”**
+
+I do tego film z **Figma → ReVideeo → Motion Design**. To już może być bardzo dobry materiał medialny.
+
+PRESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+
+Jasne. 😎 **Press pack możemy przygotować jako osobny milestone po domknięciu `v0.3.0`**, a nie jako coś robionego na szybko.
+
+Na wieczór proponuję zebrać:
+
+* **1 główny pitch** — „ReVideeo: polski, open-source, local-first edytor wideo z architekturą pluginów”
+* **krótki opis 50–100 słów**
+* **pełniejszy opis dla redakcji**
+* najważniejsze rzeczy z `v0.3.0`
+* **Juicer + real Auto Captions**
+* Frame / Media / Timeline API
+* privacy/local-first
+* EUPL i open source
+* iTVT Poland Group jako kontekst projektu
+* linki: demo, GitHub, release
+* screenshoty + logo
+* **30–60 s demo**
+* informacje kontaktowe
+* roadmapę `v0.4.0 → Basic Motion` i dalszy kierunek
+
+I przygotowałbym **dwie wersje narracji**:
+
+**PL:** dla PurePC, Spider's Web, Dobreprogramy itd.
+**EN:** żeby od razu można było wysłać również zagranicznym serwisom / społecznościom open source.
+
+Najważniejsze: **nie będziemy sprzedawać marzenia, tylko pokazywać działający produkt i konkretne liczby.** Np. „441+ testów”, działające API, realne Auto Captions itd. To brzmi znacznie bardziej wiarygodnie.
+
+A jeśli do wieczora `v0.3.0` będzie gotowe, możemy zrobić z tego wręcz:
+
+**ReVideeo v0.3.0 Press Kit — ready to send.**
+
+I wtedy przed wysyłką jeszcze raz sprawdzimy wszystkie claimy, żeby w press packu nie znalazło się przypadkiem coś, czego obecna wersja jeszcze faktycznie nie robi.
+
+
