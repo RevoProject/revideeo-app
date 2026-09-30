@@ -1,4 +1,4 @@
 {
-  "version": "0.4.0",
-  "changelog": "Timeline upgraded with solo and collapse track controls, draggable playhead handle, zoom-to-fit, adaptive ruler density, snap guide feedback, and refreshed PWA cache for the 0.4.0 release."
+  "version": "0.4.1",
+  "changelog": "Audio assets now generate real waveform peaks for timeline clips, while the app version and PWA cache are refreshed for the 0.4.1 release."
 }

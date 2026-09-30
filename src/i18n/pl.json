@@ -536,12 +536,12 @@
 
   "release.title": "Co nowego",
   "release.understand": "Rozumiem!",
-  "release.migration.title": "Rozbudowa workflow timeline'u",
-  "release.migration.desc": "Timeline dostał kompaktowe i zwijane ścieżki, tryb solo, dopasowanie zoomu do zawartości oraz gęstszą, adaptacyjną linijkę czasu w stylu Clipchamp.",
-  "release.fixes.title": "Lepszy feedback edycji",
-  "release.fixes.desc": "Playhead ma teraz przeciągalny uchwyt, dwuklik na klipie nie przestawia już osi, a podczas przeciągania pojawia się widoczna linia snapowania.",
-  "release.eupl.title": "Odświeżenie cache 0.4.0",
-  "release.eupl.desc": "Wersja aplikacji i cache service workera zostały odświeżone dla v0.4.0, aby nowe zachowanie timeline'u poprawnie trafiło do zainstalowanych buildów.",
+  "release.migration.title": "Prawdziwe waveformy audio",
+  "release.migration.desc": "Importowane audio generuje teraz rzeczywiste piki waveformu, które są zapisywane w metadanych projektu i ponownie używane przez klipy na timeline.",
+  "release.fixes.title": "Czytelniejszy timeline audio",
+  "release.fixes.desc": "Klipy audio pokazują teraz słupki waveformu bezpośrednio na osi czasu, co ułatwia montaż rytmu, pauz i wypowiedzi.",
+  "release.eupl.title": "Odświeżenie cache 0.4.1",
+  "release.eupl.desc": "Wersja aplikacji i cache service workera zostały odświeżone dla v0.4.1, aby zainstalowane buildy poprawnie pobrały timeline z waveformami audio.",
 
   "release.bugfixes.title": "Poprawki błędów",
   "release.bugfixes.desc": "Odśwież klip nie resetuje już klipu — zachowuje wszystkie edycje na osi czasu. Sesje Juicera mają przypisania tylko do bieżącej sesji. Rozszerzenie klipu teraz popchnie kolejne klipy na tym samym torze.",

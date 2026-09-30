@@ -536,12 +536,12 @@
 
   "release.title": "What's New",
   "release.understand": "Got it!",
-  "release.migration.title": "Timeline Workflow Upgrade",
-  "release.migration.desc": "Tracks now support compact/collapsed layouts, solo monitoring, zoom-to-fit, and a denser adaptive ruler for more Clipchamp-like editing flow.",
-  "release.fixes.title": "Editing Feedback Improvements",
-  "release.fixes.desc": "The playhead now has a draggable handle, clip double-click no longer seeks unexpectedly, and drag operations show a visible snap guide for alignment.",
-  "release.eupl.title": "0.4.0 Cache Refresh",
-  "release.eupl.desc": "App version and service worker cache were refreshed for v0.4.0 so installed builds receive the new timeline behavior cleanly.",
+  "release.migration.title": "Real Audio Waveforms",
+  "release.migration.desc": "Imported audio now generates real waveform peaks that are preserved in project metadata and reused by timeline clips.",
+  "release.fixes.title": "Audio Timeline Readability",
+  "release.fixes.desc": "Audio clips now show waveform bars directly inside the timeline, making rhythm, pauses, and spoken edits easier to read while editing.",
+  "release.eupl.title": "0.4.1 Cache Refresh",
+  "release.eupl.desc": "App version and service worker cache were refreshed for v0.4.1 so installed builds pick up the waveform-enabled timeline correctly.",
 
   "release.bugfixes.title": "Bug Fixes",
   "release.bugfixes.desc": "Refresh Clip no longer resets the clip — it preserves all timeline edits. Juicer session-scoped attachments: each request only receives the files you attach for that session. Ripple edit: extending a clip now correctly pushes following clips on the same track.",

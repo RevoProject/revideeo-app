@@ -536,12 +536,12 @@
 
   "release.title": "Neuigkeiten",
   "release.understand": "Verstanden!",
-  "release.migration.title": "Timeline-Workflow-Ausbau",
-  "release.migration.desc": "Die Timeline unterstützt jetzt kompakte und einklappbare Spuren, Solo-Monitoring, Zoom-to-Fit und eine dichtere adaptive Zeitskala im Clipchamp-Stil.",
-  "release.fixes.title": "Besseres Editing-Feedback",
-  "release.fixes.desc": "Der Abspielkopf hat jetzt einen ziehbaren Griff, Doppelklick auf Clips verschiebt ihn nicht mehr, und beim Ziehen erscheint eine sichtbare Snap-Hilfslinie.",
-  "release.eupl.title": "0.4.0 Cache-Aktualisierung",
-  "release.eupl.desc": "App-Version und Service-Worker-Cache wurden für v0.4.0 aktualisiert, damit installierte Builds das neue Timeline-Verhalten sauber erhalten.",
+  "release.migration.title": "Echte Audio-Waveforms",
+  "release.migration.desc": "Importiertes Audio erzeugt jetzt echte Waveform-Peaks, die in den Projektmetadaten gespeichert und von Timeline-Clips wiederverwendet werden.",
+  "release.fixes.title": "Bessere Lesbarkeit im Audio-Timeline",
+  "release.fixes.desc": "Audioclips zeigen nun Waveform-Balken direkt in der Timeline, wodurch Rhythmus, Pausen und Sprachschnitte leichter zu erkennen sind.",
+  "release.eupl.title": "0.4.1 Cache-Aktualisierung",
+  "release.eupl.desc": "App-Version und Service-Worker-Cache wurden für v0.4.1 aktualisiert, damit installierte Builds die Audio-Waveforms korrekt übernehmen.",
 
   "release.bugfixes.title": "Fehlerbehebungen",
   "release.bugfixes.desc": "Clip-Refresh setzt den Clip nicht mehr zurück — alle Timeline-Bearbeitungen bleiben erhalten. Juicer session-scoped Anhänge: Jede Anfrage erhält nur die Dateien, die Sie für diese Sitzung anhängen. Ripple-Edit: Das Verlängern eines Clips verschiebt jetzt korrekt die folgenden Clips auf derselben Spur.",
