@@ -25,7 +25,14 @@ export const parsePositionInput = (value: string, fps: number): number | null =>
   return Math.round(seconds * fps);
 };
 
-export const getRulerStepSeconds = (totalFrames: number, fps: number): number => {
+export const getRulerStepSeconds = (totalFrames: number, fps: number, zoom?: number): number => {
   const seconds = totalFrames / fps;
-  return seconds <= 30 ? 5 : seconds <= 120 ? 10 : seconds <= 600 ? 30 : 60;
+  if (zoom === undefined) {
+    return seconds <= 30 ? 5 : seconds <= 120 ? 10 : seconds <= 600 ? 30 : 60;
+  }
+  if (zoom >= 3) return seconds <= 30 ? 0.5 : seconds <= 120 ? 1 : 2;
+  if (zoom >= 2) return seconds <= 30 ? 1 : seconds <= 120 ? 2 : 5;
+  if (zoom >= 1) return seconds <= 30 ? 2 : seconds <= 120 ? 5 : 10;
+  if (zoom >= 0.5) return seconds <= 120 ? 10 : seconds <= 600 ? 15 : 30;
+  return seconds <= 120 ? 15 : seconds <= 600 ? 30 : 60;
 };

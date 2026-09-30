@@ -233,7 +233,7 @@ export interface PluginProjectAPI {
   getName: () => string;
   getConfig: () => { resolutionLabel: string; orientation: string; fps: number };
   getTrackCount: () => number;
-  getTrackSettings: () => { name: string; locked: boolean; muted: boolean; hidden: boolean }[];
+  getTrackSettings: () => { name: string; locked: boolean; muted: boolean; hidden: boolean; solo?: boolean; collapsed?: boolean }[];
   isDirty: () => void;
   markDirty: () => void;
 }

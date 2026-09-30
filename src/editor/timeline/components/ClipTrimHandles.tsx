@@ -17,8 +17,8 @@ export const ClipTrimHandles = ({ disabled, onTrimLeftPointerDown, onTrimRightPo
   if (disabled) return null;
   return (
     <>
-      <div onPointerDown={onTrimLeftPointerDown} style={{ touchAction: 'none' }} className="absolute left-0 top-0 bottom-0 z-30 w-1 cursor-ew-resize bg-blue-300/70 hover:bg-white" title="Przytnij początek klipu" />
-      <div onPointerDown={onTrimRightPointerDown} style={{ touchAction: 'none' }} className="absolute right-0 top-0 bottom-0 z-30 w-1 cursor-ew-resize bg-blue-300/70 hover:bg-white" title={t('timeline.trimEnd')} />
+      <div onPointerDown={onTrimLeftPointerDown} style={{ touchAction: 'none' }} className="absolute left-0 top-0 bottom-0 z-30 w-1.5 cursor-ew-resize bg-blue-300/80 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white" title="Przytnij początek klipu" />
+      <div onPointerDown={onTrimRightPointerDown} style={{ touchAction: 'none' }} className="absolute right-0 top-0 bottom-0 z-30 w-1.5 cursor-ew-resize bg-blue-300/80 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white" title={t('timeline.trimEnd')} />
     </>
   );
 };

@@ -105,6 +105,7 @@ import { ReleaseChangesModal } from './components/modals/ReleaseChangesModal';
 import { UpdateModal } from './components/shared/UpdateModal';
 import { useTranslation } from './i18n';
 import { registerServiceWorker, checkForUpdate } from './pwa';
+import { createAudioWaveform } from './utils/audioWaveform';
 
 const DEFAULT_FPS = 30;
 
@@ -164,7 +165,7 @@ const normalizeFps = (fps: number | undefined): number =>
 const makeId = (): string => generateId();
 
 const defaultTrackSettings = (count: number, t: (key: string, params?: Record<string, string>) => string): TrackSettings[] =>
-  Array.from({ length: count }, (_, index) => ({ name: t('timeline.track', { index: String(index + 1) }), locked: false, muted: false, hidden: false }));
+  Array.from({ length: count }, (_, index) => ({ name: t('timeline.track', { index: String(index + 1) }), locked: false, muted: false, hidden: false, solo: false, collapsed: false }));
 
 const normalizeTrackSettings = (settings: TrackSettings[] | undefined, count: number, t: (key: string, params?: Record<string, string>) => string): TrackSettings[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -172,6 +173,8 @@ const normalizeTrackSettings = (settings: TrackSettings[] | undefined, count: nu
     locked: settings?.[index]?.locked ?? false,
     muted: settings?.[index]?.muted ?? false,
     hidden: settings?.[index]?.hidden ?? false,
+    solo: settings?.[index]?.solo ?? false,
+    collapsed: settings?.[index]?.collapsed ?? false,
   }));
 
 const renumberDefaultTrackNames = (settings: TrackSettings[], t: (key: string, params?: Record<string, string>) => string): TrackSettings[] => {
@@ -432,7 +435,7 @@ export default function ReVideeo() {
   });
   const [showRelease, setShowRelease] = useState(() => {
     const lastSeen = localStorage.getItem('revideeo:lastSeenVersion');
-    return lastSeen !== '0.3.1';
+    return lastSeen !== '0.4.0';
   });
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const { setLang, t } = useTranslation();
@@ -658,10 +661,12 @@ export default function ReVideeo() {
   }, [clips]);
 
   const contentFrames = useMemo(() => {
+    const hasSolo = (project?.trackSettings ?? []).some((track) => track.solo);
     let maxEnd = 0;
     for (const clip of clips) {
       const track = project?.trackSettings?.[clip.trackIndex];
       if (track?.hidden) continue;
+      if (hasSolo && !track?.solo) continue;
       const asset = assets.find((a) => a.sourceId === clip.sourceId);
       const assetDuration = asset?.durationInFrames ?? clip.durationInFrames;
       const clipEnd = clip.offsetInTimeline + Math.min(clip.durationInFrames, assetDuration);
@@ -740,6 +745,29 @@ export default function ReVideeo() {
     });
   }, [clips, assets, mediaHttpUrls]);
 
+  useEffect(() => {
+    setClips((previous) => {
+      let changed = false;
+      const next = previous.map((clip) => {
+        if (clip.type !== 'audio' || (clip.waveform?.length ?? 0) > 0) return clip;
+        const waveform = assets.find((asset) => asset.sourceId === clip.sourceId)?.waveform;
+        if (!waveform || waveform.length === 0) return clip;
+        changed = true;
+        return { ...clip, waveform };
+      });
+      return changed ? next : previous;
+    });
+  }, [assets]);
+  const effectiveTrackSettings = useMemo(() => {
+    const normalized = normalizeTrackSettings(project?.trackSettings, project?.trackCount ?? DEFAULT_TRACKS, t);
+    const hasSolo = normalized.some((track) => track.solo);
+    return normalized.map((track) => ({
+      ...track,
+      hidden: track.hidden || (hasSolo && !track.solo),
+      muted: track.muted || (hasSolo && !track.solo),
+    }));
+  }, [project?.trackSettings, project?.trackCount, t]);
+
   const revokeMedia = useCallback(() => {
     mediaUrls.current.forEach((url) => URL.revokeObjectURL(url));
     mediaUrls.current.clear();
@@ -780,10 +808,10 @@ export default function ReVideeo() {
       isPlaying,
     }),
     getStoredClips: () => clips,
-    getTrackSettings: () => project?.trackSettings ?? [],
+      getTrackSettings: () => effectiveTrackSettings,
     seekTo,
     playerRef,
-  }), [currentFrame, FPS, totalFrames, contentFrames, isPlaying, clips, project?.trackSettings, seekTo, playerRef]);
+  }), [currentFrame, FPS, totalFrames, contentFrames, isPlaying, clips, effectiveTrackSettings, seekTo, playerRef]);
 
   const juicerPublicApi = useMemo(() => ({
     frame: { getContext: () => ({ frame: currentFrame, time: FPS > 0 ? currentFrame / FPS : 0, fps: FPS, width: 1920, height: 1080, durationInFrames: totalFrames }) },
@@ -794,11 +822,11 @@ export default function ReVideeo() {
     timelineApi: {
       getState: () => ({ frame: currentFrame, time: FPS > 0 ? currentFrame / FPS : 0, fps: FPS, durationInFrames: totalFrames, durationInSeconds: FPS > 0 ? totalFrames / FPS : 0, contentDurationInFrames: contentFrames, contentDurationInSeconds: FPS > 0 ? contentFrames / FPS : 0, isPlaying }),
       getClips: () => clips.map((c) => ({ id: c.id, type: (c.type ?? 'video') as 'video' | 'text' | 'audio' | 'image', sourceId: c.sourceId, trackIndex: c.trackIndex, offsetInTimeline: c.offsetInTimeline, startFrame: c.startFrame, durationInFrames: c.durationInFrames, transitionIn: c.transitionIn })),
-      getTracks: () => (project?.trackSettings ?? []).map((s, i) => ({ index: i, name: s.name, locked: s.locked, muted: s.muted, hidden: s.hidden })),
+      getTracks: () => effectiveTrackSettings.map((s, i) => ({ index: i, name: s.name, locked: s.locked, muted: s.muted, hidden: s.hidden })),
       seekTo, play: () => playerRef.current?.toggle(), pause: () => playerRef.current?.toggle(), toggle: () => playerRef.current?.toggle(),
       getClipById: () => null, getClipsAtFrame: () => [],
     },
-  }), [currentFrame, FPS, totalFrames, contentFrames, isPlaying, clips, assets, project?.trackSettings, seekTo, playerRef]);
+  }), [currentFrame, FPS, totalFrames, contentFrames, isPlaying, clips, assets, effectiveTrackSettings, seekTo, playerRef]);
 
   useEffect(() => {
     if (project) {
@@ -1082,7 +1110,8 @@ export default function ReVideeo() {
       const probeUrl = URL.createObjectURL(file);
       const durationInFrames = await loadVideoDurationInFrames(probeUrl, FPS);
       URL.revokeObjectURL(probeUrl);
-      const thumbnails = await createVideoThumbnails(file);
+      const thumbnails = file.type.startsWith('audio/') ? [] : await createVideoThumbnails(file);
+      const waveform = file.type.startsWith('audio/') ? await createAudioWaveform(file) : undefined;
       replacedAssetsHistoryRef.current.push({ sourceId, asset: previousAsset, clips: clipsRef.current });
       const oldUrl = mediaUrls.current.get(sourceId);
       if (oldUrl) {
@@ -1090,14 +1119,14 @@ export default function ReVideeo() {
         mediaUrls.current.delete(sourceId);
       }
       setAssets((prev) => prev.map((asset) => asset.sourceId === sourceId
-        ? { ...asset, blob: file, durationInFrames, thumbnails }
+        ? { ...asset, blob: file, durationInFrames, thumbnails, waveform }
         : asset));
       setClips((prev) => prev.map((clip) => {
         if (clip.sourceId !== sourceId) return clip;
         const maxStart = Math.max(0, durationInFrames - 1);
         const startFrame = Math.min(clip.startFrame, maxStart);
         const maxDuration = Math.max(1, durationInFrames - startFrame);
-        return { ...clip, startFrame, durationInFrames: Math.min(clip.durationInFrames, maxDuration) };
+        return { ...clip, startFrame, durationInFrames: Math.min(clip.durationInFrames, maxDuration), waveform };
       }));
       setDirty(true);
       setReplacementSourceId(null);
@@ -1397,8 +1426,9 @@ export default function ReVideeo() {
     const probeUrl = URL.createObjectURL(file);
     const durationInFrames = await loadVideoDurationInFrames(probeUrl, FPS);
     URL.revokeObjectURL(probeUrl);
-    const thumbnails = file.type.startsWith('image/') ? [] : await createVideoThumbnails(file);
-    setAssets((prev) => [...prev, { sourceId, name: file.name, durationInFrames, blob: file, thumbnails }]);
+    const thumbnails = file.type.startsWith('image/') || file.type.startsWith('audio/') ? [] : await createVideoThumbnails(file);
+    const waveform = file.type.startsWith('audio/') ? await createAudioWaveform(file) : undefined;
+    setAssets((prev) => [...prev, { sourceId, name: file.name, durationInFrames, blob: file, thumbnails, waveform }]);
     setDirty(true);
     return sourceId;
   }, [FPS]);
@@ -1457,11 +1487,12 @@ export default function ReVideeo() {
         scale: 1,
         posX: 0,
         posY: 0,
-        width: 100,
-        height: 100,
-        transitionIn: 'none',
-        transitionDurationInFrames: DEFAULT_TRANSITION_DURATION,
-      };
+          width: 100,
+          height: 100,
+          waveform: asset.waveform,
+          transitionIn: 'none',
+          transitionDurationInFrames: DEFAULT_TRANSITION_DURATION,
+        };
       beginEdit();
       setClips((prev) => splitOverlapsForClip(prev, clip));
       setSelectedClipId(clip.id);
@@ -1590,10 +1621,10 @@ export default function ReVideeo() {
       savedAt: Date.now(),
       config: project.config,
       clips,
-      assets: assets.map((a) => ({ sourceId: a.sourceId, name: a.name, durationInFrames: a.durationInFrames })),
+      assets: assets.map((a) => ({ sourceId: a.sourceId, name: a.name, durationInFrames: a.durationInFrames, waveform: a.waveform })),
       trackCount: project.trackCount,
       markers,
-      trackSettings: project.trackSettings,
+        trackSettings: effectiveTrackSettings,
     };
     try {
       await Promise.all(assets.map((asset) => putMedia(project.id, asset.sourceId, asset.blob)));
@@ -1634,7 +1665,8 @@ export default function ReVideeo() {
             return null;
           }
           const meta = (stored.assets ?? []).find((a) => a.sourceId === sourceId);
-          const thumbnails = await createVideoThumbnails(blob);
+          const thumbnails = blob.type.startsWith('audio/') || blob.type.startsWith('image/') ? [] : await createVideoThumbnails(blob);
+          const waveform = meta?.waveform ?? (blob.type.startsWith('audio/') ? await createAudioWaveform(blob) : undefined);
           completed += 1;
           setLoading({ progress: completed / Math.max(1, sourceIds.length), label: t('import.storing') });
           return {
@@ -1643,6 +1675,7 @@ export default function ReVideeo() {
             durationInFrames: meta?.durationInFrames ?? Math.round(DEFAULT_DURATION_SECONDS * normalizeFps(stored.config.fps)),
             blob,
             thumbnails,
+            waveform,
           } satisfies MediaAsset;
         }))).filter((asset): asset is MediaAsset => asset !== null);
         setAssets(loaded);
@@ -1738,7 +1771,7 @@ export default function ReVideeo() {
       savedAt: Date.now(),
       config: project.config,
         clips,
-      assets: assets.map((a) => ({ sourceId: a.sourceId, name: a.name, durationInFrames: a.durationInFrames })),
+      assets: assets.map((a) => ({ sourceId: a.sourceId, name: a.name, durationInFrames: a.durationInFrames, waveform: a.waveform })),
       trackCount: project.trackCount,
       markers,
       trackSettings: project.trackSettings,
@@ -2605,7 +2638,7 @@ export default function ReVideeo() {
         <WelcomeModal onDismiss={() => { localStorage.setItem('revideeo:welcomed', '1'); setShowWelcome(false); }} />
       )}
       {!showWelcome && showRelease && (
-        <ReleaseChangesModal version="0.3.1" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.3.1'); setShowRelease(false); }} />
+        <ReleaseChangesModal version="0.4.0" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.4.0'); setShowRelease(false); }} />
       )}
     </div>
   );

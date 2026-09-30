@@ -25,10 +25,10 @@ export const TransitionHandle = ({ left, width, title, label, top = '0', bottom 
     onContextMenu={onContextMenu}
     style={{ left, width, top, bottom, touchAction: 'none', zIndex: 25 }}
     title={title}
-    className="absolute flex items-center justify-center gap-0.5 cursor-ew-resize"
+    className="absolute flex items-center justify-center gap-0.5 cursor-ew-resize rounded-md"
   >
     <div
-      className="absolute inset-0 rounded-sm"
+      className="absolute inset-0 rounded-md"
       style={{
         backgroundColor: 'rgba(192, 38, 211, 0.85)',
         boxShadow: '0 0 12px rgba(217, 70, 239, 0.6), inset 0 0 6px rgba(217, 70, 239, 0.3)',

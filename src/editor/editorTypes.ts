@@ -24,6 +24,7 @@ export interface MediaAsset {
   durationInFrames: number;
   blob: Blob;
   thumbnails?: string[];
+  waveform?: number[];
 }
 
 export interface OutgoingTransition {

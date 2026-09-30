@@ -59,6 +59,7 @@ export interface StoredClip {
   textColor?: string;
   textAlign?: 'left' | 'center' | 'right';
   textBackground?: string;
+  waveform?: number[];
   transitionIn: TransitionType;
   transitionDurationInFrames: number;
 }
@@ -67,6 +68,7 @@ export interface MediaAssetMeta {
   sourceId: string;
   name: string;
   durationInFrames: number;
+  waveform?: number[];
 }
 
 export interface TimelineMarker {
@@ -79,6 +81,8 @@ export interface TrackSettings {
   locked: boolean;
   muted: boolean;
   hidden: boolean;
+  solo?: boolean;
+  collapsed?: boolean;
 }
 
 export interface StoredProject {

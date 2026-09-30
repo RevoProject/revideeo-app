@@ -1,4 +1,4 @@
 {
-  "version": "0.3.1",
-  "changelog": "Browser playback stability fixes, FPS/speed corrections, timeline ripple behavior, Auto Captions media discovery fix, PWA cache invalidation, documentation remaster."
+  "version": "0.4.0",
+  "changelog": "Timeline upgraded with solo and collapse track controls, draggable playhead handle, zoom-to-fit, adaptive ruler density, snap guide feedback, and refreshed PWA cache for the 0.4.0 release."
 }

@@ -22,9 +22,14 @@ export interface TimelineAsset {
   name: string;
   durationInFrames: number;
   thumbnails?: string[];
+  waveform?: number[];
 }
 
 const ROW_H = 88;
+const COMPACT_ROW_H = 60;
+const MOBILE_ROW_H = 64;
+const MOBILE_COMPACT_ROW_H = 48;
+const TRACK_GAP = 8;
 const MIN_TRANSITION_DURATION = 5;
 const MAX_TRANSITION_DURATION = 30;
 
@@ -83,7 +88,6 @@ export const Timeline = ({
   onOpenProperties, onOpenTransitions, onClipDragEnd, height, mobile = false,
 }: TimelineProps) => {
   const { t } = useTranslation();
-  const rowHeight = mobile ? 64 : ROW_H;
   const areaRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<TimelineDrag | null>(null);
   const pinchingRef = useRef(false);
@@ -98,10 +102,38 @@ export const Timeline = ({
   const [areaWidth, setAreaWidth] = useState(0);
   const [selectionBox, setSelectionBox] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const [transitionDragLabel, setTransitionDragLabel] = useState<{ x: number; y: number; td: number } | null>(null);
+  const [snapGuideFrame, setSnapGuideFrame] = useState<number | null>(null);
   const trackClips = useMemo(() => groupByTrack(clips), [clips]);
   // Render the highest layer at the top while keeping Track 1 at the bottom.
   const tracks = Array.from({ length: trackCount }, (_, index) => trackCount - 1 - index);
+  const defaultRowHeight = mobile ? MOBILE_ROW_H : ROW_H;
+  const compactRowHeight = mobile ? MOBILE_COMPACT_ROW_H : COMPACT_ROW_H;
+  const trackLayouts = useMemo(() => {
+    let top = 0;
+    return tracks.map((trackIndex) => {
+      const clipsOnTrack = trackClips.get(trackIndex) ?? [];
+      const hasClips = clipsOnTrack.length > 0;
+      const hasVisualMedia = clipsOnTrack.some((clip) => clip.type === 'video' || clip.type === 'image' || clip.type === undefined);
+      const isCollapsed = trackSettings[trackIndex]?.collapsed;
+      const rowHeight = isCollapsed ? 40 : hasClips && !hasVisualMedia ? compactRowHeight : defaultRowHeight;
+      const layout = { trackIndex, top, height: rowHeight };
+      top += rowHeight + TRACK_GAP;
+      return layout;
+    });
+  }, [compactRowHeight, defaultRowHeight, trackClips, trackSettings, tracks]);
+  const totalTrackHeight = useMemo(() => {
+    if (trackLayouts.length === 0) return 0;
+    const lastLayout = trackLayouts[trackLayouts.length - 1];
+    return lastLayout.top + lastLayout.height;
+  }, [trackLayouts]);
   const pct = useCallback((value: number) => `${(value / totalFrames) * 100}%`, [totalFrames]);
+  const getTrackAtY = useCallback((y: number) => {
+    const clampedY = Math.max(0, Math.min(totalTrackHeight, y));
+    for (const layout of trackLayouts) {
+      if (clampedY < layout.top + layout.height + TRACK_GAP) return layout.trackIndex;
+    }
+    return trackLayouts[trackLayouts.length - 1]?.trackIndex ?? 0;
+  }, [totalTrackHeight, trackLayouts]);
 
   useEffect(() => {
     if (!isPlaying && playheadRef.current) {
@@ -113,6 +145,32 @@ export const Timeline = ({
     const rect = event.currentTarget.getBoundingClientRect();
     onSeek(Math.max(0, Math.min(totalFrames, Math.round(((event.clientX - rect.left) / rect.width) * totalFrames))));
   };
+  const seekFromClientX = useCallback((clientX: number) => {
+    const area = areaRef.current;
+    if (!area) return;
+    const rect = area.getBoundingClientRect();
+    onSeek(Math.max(0, Math.min(totalFrames, Math.round(((clientX - rect.left) / rect.width) * totalFrames))));
+  }, [onSeek, totalFrames]);
+  const fitZoom = useCallback(() => {
+    setZoom(1);
+    if (scrollRef.current) scrollRef.current.scrollLeft = 0;
+  }, [setZoom]);
+  const getSnapFrame = useCallback((clipId: string, targetTrack: number, proposedOffset: number) => {
+    const movingIds = new Set((dragRef.current?.kind === 'clip' ? dragRef.current.clipIds : [clipId]));
+    const candidates = clips
+      .filter((clip) => clip.trackIndex === targetTrack && !movingIds.has(clip.id))
+      .flatMap((clip) => [clip.offsetInTimeline, clip.offsetInTimeline + clip.durationInFrames, currentFrame]);
+    let best: number | null = null;
+    let bestDistance = 12;
+    for (const candidate of candidates) {
+      const distance = Math.abs(candidate - proposedOffset);
+      if (distance <= bestDistance) {
+        best = candidate;
+        bestDistance = distance;
+      }
+    }
+    return best;
+  }, [clips, currentFrame]);
 
   const beginMarquee = (event: React.PointerEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -220,24 +278,31 @@ export const Timeline = ({
         setSelectionBox({ left, top, width: right - left, height: bottom - top });
         const minFrame = Math.round((left / rect.width) * totalFrames);
         const maxFrame = Math.round((right / rect.width) * totalFrames);
-        const minVisualTrack = Math.max(0, Math.floor(top / rowHeight));
-        const maxVisualTrack = Math.min(trackCount - 1, Math.floor(bottom / rowHeight));
-        const minTrack = trackCount - 1 - maxVisualTrack;
-        const maxTrack = trackCount - 1 - minVisualTrack;
-        onSelectClips(clips.filter((clip) => clip.trackIndex >= minTrack && clip.trackIndex <= maxTrack && clip.offsetInTimeline < maxFrame && clip.offsetInTimeline + clip.durationInFrames > minFrame).map((clip) => clip.id));
+        const selectedTracks = trackLayouts
+          .filter((layout) => bottom > layout.top && top < layout.top + layout.height)
+          .map((layout) => layout.trackIndex);
+        onSelectClips(clips.filter((clip) => selectedTracks.includes(clip.trackIndex) && clip.offsetInTimeline < maxFrame && clip.offsetInTimeline + clip.durationInFrames > minFrame).map((clip) => clip.id));
         return;
       }
       if (drag.kind === 'clip') {
         if (!drag.moved) { drag.moved = true; onBeginEdit(); }
-        const visualTrack = Math.max(0, Math.min(trackCount - 1, Math.floor((event.clientY - rect.top) / rowHeight)));
-        const newTrack = trackCount - 1 - visualTrack;
+        const newTrack = getTrackAtY(event.clientY - rect.top);
         const trackDelta = newTrack - drag.originalTrack;
-        drag.originals.forEach((original) => onUpdateClipFromDrag(original.id, { offsetInTimeline: Math.max(0, Math.round(original.offset + dx * framesPerPixel)), trackIndex: Math.max(0, Math.min(trackCount - 1, original.track + trackDelta)) }));
+        drag.originals.forEach((original, index) => {
+          const targetTrack = Math.max(0, Math.min(trackCount - 1, original.track + trackDelta));
+          const proposedOffset = Math.max(0, Math.round(original.offset + dx * framesPerPixel));
+          const snappedOffset = index === 0 ? getSnapFrame(original.id, targetTrack, proposedOffset) ?? proposedOffset : proposedOffset;
+          if (index === 0) setSnapGuideFrame(snappedOffset !== proposedOffset ? snappedOffset : null);
+          onUpdateClipFromDrag(original.id, { offsetInTimeline: snappedOffset, trackIndex: targetTrack });
+        });
       } else if (drag.kind === 'transition') {
         if (!drag.moved) { drag.moved = true; onBeginEdit(); }
         const td = Math.max(MIN_TRANSITION_DURATION, Math.min(MAX_TRANSITION_DURATION, Math.round(drag.originalTd + dx * framesPerPixel)));
         onTransitionResize(drag.clipId, td);
         setTransitionDragLabel({ x: event.clientX, y: event.clientY, td });
+      } else if (drag.kind === 'playhead') {
+        drag.moved = true;
+        seekFromClientX(event.clientX);
       } else {
         if (!drag.moved) { drag.moved = true; onBeginEdit(); }
         const delta = Math.round(dx * framesPerPixel);
@@ -260,13 +325,14 @@ export const Timeline = ({
         onTransitionDrop(drag.clipId, Math.round(((event.clientX - rect.left) / rect.width) * totalFrames));
       }
       if (drag.kind === 'marquee') setSelectionBox(null);
+      setSnapGuideFrame(null);
       setTransitionDragLabel(null);
       dragRef.current = null;
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
-  }, [clips, onBeginEdit, onSelectClips, onTransitionDrop, onTransitionResize, onUpdateClipFromDrag, onClipDragEnd, rowHeight, totalFrames, trackCount, areaWidth]);
+  }, [areaWidth, clips, getSnapFrame, getTrackAtY, onBeginEdit, onClipDragEnd, onSelectClips, onTransitionDrop, onTransitionResize, onUpdateClipFromDrag, seekFromClientX, totalFrames, trackCount, trackLayouts]);
 
   const handleMediaDrop = (event: React.DragEvent, trackIndex: number) => {
     event.preventDefault();
@@ -280,7 +346,7 @@ export const Timeline = ({
   return (
     <div className={`${mobile ? 'h-full' : 'shrink-0'} bg-[#18191c] flex flex-col`} style={!mobile && height ? { height } : undefined}>
       {!mobile && (
-        <TimelineControls mobile={mobile} playerRef={playerRef} isPlaying={isPlaying} trackCount={trackCount} maxTracks={getMaxTracks()} currentFrame={currentFrame} totalFrames={totalFrames} fps={fps} onSeek={onSeek} onSplit={onSplit} onAddTrack={onAddTrack} />
+        <TimelineControls mobile={mobile} playerRef={playerRef} isPlaying={isPlaying} trackCount={trackCount} maxTracks={getMaxTracks()} currentFrame={currentFrame} totalFrames={totalFrames} fps={fps} onSeek={onSeek} onSplit={onSplit} onAddTrack={onAddTrack} onFitZoom={fitZoom} />
       )}
       {mobile && <div className="flex shrink-0 items-center gap-2 border-b border-[#222429] bg-[#18191c] px-3 py-1.5"><span className="text-[10px] text-gray-500">Zoom</span><input type="range" min={MIN_ZOOM} max={4} step={0.05} value={timelineZoom} onChange={(event) => setZoom(Number(event.target.value))} className="w-full accent-[#2563EB]" aria-label={t('timeline.zoomAria')} /><span className="w-8 text-right font-mono text-[10px] text-gray-500">{timelineZoom.toFixed(1)}x</span></div>}
       <div
@@ -291,18 +357,18 @@ export const Timeline = ({
         onTouchMove={mobile ? onTouchMove : undefined}
         onTouchEnd={mobile ? onTouchEnd : undefined}
       >
-        <div className={mobile ? 'flex min-w-0 w-full' : 'flex min-w-[560px]'} style={{ height: trackCount * rowHeight + 32 }}>
-          <div className={`flex flex-col gap-1.5 shrink-0 ${mobile ? 'w-12 mr-1' : 'w-40 mr-1.5'}`}>
-            <div className="h-8 shrink-0 flex items-center justify-end"><button type="button" onClick={onQuickTransition} title={t('timeline.insertTransition')} className="h-7 w-8 flex items-center justify-center rounded bg-[#202124] text-gray-400 hover:bg-[#2a2b30] hover:text-blue-300"><ArrowRightLeft size={14} /></button></div>
-            {tracks.map((track) => <TrackHeader key={track} trackIndex={track} mobile={mobile} showControls={!mobile} settings={trackSettings[track]} selected={selectedTrack === track} onSelect={() => onSelectTrack(track)} onToggle={(key) => onToggleTrackSetting(track, key)} onRename={(name) => onRenameTrack(track, name)} onContextMenu={(event) => onContextMenuTrack(event, track)} />)}
+        <div className={mobile ? 'flex min-w-0 w-full' : 'flex min-w-[560px]'} style={{ height: totalTrackHeight + 32 }}>
+           <div className={`flex flex-col gap-2 shrink-0 ${mobile ? 'w-12 mr-1' : 'w-40 mr-1.5'}`}>
+             <div className="h-8 shrink-0 flex items-center justify-end"><button type="button" onClick={onQuickTransition} title={t('timeline.insertTransition')} className="flex h-8 w-8 items-center justify-center rounded-md bg-[#202124] text-gray-400 transition-colors hover:bg-[#2a2b30] hover:text-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"><ArrowRightLeft size={14} /></button></div>
+            {trackLayouts.map((layout) => <TrackHeader key={layout.trackIndex} trackIndex={layout.trackIndex} height={layout.height} mobile={mobile} showControls={!mobile} settings={trackSettings[layout.trackIndex]} selected={selectedTrack === layout.trackIndex} onSelect={() => onSelectTrack(layout.trackIndex)} onToggle={(key) => onToggleTrackSetting(layout.trackIndex, key)} onRename={(name) => onRenameTrack(layout.trackIndex, name)} onContextMenu={(event) => onContextMenuTrack(event, layout.trackIndex)} />)}
           </div>
           <div className="relative min-w-0 flex-1">
             <TimelineRuler totalFrames={totalFrames} fps={fps} zoom={timelineZoom} onPointerDown={() => onClearSelection()} onDoubleClick={(event) => { seekFromEvent(event); onClearSelection(); }} />
-            <div ref={areaRef} className="relative" style={{ height: trackCount * rowHeight, minWidth: mobile ? undefined : `${timelineZoom * 100}%`, width: mobile && timelineZoom < 1 ? `${timelineZoom * 100}%` : undefined }} onPointerDown={beginMarquee}>
-              <div className="flex flex-col gap-1.5">
-                {tracks.map((track) => <div key={track} className={`${mobile ? 'h-14' : 'h-20'} border rounded relative overflow-hidden ${selectedTrack === track ? 'border-blue-500 bg-blue-600/15' : 'border-[#2d3037] bg-[#1c1d21]'}`} onPointerDown={beginMarquee} onDoubleClick={(event) => { seekFromEvent(event); if (event.target === event.currentTarget) onClearSelection(); }} onContextMenu={(event) => { if (event.target === event.currentTarget) onContextMenuEmpty(event, track); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; }} onDrop={(event) => handleMediaDrop(event, track)}>
-                  {(trackClips.get(track) ?? []).map((clip, index) => {
-                    const next = (trackClips.get(track) ?? [])[index + 1];
+            <div ref={areaRef} className="relative" style={{ height: totalTrackHeight, minWidth: mobile ? undefined : `${timelineZoom * 100}%`, width: mobile && timelineZoom < 1 ? `${timelineZoom * 100}%` : undefined }} onPointerDown={beginMarquee}>
+                <div className="flex flex-col gap-2">
+                 {trackLayouts.map((layout) => <div key={layout.trackIndex} style={{ height: layout.height }} className={`relative overflow-hidden rounded-md border ${selectedTrack === layout.trackIndex ? 'border-blue-500 bg-blue-600/15' : 'border-[#2d3037] bg-[#1c1d21]'}`} onPointerDown={beginMarquee} onDoubleClick={(event) => { if (event.target !== event.currentTarget) return; seekFromEvent(event); onClearSelection(); }} onContextMenu={(event) => { if (event.target === event.currentTarget) onContextMenuEmpty(event, layout.trackIndex); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; }} onDrop={(event) => handleMediaDrop(event, layout.trackIndex)}>
+                  {(trackClips.get(layout.trackIndex) ?? []).map((clip, index) => {
+                    const next = (trackClips.get(layout.trackIndex) ?? [])[index + 1];
                     const asset = assets.find((item) => item.sourceId === clip.sourceId);
                     const clipWidthPx = (clip.durationInFrames / totalFrames) * areaWidth;
                     const showName = areaWidth > 0 && clipWidthPx > 56;
@@ -311,7 +377,9 @@ export const Timeline = ({
                 </div>)}
               </div>
               {markers.map((marker) => <button key={marker.id} type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => onSeek(marker.frame)} title={t('timeline.marker', { frame: String(marker.frame) })} className="absolute top-0 bottom-0 z-20 w-4 -translate-x-1/2" style={{ left: pct(marker.frame) }}><span className="absolute top-0 left-1/2 h-4 w-0.5 -translate-x-1/2 bg-amber-400" /><span className="absolute top-0 left-1/2 -translate-x-1/2 rounded-b bg-amber-400 px-1 text-[9px] font-bold text-black">T</span></button>)}
-              <div ref={playheadRef} data-testid="timeline-playhead" className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 pointer-events-none" />
+              {snapGuideFrame !== null && <div className="pointer-events-none absolute top-0 bottom-0 z-20 w-px bg-blue-300/80" style={{ left: pct(snapGuideFrame) }} />}
+               <div ref={playheadRef} data-testid="timeline-playhead" className="pointer-events-none absolute top-0 bottom-0 z-30 w-0.5 bg-blue-500 shadow-[0_0_6px_rgba(37,99,235,0.55)]" />
+              <button type="button" aria-label={t('timeline.playhead')} onPointerDown={(event) => { event.stopPropagation(); dragRef.current = { kind: 'playhead', startX: event.clientX, moved: false }; seekFromClientX(event.clientX); }} className="absolute top-0 z-40 h-5 w-5 -translate-x-1/2 rounded-full border border-blue-300 bg-blue-500/90 shadow-lg shadow-blue-500/30" style={{ left: pct(currentFrame) }} />
               {!mobile && selectionBox && <div className="pointer-events-none absolute z-40 border border-blue-400 bg-blue-500/15" style={selectionBox} />}
               {transitionDragLabel && (
                 <div

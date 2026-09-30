@@ -16,14 +16,17 @@ interface TimelineRulerProps {
 }
 
 export const TimelineRuler = ({ totalFrames, fps, zoom, onPointerDown, onDoubleClick }: TimelineRulerProps) => {
-  const step = getRulerStepSeconds(totalFrames, fps);
+  const step = getRulerStepSeconds(totalFrames, fps, zoom);
   const marks = Array.from({ length: Math.floor(totalFrames / (step * fps)) + 1 }, (_, index) => {
     const seconds = index * step;
-    return { frame: Math.min(totalFrames, Math.round(seconds * fps)), label: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` };
+    const wholeSeconds = Math.floor(seconds);
+    const fraction = seconds - wholeSeconds;
+    const suffix = fraction > 0 ? `.${Math.round(fraction * 10)}` : '';
+    return { frame: Math.min(totalFrames, Math.round(seconds * fps)), label: `${Math.floor(wholeSeconds / 60)}:${String(wholeSeconds % 60).padStart(2, '0')}${suffix}` };
   });
   return (
-    <div className="relative h-8 border-b border-[#2d3037] bg-[#18191c] text-[10px] text-gray-500" style={{ minWidth: `${zoom * 100}%`, width: zoom < 1 ? `${zoom * 100}%` : undefined }} onPointerDown={onPointerDown} onDoubleClick={onDoubleClick}>
-      {marks.map((mark) => <div key={mark.frame} className="absolute top-0 h-full border-l border-[#34363d]" style={{ left: `${(mark.frame / totalFrames) * 100}%` }}><span className="absolute left-1 top-1 whitespace-nowrap">{mark.label}</span></div>)}
+    <div className="relative h-8 select-none border-b border-[#2d3037] bg-[#18191c] text-[10px] text-gray-500" style={{ minWidth: `${zoom * 100}%`, width: zoom < 1 ? `${zoom * 100}%` : undefined }} onPointerDown={onPointerDown} onDoubleClick={onDoubleClick}>
+      {marks.map((mark) => <div key={mark.frame} className="absolute top-0 h-full border-l border-[#34363d]" style={{ left: `${(mark.frame / totalFrames) * 100}%` }}><span className="absolute left-1 top-1 whitespace-nowrap font-mono">{mark.label}</span></div>)}
     </div>
   );
 };
