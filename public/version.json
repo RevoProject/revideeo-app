@@ -1,4 +1,4 @@
 {
-  "version": "0.4.3",
-  "changelog": "Tools now include an Effects placeholder under Animations, fade handles are visible in the top clip corners, and the PWA cache is refreshed for v0.4.3."
+  "version": "0.4.4",
+  "changelog": "Detach Audio only works once per clip, Connect Audio for detached pairs, PWA cache v5."
 }

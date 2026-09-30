@@ -436,7 +436,7 @@ export default function ReVideeo() {
   });
   const [showRelease, setShowRelease] = useState(() => {
     const lastSeen = localStorage.getItem('revideeo:lastSeenVersion');
-    return lastSeen !== '0.4.3';
+    return lastSeen !== '0.4.4';
   });
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const { setLang, t } = useTranslation();
@@ -2462,7 +2462,7 @@ export default function ReVideeo() {
             { label: t('ctx.duplicate'), icon: <Copy size={14} />, onClick: () => { duplicateClip(clipContextMenu.clipId); setContextMenu(null); } },
             ...((() => {
               const clip = clips.find((item) => item.id === clipContextMenu.clipId);
-              return clip && (clip.type === 'video' || clip.type === 'image') ? [{ label: t('ctx.detachAudio'), icon: <Volume2 size={14} />, onClick: () => { detachAudioFromClip(clip.id); setContextMenu(null); } }] : [];
+              return clip && (clip.type === 'video' || clip.type === 'image') && !clip.linkedClipId ? [{ label: t('ctx.detachAudio'), icon: <Volume2 size={14} />, onClick: () => { detachAudioFromClip(clip.id); setContextMenu(null); } }] : [];
             })()),
             ...((() => {
               const selected = selectedClipIds.map((id) => clips.find((clip) => clip.id === id)).filter(Boolean) as StoredClip[];
@@ -2698,7 +2698,7 @@ export default function ReVideeo() {
         <WelcomeModal onDismiss={() => { localStorage.setItem('revideeo:welcomed', '1'); setShowWelcome(false); }} />
       )}
       {!showWelcome && showRelease && (
-        <ReleaseChangesModal version="0.4.3" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.4.3'); setShowRelease(false); }} />
+        <ReleaseChangesModal version="0.4.4" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.4.4'); setShowRelease(false); }} />
       )}
     </div>
   );
