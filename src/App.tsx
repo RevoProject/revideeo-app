@@ -30,6 +30,7 @@ import {
   Trash2,
   Ungroup,
   RefreshCw,
+  Volume2,
 } from 'lucide-react';
 import type {
   AppLanguage,
@@ -435,7 +436,7 @@ export default function ReVideeo() {
   });
   const [showRelease, setShowRelease] = useState(() => {
     const lastSeen = localStorage.getItem('revideeo:lastSeenVersion');
-    return lastSeen !== '0.4.1';
+    return lastSeen !== '0.4.2';
   });
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const { setLang, t } = useTranslation();
@@ -1377,6 +1378,53 @@ export default function ReVideeo() {
     setClips((prev) => prev.map((clip) => clip.groupId && groupIds.has(clip.groupId) ? { ...clip, groupId: undefined } : clip));
     setDirty(true);
   }, [beginEdit, clips, selectedClipIds]);
+
+  const detachAudioFromClip = useCallback((clipId: string) => {
+    const clip = clipsRef.current.find((item) => item.id === clipId);
+    if (!clip || clip.type === 'audio' || isTrackLocked(clip.trackIndex)) return;
+    const asset = assets.find((item) => item.sourceId === clip.sourceId);
+    if (!asset || !asset.blob.type.startsWith('video/')) return;
+    const targetTrack = Math.max(0, clip.trackIndex - 1);
+    const audioClip: StoredClip = {
+      id: makeId(),
+      type: 'audio',
+      sourceId: clip.sourceId,
+      trackIndex: targetTrack,
+      offsetInTimeline: clip.offsetInTimeline,
+      startFrame: clip.startFrame,
+      durationInFrames: clip.durationInFrames,
+      scale: 1,
+      posX: 0,
+      posY: 0,
+      width: 100,
+      height: 100,
+      waveform: asset.waveform,
+      linkedClipId: clip.id,
+      transitionIn: 'none',
+      transitionDurationInFrames: DEFAULT_TRANSITION_DURATION,
+    };
+    beginEdit();
+    setClips((prev) => [...prev.map((item) => item.id === clip.id ? { ...item, linkedClipId: audioClip.id } : item), audioClip]);
+    setSelectedClipId(audioClip.id);
+    setSelectedClipIds([audioClip.id]);
+    setSelectedTrack(targetTrack);
+    setDirty(true);
+  }, [assets, beginEdit, isTrackLocked]);
+
+  const connectSelectedAudio = useCallback(() => {
+    if (selectedClipIds.length !== 2) return;
+    const selected = selectedClipIds.map((id) => clipsRef.current.find((clip) => clip.id === id)).filter(Boolean) as StoredClip[];
+    const mediaClip = selected.find((clip) => clip.type === 'video' || clip.type === 'image');
+    const audioClip = selected.find((clip) => clip.type === 'audio');
+    if (!mediaClip || !audioClip) return;
+    beginEdit();
+    setClips((prev) => prev.map((clip) => {
+      if (clip.id === mediaClip.id) return { ...clip, linkedClipId: audioClip.id };
+      if (clip.id === audioClip.id) return { ...clip, linkedClipId: mediaClip.id, offsetInTimeline: mediaClip.offsetInTimeline, startFrame: mediaClip.startFrame };
+      return clip;
+    }));
+    setDirty(true);
+  }, [beginEdit, selectedClipIds]);
 
   const buildJoinChain = (clipList: StoredClip[], ids: string[]): StoredClip[] | null => {
     if (ids.length < 2) return null;
@@ -2410,6 +2458,16 @@ export default function ReVideeo() {
             { label: t('ctx.copy'), icon: <Copy size={14} />, onClick: () => { copyClip(clipContextMenu.clipId); setContextMenu(null); } },
             { label: t('ctx.paste'), icon: <ClipboardPaste size={14} />, onClick: () => { pasteClip(); setContextMenu(null); } },
             { label: t('ctx.duplicate'), icon: <Copy size={14} />, onClick: () => { duplicateClip(clipContextMenu.clipId); setContextMenu(null); } },
+            ...((() => {
+              const clip = clips.find((item) => item.id === clipContextMenu.clipId);
+              return clip && (clip.type === 'video' || clip.type === 'image') ? [{ label: t('ctx.detachAudio'), icon: <Volume2 size={14} />, onClick: () => { detachAudioFromClip(clip.id); setContextMenu(null); } }] : [];
+            })()),
+            ...((() => {
+              const selected = selectedClipIds.map((id) => clips.find((clip) => clip.id === id)).filter(Boolean) as StoredClip[];
+              const hasMedia = selected.some((clip) => clip.type === 'video' || clip.type === 'image');
+              const hasAudio = selected.some((clip) => clip.type === 'audio');
+              return selected.length === 2 && hasMedia && hasAudio ? [{ label: t('ctx.connectAudio'), icon: <Volume2 size={14} />, onClick: () => { connectSelectedAudio(); setContextMenu(null); } }] : [];
+            })()),
             ...(selectedClipIds.length > 1 && !selectedClipIds.some((id) => clips.find((clip) => clip.id === id)?.groupId)
               ? [{ label: t('ctx.group'), icon: <Layers size={14} />, onClick: () => { groupSelectedClips(); setContextMenu(null); } }]
               : []),
@@ -2638,7 +2696,7 @@ export default function ReVideeo() {
         <WelcomeModal onDismiss={() => { localStorage.setItem('revideeo:welcomed', '1'); setShowWelcome(false); }} />
       )}
       {!showWelcome && showRelease && (
-        <ReleaseChangesModal version="0.4.1" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.4.1'); setShowRelease(false); }} />
+        <ReleaseChangesModal version="0.4.2" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.4.2'); setShowRelease(false); }} />
       )}
     </div>
   );

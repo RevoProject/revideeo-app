@@ -9,4 +9,5 @@ export type TimelineDrag =
   | { kind: 'marquee'; startX: number; startY: number; moved: boolean }
   | { kind: 'trim-left' | 'trim-right'; clipId: string; startX: number; originalOffset: number; originalStartFrame: number; originalDuration: number; sourceDuration: number; moved: boolean }
   | { kind: 'transition'; clipId: string; startX: number; startY: number; originalTd: number; moved: boolean }
-  | { kind: 'playhead'; startX: number; moved: boolean };
+  | { kind: 'playhead'; startX: number; moved: boolean }
+  | { kind: 'fade-in' | 'fade-out' | 'audio-fade-in' | 'audio-fade-out'; clipId: string; startX: number; originalFrames: number; moved: boolean };

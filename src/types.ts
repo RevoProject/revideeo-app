@@ -60,6 +60,7 @@ export interface StoredClip {
   textAlign?: 'left' | 'center' | 'right';
   textBackground?: string;
   waveform?: number[];
+  linkedClipId?: string;
   transitionIn: TransitionType;
   transitionDurationInFrames: number;
 }

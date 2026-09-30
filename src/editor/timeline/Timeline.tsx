@@ -303,7 +303,14 @@ export const Timeline = ({
       } else if (drag.kind === 'playhead') {
         drag.moved = true;
         seekFromClientX(event.clientX);
-      } else {
+      } else if (drag.kind === 'fade-in' || drag.kind === 'fade-out' || drag.kind === 'audio-fade-in' || drag.kind === 'audio-fade-out') {
+        if (!drag.moved) { drag.moved = true; onBeginEdit(); }
+        const fadeFrames = Math.max(0, Math.min(300, Math.round(drag.originalFrames + dx * framesPerPixel)));
+        if (drag.kind === 'fade-in') onUpdateClipFromDrag(drag.clipId, { fadeInFrames: fadeFrames });
+        else if (drag.kind === 'fade-out') onUpdateClipFromDrag(drag.clipId, { fadeOutFrames: fadeFrames });
+        else if (drag.kind === 'audio-fade-in') onUpdateClipFromDrag(drag.clipId, { audioFadeInFrames: fadeFrames });
+        else onUpdateClipFromDrag(drag.clipId, { audioFadeOutFrames: fadeFrames });
+      } else if (drag.kind === 'trim-left' || drag.kind === 'trim-right') {
         if (!drag.moved) { drag.moved = true; onBeginEdit(); }
         const delta = Math.round(dx * framesPerPixel);
         if (drag.kind === 'trim-left') {
