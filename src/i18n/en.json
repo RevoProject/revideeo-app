@@ -86,6 +86,7 @@
   "tools.effectsTitle": "EFFECTS",
   "tools.pluginsTitle": "PLUGINS",
   "tools.effectsPlaceholder": "Effects will appear here in a future update.",
+  "tools.placeholderBadge": "Soon",
   "tools.noPlugins": "No active plugins.",
   "tools.seePlugins": "View plugins",
   "tools.placeholder": "This module is prepared as a placeholder for future features.",
