@@ -1,4 +1,4 @@
 {
-  "version": "0.4.2",
-  "changelog": "Clip context menus now support detach/connect audio, audio waveforms are rendered in a more Audacity-like style, and the PWA cache is refreshed for v0.4.2."
+  "version": "0.4.3",
+  "changelog": "Tools now include an Effects placeholder under Animations, fade handles are visible in the top clip corners, and the PWA cache is refreshed for v0.4.3."
 }

@@ -14,8 +14,8 @@ export const ClipFadeHandles = ({ disabled, onFadeInPointerDown, onFadeOutPointe
   if (disabled) return null;
   return (
     <>
-      <button type="button" onPointerDown={onFadeInPointerDown} className="absolute left-1 top-1/2 z-30 h-3 w-3 -translate-y-1/2 rounded-full border border-white/50 bg-blue-300/90 opacity-0 transition-opacity group-hover:opacity-100" title="Fade in" />
-      <button type="button" onPointerDown={onFadeOutPointerDown} className="absolute right-1 top-1/2 z-30 h-3 w-3 -translate-y-1/2 rounded-full border border-white/50 bg-blue-300/90 opacity-0 transition-opacity group-hover:opacity-100" title="Fade out" />
+      <button type="button" data-fade-handle="in" onPointerDown={onFadeInPointerDown} className="absolute left-0 top-0 z-40 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/60 bg-blue-300/95 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white" title="Fade in" />
+      <button type="button" data-fade-handle="out" onPointerDown={onFadeOutPointerDown} className="absolute right-0 top-0 z-40 h-4 w-4 translate-x-1/2 -translate-y-1/2 rounded-full border border-white/60 bg-blue-300/95 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white" title="Fade out" />
     </>
   );
 };

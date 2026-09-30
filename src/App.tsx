@@ -436,7 +436,7 @@ export default function ReVideeo() {
   });
   const [showRelease, setShowRelease] = useState(() => {
     const lastSeen = localStorage.getItem('revideeo:lastSeenVersion');
-    return lastSeen !== '0.4.2';
+    return lastSeen !== '0.4.3';
   });
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const { setLang, t } = useTranslation();
@@ -2244,6 +2244,7 @@ export default function ReVideeo() {
                 onOpenTransitions={() => mobileShellRef.current?.openSheet({ kind: 'tools', view: 'transitions' })}
                 onOpenAudio={() => mobileShellRef.current?.openSheet({ kind: 'tools', view: 'audio' })}
                 onOpenAnimations={() => mobileShellRef.current?.openSheet({ kind: 'tools', view: 'animations' })}
+                onOpenEffects={() => mobileShellRef.current?.openSheet({ kind: 'tools', view: 'effects' })}
                 onOpenPlugins={() => mobileShellRef.current?.openSheet({ kind: 'tools', view: 'plugins' })}
                 onOpenPluginsModal={() => { previousModalRef.current = modal; setModal('plugins'); }}
                 pluginContent={view === 'plugins' && pluginSnapshot.tools.length > 0 ? (
@@ -2384,6 +2385,7 @@ export default function ReVideeo() {
           onOpenTransitions={() => { setToolView('transitions'); setPropertiesOpen(true); }}
           onOpenAudio={() => { setToolView('audio'); setPropertiesOpen(true); }}
           onOpenAnimations={() => { setToolView('animations'); setPropertiesOpen(true); }}
+          onOpenEffects={() => { setToolView('effects'); setPropertiesOpen(true); }}
           onOpenPlugins={() => { setToolView('plugins'); setPropertiesOpen(true); }}
           onOpenPluginsModal={() => { previousModalRef.current = modal; setModal('plugins'); }}
           pluginContent={toolView === 'plugins' && pluginSnapshot.tools.length > 0 ? (
@@ -2696,7 +2698,7 @@ export default function ReVideeo() {
         <WelcomeModal onDismiss={() => { localStorage.setItem('revideeo:welcomed', '1'); setShowWelcome(false); }} />
       )}
       {!showWelcome && showRelease && (
-        <ReleaseChangesModal version="0.4.2" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.4.2'); setShowRelease(false); }} />
+        <ReleaseChangesModal version="0.4.3" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.4.3'); setShowRelease(false); }} />
       )}
     </div>
   );

@@ -350,6 +350,30 @@ export const Timeline = ({
     onMediaDrop(sourceId, trackIndex, Math.max(0, Math.round(((event.clientX - rect.left) / rect.width) * totalFrames)));
   };
 
+  const beginFadeDrag = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    const fadeHandle = target?.closest<HTMLElement>('[data-fade-handle]');
+    if (!fadeHandle) return;
+    const clipNode = fadeHandle.closest<HTMLElement>('[data-clip-id]');
+    const clipId = clipNode?.dataset.clipId;
+    if (!clipId) return;
+    const clip = clips.find((item) => item.id === clipId);
+    if (!clip) return;
+    event.stopPropagation();
+    const handleKind = fadeHandle.dataset.fadeHandle === 'out' ? 'out' : 'in';
+    dragRef.current = {
+      kind: clip.type === 'audio'
+        ? handleKind === 'in' ? 'audio-fade-in' : 'audio-fade-out'
+        : handleKind === 'in' ? 'fade-in' : 'fade-out',
+      clipId: clip.id,
+      startX: event.clientX,
+      originalFrames: clip.type === 'audio'
+        ? handleKind === 'in' ? (clip.audioFadeInFrames ?? 0) : (clip.audioFadeOutFrames ?? 0)
+        : handleKind === 'in' ? (clip.fadeInFrames ?? 0) : (clip.fadeOutFrames ?? 0),
+      moved: false,
+    };
+  }, [clips]);
+
   return (
     <div className={`${mobile ? 'h-full' : 'shrink-0'} bg-[#18191c] flex flex-col`} style={!mobile && height ? { height } : undefined}>
       {!mobile && (
@@ -373,7 +397,7 @@ export const Timeline = ({
             <TimelineRuler totalFrames={totalFrames} fps={fps} zoom={timelineZoom} onPointerDown={() => onClearSelection()} onDoubleClick={(event) => { seekFromEvent(event); onClearSelection(); }} />
             <div ref={areaRef} className="relative" style={{ height: totalTrackHeight, minWidth: mobile ? undefined : `${timelineZoom * 100}%`, width: mobile && timelineZoom < 1 ? `${timelineZoom * 100}%` : undefined }} onPointerDown={beginMarquee}>
                 <div className="flex flex-col gap-2">
-                 {trackLayouts.map((layout) => <div key={layout.trackIndex} style={{ height: layout.height }} className={`relative overflow-hidden rounded-md border ${selectedTrack === layout.trackIndex ? 'border-blue-500 bg-blue-600/15' : 'border-[#2d3037] bg-[#1c1d21]'}`} onPointerDown={beginMarquee} onDoubleClick={(event) => { if (event.target !== event.currentTarget) return; seekFromEvent(event); onClearSelection(); }} onContextMenu={(event) => { if (event.target === event.currentTarget) onContextMenuEmpty(event, layout.trackIndex); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; }} onDrop={(event) => handleMediaDrop(event, layout.trackIndex)}>
+                 {trackLayouts.map((layout) => <div key={layout.trackIndex} style={{ height: layout.height }} className={`relative overflow-hidden rounded-md border ${selectedTrack === layout.trackIndex ? 'border-blue-500 bg-blue-600/15' : 'border-[#2d3037] bg-[#1c1d21]'}`} onPointerDownCapture={beginFadeDrag} onPointerDown={beginMarquee} onDoubleClick={(event) => { if (event.target !== event.currentTarget) return; seekFromEvent(event); onClearSelection(); }} onContextMenu={(event) => { if (event.target === event.currentTarget) onContextMenuEmpty(event, layout.trackIndex); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; }} onDrop={(event) => handleMediaDrop(event, layout.trackIndex)}>
                   {(trackClips.get(layout.trackIndex) ?? []).map((clip, index) => {
                     const next = (trackClips.get(layout.trackIndex) ?? [])[index + 1];
                     const asset = assets.find((item) => item.sourceId === clip.sourceId);

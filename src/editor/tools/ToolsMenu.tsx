@@ -4,16 +4,17 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { AudioLines, Puzzle, Settings2, Shuffle, Sparkles } from 'lucide-react';
+import { AudioLines, Puzzle, Settings2, Shuffle, Sparkles, Wand2 } from 'lucide-react';
 import { useTranslation } from '../../i18n';
 
-export type ToolView = 'properties' | 'transitions' | 'audio' | 'animations' | 'plugins';
+export type ToolView = 'properties' | 'transitions' | 'audio' | 'animations' | 'effects' | 'plugins';
 
 interface ToolsMenuProps {
   onOpenProperties: () => void;
   onOpenTransitions: () => void;
   onOpenAudio: () => void;
   onOpenAnimations: () => void;
+  onOpenEffects: () => void;
   onOpenPlugins: () => void;
 }
 
@@ -24,6 +25,7 @@ export const ToolsMenu = ({
   onOpenTransitions,
   onOpenAudio,
   onOpenAnimations,
+  onOpenEffects,
   onOpenPlugins,
 }: ToolsMenuProps) => {
   const { t } = useTranslation();
@@ -44,6 +46,10 @@ export const ToolsMenu = ({
     <button onClick={onOpenAnimations} className={toolButton}>
       <Sparkles size={14} className="text-blue-400" />
       {t('tools.animations')}
+    </button>
+    <button onClick={onOpenEffects} className={toolButton}>
+      <Wand2 size={14} className="text-blue-400" />
+      {t('tools.effects')}
     </button>
     <button onClick={onOpenPlugins} className={toolButton}>
       <Puzzle size={14} className="text-purple-400" />
