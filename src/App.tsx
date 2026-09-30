@@ -1384,7 +1384,7 @@ export default function ReVideeo() {
     if (!clip || clip.type === 'audio' || isTrackLocked(clip.trackIndex)) return;
     const asset = assets.find((item) => item.sourceId === clip.sourceId);
     if (!asset || !asset.blob.type.startsWith('video/')) return;
-    const targetTrack = Math.max(0, clip.trackIndex - 1);
+    const targetTrack = clip.trackIndex + 1;
     const audioClip: StoredClip = {
       id: makeId(),
       type: 'audio',
@@ -1404,7 +1404,10 @@ export default function ReVideeo() {
       transitionDurationInFrames: DEFAULT_TRANSITION_DURATION,
     };
     beginEdit();
-    setClips((prev) => [...prev.map((item) => item.id === clip.id ? { ...item, linkedClipId: audioClip.id } : item), audioClip]);
+    setClips((prev) => {
+      const shifted = prev.map((item) => item.trackIndex >= targetTrack ? { ...item, trackIndex: item.trackIndex + 1 } : item);
+      return [...shifted.map((item) => item.id === clip.id ? { ...item, linkedClipId: audioClip.id } : item), audioClip];
+    });
     setSelectedClipId(audioClip.id);
     setSelectedClipIds([audioClip.id]);
     setSelectedTrack(targetTrack);

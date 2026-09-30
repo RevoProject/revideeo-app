@@ -1,4 +1,4 @@
 {
-  "version": "0.4.4",
-  "changelog": "Detach Audio only works once per clip, Connect Audio for detached pairs, PWA cache v5."
+  "version": "0.4.5",
+  "changelog": "Detach audio goes below clip with track shift, fade handles visible on timeline, fade overlay visualization, PWA cache v6."
 }
