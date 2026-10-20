@@ -1,5 +1,5 @@
-const CACHE_NAME = 'revideeo-v7';
-const STATIC_CACHE = 'revideeo-static-v7';
+const CACHE_NAME = 'revideeo-v8';
+const STATIC_CACHE = 'revideeo-static-v8';
 
 const PRECACHE_URLS = [
   '/',

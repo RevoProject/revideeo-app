@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('PWA service worker versioning', () => {
-  it('public/sw.js template contains v7 placeholder', () => {
+  it('public/sw.js template contains v8 placeholder', () => {
     const sw = readFileSync(join(process.cwd(), 'public', 'sw.js'), 'utf8');
-    expect(sw).toContain("CACHE_NAME = 'revideeo-v7'");
-    expect(sw).toContain("STATIC_CACHE = 'revideeo-static-v7'");
+    expect(sw).toContain("CACHE_NAME = 'revideeo-v8'");
+    expect(sw).toContain("STATIC_CACHE = 'revideeo-static-v8'");
   });
 
   it('dist/sw.js contains version-injected cache names after build', () => {
@@ -14,7 +14,7 @@ describe('PWA service worker versioning', () => {
     const sw = readFileSync(join(process.cwd(), 'dist', 'sw.js'), 'utf8');
     expect(sw).toContain(`CACHE_NAME = 'revideeo-v${pkg.version}'`);
     expect(sw).toContain(`STATIC_CACHE = 'revideeo-static-v${pkg.version}'`);
-    expect(sw).not.toContain('revideeo-v7');
+    expect(sw).not.toContain('revideeo-v8');
   });
 
   it('dist/sw.js retains core SW functionality', () => {

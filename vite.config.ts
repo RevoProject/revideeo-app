@@ -129,8 +129,8 @@ function swVersionPlugin(): Plugin {
       const version: string = pkg.version
       const swTemplate = await readFile(join(process.cwd(), 'public', 'sw.js'), 'utf8')
       const sw = swTemplate
-        .replace("const CACHE_NAME = 'revideeo-v7'", `const CACHE_NAME = 'revideeo-v${version}'`)
-        .replace("const STATIC_CACHE = 'revideeo-static-v7'", `const STATIC_CACHE = 'revideeo-static-v${version}'`)
+        .replace("const CACHE_NAME = 'revideeo-v8'", `const CACHE_NAME = 'revideeo-v${version}'`)
+        .replace("const STATIC_CACHE = 'revideeo-static-v8'", `const STATIC_CACHE = 'revideeo-static-v${version}'`)
       this.emitFile({ type: 'asset', fileName: 'sw.js', source: sw })
     },
   }

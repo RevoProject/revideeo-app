@@ -1,4 +1,4 @@
 {
-  "version": "0.4.6",
-  "changelog": "Long renders keep their uploaded assets until completion, failed manifest renders no longer restart through the legacy endpoint, PWA cache v7."
+  "version": "0.5.0",
+  "changelog": "Shift+Delete ripple delete, stable timeline scroll during edits, ONDA native browser rendering, PWA cache v8."
 }
