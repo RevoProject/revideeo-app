@@ -106,7 +106,7 @@ import { WelcomeModal } from './components/modals/WelcomeModal';
 import { ReleaseChangesModal } from './components/modals/ReleaseChangesModal';
 import { UpdateModal } from './components/shared/UpdateModal';
 import { useTranslation } from './i18n';
-import { registerServiceWorker, checkForUpdate } from './pwa';
+import { APP_VERSION, registerServiceWorker, checkForUpdate } from './pwa';
 import { createAudioWaveform } from './utils/audioWaveform';
 
 const DEFAULT_FPS = 30;
@@ -437,7 +437,7 @@ export default function ReVideeo() {
   });
   const [showRelease, setShowRelease] = useState(() => {
     const lastSeen = localStorage.getItem('revideeo:lastSeenVersion');
-    return lastSeen !== '0.4.4';
+    return lastSeen !== APP_VERSION;
   });
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const { setLang, t } = useTranslation();
@@ -2719,7 +2719,7 @@ export default function ReVideeo() {
         <WelcomeModal onDismiss={() => { localStorage.setItem('revideeo:welcomed', '1'); setShowWelcome(false); }} />
       )}
       {!showWelcome && showRelease && (
-        <ReleaseChangesModal version="0.4.4" onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', '0.4.4'); setShowRelease(false); }} />
+        <ReleaseChangesModal version={APP_VERSION} onDismiss={() => { localStorage.setItem('revideeo:lastSeenVersion', APP_VERSION); setShowRelease(false); }} />
       )}
     </div>
   );

@@ -546,12 +546,12 @@
 
   "release.title": "Co nowego",
   "release.understand": "Rozumiem!",
-  "release.migration.title": "Placeholder Efekty",
-  "release.migration.desc": "W Narzędziach pojawiła się nowa pozycja Efekty pod Animacjami, przygotowana jako placeholder pod kolejny etap pracy nad efektami klipów.",
-  "release.fixes.title": "Dopracowanie uchwytów fade",
-  "release.fixes.desc": "Uchwyty fade są teraz widoczne w górnych rogach klipu, a boczne paski trim chowają się, gdy celujesz w kontrolki fade.",
-  "release.eupl.title": "Odświeżenie cache 0.4.3",
-  "release.eupl.desc": "Wersja aplikacji i cache service workera zostały odświeżone dla v0.4.3, aby zainstalowane buildy otrzymały zaktualizowany panel Narzędzi i zachowanie uchwytów fade.",
+  "release.onda.title": "Natywny rendering ONDA",
+  "release.onda.desc": "Nowy silnik renderuje filmy lokalnie w przeglądarce (MP4/WebM przez WebCodecs) — bez serwera renderującego. Wybierz ONDA Native w oknie eksportu.",
+  "release.ripple.title": "Usuwanie z magnesem (Shift+Delete)",
+  "release.ripple.desc": "Shift+Delete usuwa zaznaczone klipy i automatycznie przesuwa klipy z prawej, domykając powstałą lukę na ścieżce.",
+  "release.scroll.title": "Stabilny widok osi czasu",
+  "release.scroll.desc": "Edycja klipów dłuższych niż timeline nie cofa już widoku w lewo — przewijanie pozostaje tam, gdzie je zostawisz.",
 
   "release.bugfixes.title": "Poprawki błędów",
   "release.bugfixes.desc": "Odśwież klip nie resetuje już klipu — zachowuje wszystkie edycje na osi czasu. Sesje Juicera mają przypisania tylko do bieżącej sesji. Rozszerzenie klipu teraz popchnie kolejne klipy na tym samym torze.",

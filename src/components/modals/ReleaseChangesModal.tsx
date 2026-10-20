@@ -16,9 +16,9 @@ export const ReleaseChangesModal = ({ version, onDismiss }: ReleaseChangesModalP
   const { t } = useTranslation();
 
   const changes = [
-    { icon: <Zap size={14} className="text-amber-400" />, key: 'migration' },
-    { icon: <CheckCircle2 size={14} className="text-green-400" />, key: 'fixes' },
-    { icon: <Shield size={14} className="text-blue-400" />, key: 'eupl' },
+    { icon: <Zap size={14} className="text-amber-400" />, key: 'onda' },
+    { icon: <CheckCircle2 size={14} className="text-green-400" />, key: 'ripple' },
+    { icon: <Shield size={14} className="text-blue-400" />, key: 'scroll' },
   ];
 
   return (

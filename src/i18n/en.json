@@ -546,12 +546,12 @@
 
   "release.title": "What's New",
   "release.understand": "Got it!",
-  "release.migration.title": "Effects Placeholder",
-  "release.migration.desc": "Tools now include an Effects entry under Animations, ready as a placeholder for the next stage of clip effect work.",
-  "release.fixes.title": "Fade Handle Polish",
-  "release.fixes.desc": "Clip fade handles are now visible from the top corners and side trim bars back off when you target the fade controls.",
-  "release.eupl.title": "0.4.3 Cache Refresh",
-  "release.eupl.desc": "App version and service worker cache were refreshed for v0.4.3 so installed builds receive the updated tools panel and fade handle behavior.",
+  "release.onda.title": "ONDA Native Rendering",
+  "release.onda.desc": "A new engine renders videos locally in your browser (MP4/WebM via WebCodecs) — no render server needed. Pick ONDA Native in the export dialog.",
+  "release.ripple.title": "Ripple delete (Shift+Delete)",
+  "release.ripple.desc": "Shift+Delete removes the selected clips and automatically slides clips from the right to close the gap on the track.",
+  "release.scroll.title": "Stable timeline view",
+  "release.scroll.desc": "Editing clips longer than the timeline no longer snaps the view back to the left — horizontal scrolling stays where you left it.",
 
   "release.bugfixes.title": "Bug Fixes",
   "release.bugfixes.desc": "Refresh Clip no longer resets the clip — it preserves all timeline edits. Juicer session-scoped attachments: each request only receives the files you attach for that session. Ripple edit: extending a clip now correctly pushes following clips on the same track.",
