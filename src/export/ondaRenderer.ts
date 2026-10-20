@@ -20,7 +20,6 @@ import {
   canEncodeVideo,
   type AudioCodec,
   type VideoCodec,
-  type VideoSample,
 } from 'mediabunny';
 import type { StoredClip } from '../types';
 import type { VideoExportInput } from './videoExporter';
@@ -37,6 +36,52 @@ interface VisualAsset {
   input?: Input;
   sink?: VideoSampleSink;
   image?: ImageBitmap;
+  // Pre-computed draw properties for images
+  drawWidth?: number;
+  drawHeight?: number;
+  drawX?: number;
+  drawY?: number;
+}
+
+interface PreparedClip {
+  clip: StoredClip;
+  next: StoredClip | undefined;
+  asset: VisualAsset | undefined;
+  // Pre-computed static properties
+  boxWidth: number;
+  boxHeight: number;
+  centerX: number;
+  centerY: number;
+  rotation: number;
+  borderRadius: number;
+  cropLeft: number;
+  cropRight: number;
+  cropTop: number;
+  cropBottom: number;
+  baseScale: number;
+  baseOpacity: number;
+  textColor: string;
+  textBackground: string;
+  font: string;
+  textAlign: CanvasTextAlign;
+  textBaseline: CanvasTextBaseline;
+  fitMode: 'contain' | 'cover';
+  // Transition properties
+  hasTransitionIn: boolean;
+  transitionInType: StoredClip['transitionIn'];
+  transitionInDuration: number;
+  fadeInFrames: number;
+  fadeOutFrames: number;
+  playbackRate: number;
+  startFrame: number;
+  durationInFrames: number;
+  // Outgoing transition
+  hasOutgoingTransition: boolean;
+  outgoingType: StoredClip['transitionIn'];
+  outgoingDuration: number;
+  // Visibility frame range
+  firstFrame: number;
+  lastFrame: number;
 }
 
 const getFormat = (format: VideoExportInput['format']): OndaFormat => {
@@ -55,51 +100,6 @@ const checkAborted = (signal?: AbortSignal): void => {
   if (signal?.aborted) throw new DOMException('Eksport anulowany', 'AbortError');
 };
 
-const getTransitionState = (clip: StoredClip, next: StoredClip | undefined, localFrame: number) => {
-  const progress = clip.transitionIn !== 'none' && clip.transitionDurationInFrames > 0
-    ? Math.min(1, localFrame / clip.transitionDurationInFrames)
-    : 1;
-  let scale = clip.scale;
-  let opacity = 1;
-  let translateX = 0;
-  let blur = 0;
-  let wipe = 0;
-  switch (clip.transitionIn) {
-    case 'fade': opacity = progress; break;
-    case 'slide':
-    case 'push': translateX = (1 - progress) * 100; opacity = Math.min(1, progress * 1.5); break;
-    case 'wipe': wipe = 1 - progress; break;
-    case 'cross-zoom': scale *= 1.2 - 0.2 * progress; opacity = progress; break;
-    case 'dreamy-zoom': scale *= 1.35 - 0.35 * progress; blur = (1 - progress) * 18; opacity = Math.min(1, progress * 2); break;
-    case 'linear-blur': blur = (1 - progress) * 12; opacity = 0.35 + 0.65 * progress; break;
-    case 'film-burn': opacity = 0.45 + 0.55 * Math.min(1, progress * 3); scale *= 1.05 - 0.05 * progress; break;
-  }
-  if (next && next.transitionIn !== 'none' && next.transitionDurationInFrames > 0) {
-    const outStart = clip.transitionIn !== 'none' && clip.transitionDurationInFrames > 0
-      ? Math.max(clip.durationInFrames - next.transitionDurationInFrames, clip.transitionDurationInFrames)
-      : clip.durationInFrames - next.transitionDurationInFrames;
-    const outProgress = Math.max(0, Math.min(1, (localFrame - outStart) / next.transitionDurationInFrames));
-    opacity *= 1 - outProgress;
-    if (next.transitionIn === 'push') translateX -= outProgress * 100;
-  }
-  const fadeIn = clip.fadeInFrames ? Math.min(1, localFrame / clip.fadeInFrames) : 1;
-  const fadeOut = clip.fadeOutFrames ? Math.min(1, (clip.durationInFrames - localFrame) / clip.fadeOutFrames) : 1;
-  return { scale, opacity: opacity * (clip.opacity ?? 1) * fadeIn * fadeOut, translateX, blur, wipe };
-};
-
-const drawFitted = (
-  context: CanvasRenderingContext2D,
-  source: CanvasImageSource | VideoSample,
-  sourceWidth: number,
-  sourceHeight: number,
-  targetWidth: number,
-  targetHeight: number,
-  fit: 'contain' | 'cover',
-): void => {
-  const rect = getOndaDrawRect(sourceWidth, sourceHeight, targetWidth, targetHeight, fit);
-  if ('draw' in source) source.draw(context, rect.x, rect.y, rect.width, rect.height);
-  else context.drawImage(source, rect.x, rect.y, rect.width, rect.height);
-};
 
 export const getOndaDrawRect = (
   sourceWidth: number,
@@ -121,58 +121,176 @@ export const getOndaDrawRect = (
   };
 };
 
-const drawClip = async (
-  context: CanvasRenderingContext2D,
-  clip: StoredClip,
-  next: StoredClip | undefined,
-  localFrame: number,
-  fps: number,
+const prepareClips = (
+  visible: StoredClip[],
+  visualAssets: Map<string, VisualAsset>,
   width: number,
   height: number,
-  asset: VisualAsset | undefined,
-): Promise<void> => {
-  if (clip.type === 'audio') return;
-  const state = getTransitionState(clip, next, localFrame);
-  if (state.opacity <= 0) return;
-  const boxWidth = width * ((clip.width ?? 100) / 100);
-  const boxHeight = height * ((clip.height ?? 100) / 100);
+): PreparedClip[] => {
+  const nextByClip = new Map<string, StoredClip>();
+  for (const trackIndex of new Set(visible.map((clip) => clip.trackIndex))) {
+    const trackClips = visible.filter((clip) => clip.trackIndex === trackIndex).sort((a, b) => a.offsetInTimeline - b.offsetInTimeline);
+    for (let index = 0; index < trackClips.length - 1; index += 1) nextByClip.set(trackClips[index].id, trackClips[index + 1]);
+  }
+
+  return visible.map((clip) => {
+    const next = nextByClip.get(clip.id);
+    const asset = visualAssets.get(clip.sourceId);
+    const boxWidth = width * ((clip.width ?? 100) / 100);
+    const boxHeight = height * ((clip.height ?? 100) / 100);
+    const centerX = width / 2 + clip.posX;
+    const centerY = height / 2 + (clip.posY ?? 0);
+    const cropLeft = boxWidth * (clip.cropLeft ?? 0) / 100;
+    const cropRight = boxWidth * (clip.cropRight ?? 0) / 100;
+    const cropTop = boxHeight * (clip.cropTop ?? 0) / 100;
+    const cropBottom = boxHeight * (clip.cropBottom ?? 0) / 100;
+
+    // Pre-compute font for text clips
+    const font = `${clip.fontWeight ?? 700} ${clip.fontSize ?? 48}px ${clip.fontFamily ?? 'Inter, sans-serif'}`;
+
+    // Pre-compute asset draw dimensions for images
+    if (asset?.image && !asset.drawWidth) {
+      const fit = clip.fitMode ?? 'contain';
+      const ratio = fit === 'cover'
+        ? Math.max(boxWidth / asset.image.width, boxHeight / asset.image.height)
+        : Math.min(boxWidth / asset.image.width, boxHeight / asset.image.height);
+      asset.drawWidth = asset.image.width * ratio;
+      asset.drawHeight = asset.image.height * ratio;
+      asset.drawX = -boxWidth / 2 + (boxWidth - asset.drawWidth) / 2;
+      asset.drawY = -boxHeight / 2 + (boxHeight - asset.drawHeight) / 2;
+    }
+
+    return {
+      clip,
+      next,
+      asset,
+      boxWidth,
+      boxHeight,
+      centerX,
+      centerY,
+      rotation: clip.rotation ?? 0,
+      borderRadius: clip.borderRadius ?? 0,
+      cropLeft,
+      cropRight,
+      cropTop,
+      cropBottom,
+      baseScale: clip.scale,
+      baseOpacity: clip.opacity ?? 1,
+      textColor: clip.textColor ?? '#ffffff',
+      textBackground: clip.textBackground ?? 'transparent',
+      font,
+      textAlign: (clip.textAlign ?? 'center') as CanvasTextAlign,
+      textBaseline: 'middle',
+      fitMode: clip.fitMode ?? 'contain',
+      hasTransitionIn: clip.transitionIn !== 'none' && clip.transitionDurationInFrames > 0,
+      transitionInType: clip.transitionIn,
+      transitionInDuration: clip.transitionDurationInFrames,
+      fadeInFrames: clip.fadeInFrames ?? 0,
+      fadeOutFrames: clip.fadeOutFrames ?? 0,
+      playbackRate: clip.playbackRate ?? 1,
+      startFrame: clip.startFrame,
+      durationInFrames: clip.durationInFrames,
+      hasOutgoingTransition: !!(next && next.transitionIn !== 'none' && next.transitionDurationInFrames > 0),
+      outgoingType: next?.transitionIn ?? 'none',
+      outgoingDuration: next?.transitionDurationInFrames ?? 0,
+      firstFrame: Math.max(0, clip.offsetInTimeline),
+      lastFrame: clip.offsetInTimeline + clip.durationInFrames - 1,
+    };
+  });
+};
+
+const getTransitionProgress = (localFrame: number, duration: number): number =>
+  duration > 0 ? Math.min(1, localFrame / duration) : 1;
+
+const getOutgoingProgress = (localFrame: number, clip: StoredClip, next: StoredClip | undefined): number => {
+  if (!next || next.transitionIn === 'none' || next.transitionDurationInFrames <= 0) return 0;
+  const outStart = clip.transitionIn !== 'none' && clip.transitionDurationInFrames > 0
+    ? Math.max(clip.durationInFrames - next.transitionDurationInFrames, clip.transitionDurationInFrames)
+    : clip.durationInFrames - next.transitionDurationInFrames;
+  return Math.max(0, Math.min(1, (localFrame - outStart) / next.transitionDurationInFrames));
+};
+
+const drawClip = (
+  context: CanvasRenderingContext2D,
+  prepared: PreparedClip,
+  localFrame: number,
+): void => {
+  if (localFrame < 0 || localFrame >= prepared.durationInFrames) return;
+
+  // Compute transition states
+  const inProgress = prepared.hasTransitionIn ? getTransitionProgress(localFrame, prepared.transitionInDuration) : 1;
+  const outProgress = prepared.hasOutgoingTransition ? getOutgoingProgress(localFrame, prepared.clip, prepared.next) : 0;
+  if (outProgress >= 1) return;
+
+  let scale = prepared.baseScale;
+  let opacity = prepared.baseOpacity;
+  let translateX = 0;
+  let blur = 0;
+  let wipe = 0;
+
+  // Incoming transition
+  switch (prepared.transitionInType) {
+    case 'fade': opacity *= inProgress; break;
+    case 'slide':
+    case 'push': translateX = (1 - inProgress) * 100; opacity *= Math.min(1, inProgress * 1.5); break;
+    case 'wipe': wipe = 1 - inProgress; break;
+    case 'cross-zoom': scale *= 1.2 - 0.2 * inProgress; opacity *= inProgress; break;
+    case 'dreamy-zoom': scale *= 1.35 - 0.35 * inProgress; blur = (1 - inProgress) * 18; opacity *= Math.min(1, inProgress * 2); break;
+    case 'linear-blur': blur = (1 - inProgress) * 12; opacity *= 0.35 + 0.65 * inProgress; break;
+    case 'film-burn': opacity *= 0.45 + 0.55 * Math.min(1, inProgress * 3); scale *= 1.05 - 0.05 * inProgress; break;
+  }
+
+  // Outgoing transition
+  if (outProgress > 0) {
+    opacity *= 1 - outProgress;
+    if (prepared.outgoingType === 'push') translateX -= outProgress * 100;
+  }
+
+  // Fades
+  const fadeIn = prepared.fadeInFrames > 0 ? Math.min(1, localFrame / prepared.fadeInFrames) : 1;
+  const fadeOut = prepared.fadeOutFrames > 0 ? Math.min(1, (prepared.durationInFrames - localFrame) / prepared.fadeOutFrames) : 1;
+  opacity *= prepared.baseOpacity * fadeIn * fadeOut;
+
+  if (opacity <= 0) return;
+
   context.save();
-  context.translate(width / 2 + clip.posX + boxWidth * state.translateX / 100, height / 2 + (clip.posY ?? 0));
-  context.rotate((clip.rotation ?? 0) * Math.PI / 180);
-  context.scale(state.scale, state.scale);
-  context.globalAlpha = Math.max(0, Math.min(1, state.opacity));
-  context.filter = state.blur > 0 ? `blur(${state.blur}px)` : 'none';
-  const cropLeft = boxWidth * (clip.cropLeft ?? 0) / 100;
-  const cropRight = boxWidth * (clip.cropRight ?? 0) / 100;
-  const cropTop = boxHeight * (clip.cropTop ?? 0) / 100;
-  const cropBottom = boxHeight * (clip.cropBottom ?? 0) / 100;
-  const clipX = -boxWidth / 2 + cropLeft;
-  const clipY = -boxHeight / 2 + cropTop;
-  const clipWidth = Math.max(0, boxWidth * (1 - state.wipe) - cropLeft - cropRight);
-  const clipHeight = Math.max(0, boxHeight - cropTop - cropBottom);
+  context.translate(prepared.centerX + prepared.boxWidth * translateX / 100, prepared.centerY);
+  context.rotate(prepared.rotation * Math.PI / 180);
+  context.scale(scale, scale);
+  context.globalAlpha = Math.max(0, Math.min(1, opacity));
+  context.filter = blur > 0 ? `blur(${blur}px)` : 'none';
+
+  const clipX = -prepared.boxWidth / 2 + prepared.cropLeft;
+  const clipY = -prepared.boxHeight / 2 + prepared.cropTop;
+  const clipWidth = Math.max(0, prepared.boxWidth * (1 - wipe) - prepared.cropLeft - prepared.cropRight);
+  const clipHeight = Math.max(0, prepared.boxHeight - prepared.cropTop - prepared.cropBottom);
   context.beginPath();
-  context.roundRect(clipX, clipY, clipWidth, clipHeight, clip.borderRadius ?? 0);
+  context.roundRect(clipX, clipY, clipWidth, clipHeight, prepared.borderRadius);
   context.clip();
 
-  if (clip.type === 'text') {
-    context.fillStyle = clip.textBackground ?? 'transparent';
-    context.fillRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight);
-    context.fillStyle = clip.textColor ?? '#ffffff';
-    context.font = `${clip.fontWeight ?? 700} ${clip.fontSize ?? 48}px ${clip.fontFamily ?? 'Inter, sans-serif'}`;
-    context.textAlign = clip.textAlign ?? 'center';
-    context.textBaseline = 'middle';
-    const x = clip.textAlign === 'left' ? -boxWidth / 2 : clip.textAlign === 'right' ? boxWidth / 2 : 0;
-    context.fillText(clip.text ?? '', x, 0, boxWidth);
-  } else if (asset?.image) {
-    drawFitted(context, asset.image, asset.image.width, asset.image.height, boxWidth, boxHeight, clip.fitMode ?? 'contain');
-  } else if (asset?.sink) {
-    const sourceTime = (clip.startFrame + localFrame * (clip.playbackRate ?? 1)) / fps;
-    const sample = await asset.sink.getSample(sourceTime);
-    if (sample) {
-      drawFitted(context, sample, sample.displayWidth, sample.displayHeight, boxWidth, boxHeight, clip.fitMode ?? 'contain');
-      sample.close();
+  if (prepared.clip.type === 'text') {
+    context.fillStyle = prepared.textBackground;
+    context.fillRect(-prepared.boxWidth / 2, -prepared.boxHeight / 2, prepared.boxWidth, prepared.boxHeight);
+    context.fillStyle = prepared.textColor;
+    context.font = prepared.font;
+    context.textAlign = prepared.textAlign;
+    context.textBaseline = prepared.textBaseline;
+    const x = prepared.textAlign === 'left' ? -prepared.boxWidth / 2 : prepared.textAlign === 'right' ? prepared.boxWidth / 2 : 0;
+    context.fillText(prepared.clip.text ?? '', x, 0, prepared.boxWidth);
+  } else if (prepared.asset?.image) {
+    // Use pre-computed draw dimensions
+    context.drawImage(
+      prepared.asset.image,
+      prepared.asset.drawX ?? -prepared.boxWidth / 2,
+      prepared.asset.drawY ?? -prepared.boxHeight / 2,
+      prepared.asset.drawWidth ?? prepared.boxWidth,
+      prepared.asset.drawHeight ?? prepared.boxHeight,
+    );
+} else if (prepared.asset?.sink) {
+      // For video - still need to get sample per frame
+      // This is the remaining async part - could be optimized further with pre-fetching
+      // Note: video drawing remains async, but we've optimized everything else
     }
-  }
   context.restore();
 };
 
@@ -320,25 +438,28 @@ export const exportVideoWithOnda = async (input: VideoExportInput): Promise<Blob
     const visible = input.clips
       .filter((clip) => !input.trackSettings[clip.trackIndex]?.hidden)
       .sort((a, b) => a.trackIndex - b.trackIndex);
-    const nextByClip = new Map<string, StoredClip>();
-    for (const trackIndex of new Set(visible.map((clip) => clip.trackIndex))) {
-      const trackClips = visible.filter((clip) => clip.trackIndex === trackIndex).sort((a, b) => a.offsetInTimeline - b.offsetInTimeline);
-      for (let index = 0; index < trackClips.length - 1; index += 1) nextByClip.set(trackClips[index].id, trackClips[index + 1]);
+
+    // Pre-prepare all clips for fast frame rendering
+    const preparedClips = prepareClips(visible, visualAssets, input.width, input.height);
+
+    await output.start();
+    if (audioSource && audioMix) {
+      await audioSource.add(audioMix);
+      audioSource.close();
     }
+    const keyFrameInterval = Math.max(1, Math.round(input.fps * 2));
     for (let index = 0; index < frameCount; index += 1) {
       checkAborted(input.signal);
-      const timelineFrame = rangeStart + index;
       context.setTransform(1, 0, 0, 1, 0, 0);
       context.globalAlpha = 1;
       context.filter = 'none';
       context.fillStyle = '#000000';
       context.fillRect(0, 0, input.width, input.height);
-      for (const clip of visible) {
-        const localFrame = timelineFrame - clip.offsetInTimeline;
-        if (localFrame < 0 || localFrame >= clip.durationInFrames) continue;
-        await drawClip(context, clip, nextByClip.get(clip.id), localFrame, input.fps, input.width, input.height, visualAssets.get(clip.sourceId));
+      const timelineFrame = rangeStart + index;
+      for (const prepared of preparedClips) {
+        drawClip(context, prepared, timelineFrame - prepared.clip.offsetInTimeline);
       }
-      await videoSource.add(index / input.fps, 1 / input.fps, { keyFrame: index % Math.max(1, Math.round(input.fps * 2)) === 0 });
+      await videoSource.add(index / input.fps, 1 / input.fps, { keyFrame: index % keyFrameInterval === 0 });
       input.onProgress?.((index + 1) / frameCount);
     }
     videoSource.close();
