@@ -5,8 +5,7 @@
  */
 
 import { useMemo } from 'react';
-import { Img } from 'remotion';
-import { Audio, Video } from '@remotion/media';
+import { Audio, Img, Video } from 'remotion';
 import type { OutgoingTransition, RenderClip } from '../editorTypes';
 import { getClipStyle } from './transitionStyles';
 import { useTranslation } from '../../i18n';
@@ -32,6 +31,6 @@ export const ClipLayer = ({ clip, outgoing, muted, frame }: { clip: RenderClip; 
   const audioFadeIn = clip.audioFadeInFrames ? Math.min(1, frame / clip.audioFadeInFrames) : 1;
   const audioFadeOut = clip.audioFadeOutFrames ? Math.min(1, (clip.durationInFrames - frame) / clip.audioFadeOutFrames) : 1;
   const volume = muted ? 0 : (clip.volume ?? 1) * audioFadeIn * audioFadeOut;
-  if (clip.type === 'audio') return <Audio src={clip.url} playbackRate={clip.playbackRate ?? 1} volume={volume} trimBefore={clip.startFrame} />;
-  return <Video src={clip.url} trimBefore={clip.startFrame} playbackRate={clip.playbackRate ?? 1} volume={volume} delayRenderTimeoutInMilliseconds={120000} style={style} />;
+  if (clip.type === 'audio') return <Audio src={clip.url} playbackRate={clip.playbackRate ?? 1} volume={volume} startFrom={clip.startFrame} />;
+  return <Video src={clip.url} startFrom={clip.startFrame} playbackRate={clip.playbackRate ?? 1} volume={volume} delayRenderTimeoutInMilliseconds={120000} style={style} />;
 };

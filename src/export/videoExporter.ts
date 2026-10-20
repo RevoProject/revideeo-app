@@ -8,9 +8,6 @@ import type { StoredClip, TrackSettings } from '../types';
 import { detectTrueVideoDuration } from '../utils/videoDuration';
 
 export type VideoExportFormat = 'mp4' | 'mkv' | 'webm';
-export type VideoExportTarget = { kind: 'browser' } | { kind: 'server'; serverUrl: string };
-
-export const isBrowserRenderingSupported = (): boolean => 'VideoEncoder' in globalThis && 'VideoDecoder' in globalThis;
 
 interface ExportAsset {
   sourceId: string;
@@ -31,7 +28,6 @@ export interface VideoExportInput {
   onProgress?: (progress: number) => void;
   signal?: AbortSignal;
   serverUrl?: string;
-  target?: VideoExportTarget;
   normalize?: boolean;
 }
 
@@ -72,10 +68,6 @@ import { exportVideoViaRenderServer, exportVideoViaManifest, ManifestEndpointUna
 
 export const exportVideo = async (input: VideoExportInput): Promise<Blob> => {
   checkAborted(input.signal);
-  if (input.target?.kind === 'browser') {
-    const { exportVideoInBrowser } = await import('./browserRenderer');
-    return exportVideoInBrowser(input);
-  }
   try {
     return await exportVideoViaManifest(input);
   } catch (error) {

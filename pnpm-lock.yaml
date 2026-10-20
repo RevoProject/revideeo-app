@@ -8,12 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@remotion/media':
-        specifier: 4.0.505
-        version: 4.0.505(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@remotion/web-renderer':
-        specifier: 4.0.505
-        version: 4.0.505(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@revideeo/core':
         specifier: workspace:*
         version: link:packages/core
@@ -578,12 +572,6 @@ packages:
 
   '@remotion/media-utils@4.0.505':
     resolution: {integrity: sha512-Y5EGhjh7uw3ERR6IUdmEPVyXy5gKDXYNIDM5B1R6WDxeAmybKOGE2aaYB01JrXZbVF+BDizaEZphkiegDlnSHw==}
-    peerDependencies:
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
-
-  '@remotion/media@4.0.505':
-    resolution: {integrity: sha512-z+baQRjeX0z9g355/TycF/OTr9WA76COvv/6M5coWF1oAHY6efgPvGqlOmws9goKt6sZgsHq148zNWvtQQydQg==}
     peerDependencies:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
@@ -2683,14 +2671,6 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       remotion: 4.0.505(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-
-  '@remotion/media@4.0.505(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
-    dependencies:
-      mediabunny: 1.50.8
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      remotion: 4.0.505(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      zod: 4.4.3
 
   '@remotion/player@4.0.505(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
