@@ -13,6 +13,7 @@ export const ShortcutsModal = ({ onClose }: { onClose: () => void }) => {
     [t('shortcuts.keys.space'), t('shortcuts.actions.playPause')],
     ['← / →', t('shortcuts.actions.frameStep')],
     [t('shortcuts.keys.backspaceDelete'), t('shortcuts.actions.deleteClip')],
+    ['Shift + Delete', t('shortcuts.actions.rippleDelete')],
     ['S', t('shortcuts.actions.splitClip')],
     ['T', t('shortcuts.actions.addMarker')],
     ['F', t('shortcuts.actions.cycleTransitions')],

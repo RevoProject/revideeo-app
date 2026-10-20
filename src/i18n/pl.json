@@ -510,6 +510,7 @@
   "shortcuts.actions.playPause": "Odtwarzaj / Pauza",
   "shortcuts.actions.frameStep": "Przesuń o 1 klatkę (Shift: 10 klatek)",
   "shortcuts.actions.deleteClip": "Usuń zaznaczony klip",
+  "shortcuts.actions.rippleDelete": "Usuń zaznaczenie i zamknij lukę",
   "shortcuts.actions.splitClip": "Rozetnij klip pod playheadem",
   "shortcuts.actions.addMarker": "Dodaj marker na playheadzie",
   "shortcuts.actions.cycleTransitions": "Cykl przejść na najbliższej krawędzi",

@@ -510,6 +510,7 @@
   "shortcuts.actions.playPause": "Play / Pause",
   "shortcuts.actions.frameStep": "Step 1 frame (Shift: 10 frames)",
   "shortcuts.actions.deleteClip": "Delete selected clip",
+  "shortcuts.actions.rippleDelete": "Delete selection and close the gap",
   "shortcuts.actions.splitClip": "Split clip at playhead",
   "shortcuts.actions.addMarker": "Add marker at playhead",
   "shortcuts.actions.cycleTransitions": "Cycle transitions on nearest edge",

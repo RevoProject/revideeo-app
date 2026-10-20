@@ -510,6 +510,7 @@
   "shortcuts.actions.playPause": "Abspielen / Pause",
   "shortcuts.actions.frameStep": "1 Frame vorwärts (Shift: 10 Frames)",
   "shortcuts.actions.deleteClip": "Ausgewählten Clip löschen",
+  "shortcuts.actions.rippleDelete": "Auswahl löschen und Lücke schließen",
   "shortcuts.actions.splitClip": "Clip am Abspielpunkt teilen",
   "shortcuts.actions.addMarker": "Marker am Abspielpunkt hinzufügen",
   "shortcuts.actions.cycleTransitions": "Übergänge an nächster Kante durchschalten",

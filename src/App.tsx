@@ -66,6 +66,7 @@ import { downloadVideoBlob, exportVideo, correctAssetDurationsBeforeExport, seri
 import { type ToolView } from './editor/tools/ToolsMenu';
 import { ContextMenu } from './components/shared/ContextMenu';
 import { Timeline as TimelineView } from './editor/timeline/Timeline';
+import { rippleDeleteClips } from './editor/timeline/utils/timelineMutations';
 import type { ContextMenuState, ContextMenuTarget, MediaAsset, OpenProject, RenderClip } from './editor/editorTypes';
 import { ShortcutsModal } from './components/modals/ShortcutsModal';
 import { ExportFilmModal } from './components/modals/ExportFilmModal';
@@ -1035,6 +1036,20 @@ export default function ReVideeo() {
     [beginEdit, isTrackLocked],
   );
 
+  const handleRippleDeleteSelected = useCallback(() => {
+    const lockedTracks = new Set(
+      (project?.trackSettings ?? []).flatMap((track, index) => track.locked ? [index] : []),
+    );
+    const next = rippleDeleteClips(clipsRef.current, selectedClipIds, lockedTracks);
+    if (next === clipsRef.current) return;
+    beginEdit();
+    setClips(next);
+    setSelectedClipId(null);
+    setSelectedClipIds([]);
+    setShowTransformOverlay(false);
+    setDirty(true);
+  }, [beginEdit, project?.trackSettings, selectedClipIds]);
+
   const cutClip = useCallback(
     (id: string) => {
       const clip = clipsRef.current.find((item) => item.id === id);
@@ -1647,7 +1662,8 @@ export default function ReVideeo() {
         seekTo(currentFrame + (e.shiftKey ? 10 : 1));
       } else if (e.key === 'Backspace' || e.key === 'Delete') {
         e.preventDefault();
-        if (selectedClipId) handleDeleteClip(selectedClipId);
+        if (e.shiftKey) handleRippleDeleteSelected();
+        else if (selectedClipId) handleDeleteClip(selectedClipId);
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         splitClipAt(currentFrame);
@@ -1661,7 +1677,7 @@ export default function ReVideeo() {
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [currentFrame, totalFrames, selectedClipId, selectedTrack, clips, seekTo, undo, redo, handleDeleteClip, splitClipAt, addMarker, handleQuickTransition]);
+  }, [currentFrame, totalFrames, selectedClipId, selectedTrack, clips, seekTo, undo, redo, handleDeleteClip, handleRippleDeleteSelected, splitClipAt, addMarker, handleQuickTransition]);
 
   // --- Persistence ---
   const saveProject = useCallback(async () => {
