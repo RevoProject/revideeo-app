@@ -36,3 +36,9 @@ export const getRulerStepSeconds = (totalFrames: number, fps: number, zoom?: num
   if (zoom >= 0.5) return seconds <= 120 ? 10 : seconds <= 600 ? 15 : 30;
   return seconds <= 120 ? 15 : seconds <= 600 ? 30 : 60;
 };
+
+export const shouldFollowPlayhead = (
+  previous: { frame: number; zoom: number } | null,
+  frame: number,
+  zoom: number,
+): boolean => previous === null || previous.frame !== frame || previous.zoom !== zoom;

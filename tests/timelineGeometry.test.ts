@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatTimecode, getRulerStepSeconds, parsePositionInput } from '../src/editor/timeline/utils/timelineGeometry';
+import { formatTimecode, getRulerStepSeconds, parsePositionInput, shouldFollowPlayhead } from '../src/editor/timeline/utils/timelineGeometry';
 
 describe('timeline geometry', () => {
   it('formats frames as HH:MM:SS', () => {
@@ -18,5 +18,15 @@ describe('timeline geometry', () => {
     expect(getRulerStepSeconds(15 * 30, 30)).toBe(5);
     expect(getRulerStepSeconds(2 * 60 * 30, 30)).toBe(10);
     expect(getRulerStepSeconds(10 * 60 * 30, 30)).toBe(30);
+  });
+
+  it('does not follow an unchanged playhead after duration-only edits', () => {
+    expect(shouldFollowPlayhead({ frame: 20, zoom: 2 }, 20, 2)).toBe(false);
+  });
+
+  it('follows actual playhead and zoom changes', () => {
+    expect(shouldFollowPlayhead(null, 20, 2)).toBe(true);
+    expect(shouldFollowPlayhead({ frame: 20, zoom: 2 }, 21, 2)).toBe(true);
+    expect(shouldFollowPlayhead({ frame: 20, zoom: 2 }, 20, 2.5)).toBe(true);
   });
 });

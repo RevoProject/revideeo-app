@@ -16,6 +16,7 @@ import { TimelineClip } from './components/TimelineClip';
 import { TrackHeader } from './components/TrackHeader';
 import { useTimelineZoom } from './hooks/useTimelineZoom';
 import type { TimelineDrag } from './utils/timelineInteraction';
+import { shouldFollowPlayhead } from './utils/timelineGeometry';
 
 export interface TimelineAsset {
   sourceId: string;
@@ -96,6 +97,7 @@ export const Timeline = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef(1);
+  const previousFollowStateRef = useRef<{ frame: number; zoom: number } | null>(null);
   const MIN_ZOOM = mobile ? 0.125 : 0.25;
   const { zoom: timelineZoom, setZoom } = useTimelineZoom(MIN_ZOOM);
   zoomRef.current = timelineZoom;
@@ -246,15 +248,21 @@ export const Timeline = ({
   }, [timelineZoom]);
 
   useLayoutEffect(() => {
+    const shouldFollow = shouldFollowPlayhead(previousFollowStateRef.current, currentFrame, timelineZoom);
+    previousFollowStateRef.current = { frame: currentFrame, zoom: timelineZoom };
+    if (!shouldFollow) return;
     const scroll = scrollRef.current;
     const area = areaRef.current;
     if (!scroll || !area || totalFrames <= 0) return;
-    const playheadX = (currentFrame / totalFrames) * area.scrollWidth;
+    const scrollRect = scroll.getBoundingClientRect();
+    const areaRect = area.getBoundingClientRect();
+    const areaStartX = areaRect.left - scrollRect.left + scroll.scrollLeft;
+    const playheadX = areaStartX + (currentFrame / totalFrames) * area.scrollWidth;
     const margin = scroll.clientWidth * 0.2;
     const leftEdge = scroll.scrollLeft + margin;
     const rightEdge = scroll.scrollLeft + scroll.clientWidth - margin;
     if (playheadX < leftEdge) scroll.scrollLeft = Math.max(0, playheadX - scroll.clientWidth * 0.3);
-    else if (playheadX > rightEdge) scroll.scrollLeft = Math.min(Math.max(0, area.scrollWidth - scroll.clientWidth), playheadX - scroll.clientWidth * 0.7);
+    else if (playheadX > rightEdge) scroll.scrollLeft = Math.min(Math.max(0, scroll.scrollWidth - scroll.clientWidth), playheadX - scroll.clientWidth * 0.7);
   }, [currentFrame, timelineZoom, totalFrames]);
 
   useEffect(() => {
