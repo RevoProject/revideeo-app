@@ -5,8 +5,8 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, Loader2, Server, ServerOff, TriangleAlert, Video, X } from 'lucide-react';
-import type { VideoExportFormat } from '../../export/videoExporter';
+import { ChevronDown, ChevronRight, Cpu, Loader2, Server, ServerOff, TriangleAlert, Video, X } from 'lucide-react';
+import type { VideoExportFormat, VideoExportTarget } from '../../export/videoExporter';
 import type { RenderServer } from '../../types';
 
 function EditableNumber({ value, min, max, disabled, onChange, className }: { value: number; min?: number; max?: number; disabled?: boolean; onChange: (v: number) => void; className?: string }) {
@@ -39,6 +39,7 @@ export const ExportFilmModal = ({
   onExport,
   onClose,
   mobileUnavailable = false,
+  ondaAvailable,
 }: {
   totalFrames: number;
   contentFrames?: number;
@@ -49,13 +50,14 @@ export const ExportFilmModal = ({
     format: VideoExportFormat,
     startFrame: number,
     endFrame: number,
-    serverUrl: string,
+    target: VideoExportTarget,
     onProgress: (p: number) => void,
     signal: AbortSignal,
   ) => Promise<void>;
   onClose: () => void;
   defaultName?: string;
   mobileUnavailable?: boolean;
+  ondaAvailable: boolean;
 }) => {
   const [name, setName] = useState(defaultName ?? 'revideeo-film');
   const [format, setFormat] = useState<VideoExportFormat>('mp4');
@@ -77,17 +79,21 @@ export const ExportFilmModal = ({
       .filter((s) => s.url.trim())
       .map((s) => ({ url: s.url.trim(), label: s.alias?.trim() || s.url.trim() })),
   ].filter((server, index, all) => all.findIndex((other) => other.url === server.url) === index);
-  const { checking, available } = useRenderServersStatus(candidateServers, 5000, !busy);
+  const { checking, available } = useRenderServersStatus(candidateServers, 5000, !busy, 'render');
   const online = available.length >= 1;
 
-  const [selectedServerUrl, setSelectedServerUrl] = useState<string | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<VideoExportTarget | null>(null);
   useEffect(() => {
-    if (available.length === 0) {
-      setSelectedServerUrl(null);
-    } else if (!available.some((s) => s.url === selectedServerUrl)) {
-      setSelectedServerUrl(available[0].url);
-    }
-  }, [available, selectedServerUrl]);
+    if (selectedTarget?.kind === 'onda' && ondaAvailable) return;
+    if (selectedTarget?.kind === 'server' && available.some((server) => server.url === selectedTarget.serverUrl)) return;
+    if (available.length > 0) setSelectedTarget({ kind: 'server', serverUrl: available[0].url });
+    else if (!checking && ondaAvailable) setSelectedTarget({ kind: 'onda' });
+    else setSelectedTarget(null);
+  }, [available, checking, ondaAvailable, selectedTarget]);
+
+  useEffect(() => {
+    if (selectedTarget?.kind === 'onda' && format === 'mkv') setFormat('mp4');
+  }, [format, selectedTarget]);
 
   const clamp = (lo: number, value: number, hi: number) => Math.max(lo, Math.min(hi, value));
   const setEnd = (value: number) => setEndFrame(clamp(startFrame, Math.round(value || startFrame), totalFrames));
@@ -141,7 +147,7 @@ export const ExportFilmModal = ({
   };
 
   const submit = async () => {
-    if (!online) return;
+    if (!selectedTarget) return;
     const controller = new AbortController();
     abortRef.current = controller;
     setBusy(true);
@@ -153,7 +159,7 @@ export const ExportFilmModal = ({
         format,
         startFrame,
         endFrame,
-        selectedServerUrl ?? available[0]?.url ?? '',
+        selectedTarget,
         (p) => setProgress(p),
         controller.signal,
       );
@@ -172,6 +178,8 @@ export const ExportFilmModal = ({
     mkv: 'MKV (VP9)',
     webm: 'WebM (VP9)',
   };
+  const availableFormats: VideoExportFormat[] = selectedTarget?.kind === 'onda' ? ['mp4', 'webm'] : ['mp4', 'mkv', 'webm'];
+  const canExport = selectedTarget !== null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
@@ -196,7 +204,7 @@ export const ExportFilmModal = ({
               <p className="text-sm text-gray-400">{t('export.mobileUnavailableDesc')}</p>
             </div>
           </div>
-        ) : online ? (
+        ) : (online || ondaAvailable) ? (
           <div key="settings" className="fade-in flex flex-col gap-4">
             <label className="flex flex-col gap-2 text-xs text-gray-400">
               {t('export.fileName')}
@@ -207,33 +215,28 @@ export const ExportFilmModal = ({
                 className="rounded-lg border border-[#2c2d33] bg-[#202124] px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500"
               />
             </label>
-            {available.length >= 2 && (
-              <div className="flex flex-col gap-2">
-                <span className="text-xs text-gray-400">{t('export.renderServersLabel')}</span>
-                <div className="grid grid-cols-2 gap-2">
-                  {available.map((server) => (
-                    <button
-                      key={server.url}
-                      type="button"
-                      onClick={() => setSelectedServerUrl(server.url)}
-                      disabled={busy}
-                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold ${
-                        selectedServerUrl === server.url
-                          ? 'border-blue-500 bg-blue-600 text-white'
-                          : 'border-[#2c2d33] bg-[#202124] text-gray-400'
-                      }`}
-                    >
-                      <Server size={14} className={selectedServerUrl === server.url ? 'text-white' : 'text-gray-500'} />
-                      <span className="truncate">{server.label}</span>
-                    </button>
-                  ))}
-                </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-xs text-gray-400">{t('export.renderTargetsLabel')}</span>
+              <div className="grid grid-cols-2 gap-2">
+                {ondaAvailable && (
+                  <button type="button" onClick={() => setSelectedTarget({ kind: 'onda' })} disabled={busy} className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold ${selectedTarget?.kind === 'onda' ? 'border-cyan-500 bg-cyan-600 text-white' : 'border-[#2c2d33] bg-[#202124] text-gray-400'}`}>
+                    <Cpu size={14} />
+                    <span className="truncate">ONDA Native</span>
+                  </button>
+                )}
+                {available.map((server) => (
+                  <button key={server.url} type="button" onClick={() => setSelectedTarget({ kind: 'server', serverUrl: server.url })} disabled={busy} className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold ${selectedTarget?.kind === 'server' && selectedTarget.serverUrl === server.url ? 'border-blue-500 bg-blue-600 text-white' : 'border-[#2c2d33] bg-[#202124] text-gray-400'}`}>
+                    <Server size={14} />
+                    <span className="truncate">{server.label}</span>
+                  </button>
+                ))}
               </div>
-            )}
+              {selectedTarget?.kind === 'onda' && <span className="text-[10px] text-gray-500">{t('export.ondaDesc')}</span>}
+            </div>
             <div className="flex flex-col gap-2">
               <span className="text-xs text-gray-400">{t('export.format')}</span>
               <div className="grid grid-cols-3 gap-2">
-                {(['mp4', 'mkv', 'webm'] as VideoExportFormat[]).map((item) => (
+                {availableFormats.map((item) => (
                   <button
                     key={item}
                     type="button"
@@ -243,7 +246,7 @@ export const ExportFilmModal = ({
                       format === item ? 'border-blue-500 bg-blue-600 text-white' : 'border-[#2c2d33] bg-[#202124] text-gray-400'
                     }`}
                   >
-                    {fmtLabel[item]}
+                    {item === 'webm' && selectedTarget?.kind === 'onda' ? 'WebM (VP8)' : fmtLabel[item]}
                   </button>
                 ))}
               </div>
@@ -371,7 +374,7 @@ export const ExportFilmModal = ({
               </button>
               <button
                 onClick={submit}
-                disabled={busy || !online}
+                disabled={busy || !canExport}
                 className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {busy ? t('export.rendering') : t('export.export')}

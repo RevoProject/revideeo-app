@@ -8,6 +8,13 @@ import type { StoredClip, TrackSettings } from '../types';
 import { detectTrueVideoDuration } from '../utils/videoDuration';
 
 export type VideoExportFormat = 'mp4' | 'mkv' | 'webm';
+export type VideoExportTarget = { kind: 'onda' } | { kind: 'server'; serverUrl: string };
+
+export const isOndaSupported = (): boolean => (
+  'VideoEncoder' in globalThis
+  && 'VideoDecoder' in globalThis
+  && 'OfflineAudioContext' in globalThis
+);
 
 interface ExportAsset {
   sourceId: string;
@@ -28,6 +35,7 @@ export interface VideoExportInput {
   onProgress?: (progress: number) => void;
   signal?: AbortSignal;
   serverUrl?: string;
+  target?: VideoExportTarget;
   normalize?: boolean;
 }
 
@@ -68,6 +76,10 @@ import { exportVideoViaRenderServer, exportVideoViaManifest, ManifestEndpointUna
 
 export const exportVideo = async (input: VideoExportInput): Promise<Blob> => {
   checkAborted(input.signal);
+  if (input.target?.kind === 'onda') {
+    const { exportVideoWithOnda } = await import('./ondaRenderer');
+    return exportVideoWithOnda(input);
+  }
   try {
     return await exportVideoViaManifest(input);
   } catch (error) {

@@ -62,7 +62,7 @@ import {
   type RecentExport,
   upsertProject,
 } from './storage';
-import { downloadVideoBlob, exportVideo, correctAssetDurationsBeforeExport, serializeName, type VideoExportFormat } from './export/videoExporter';
+import { downloadVideoBlob, exportVideo, correctAssetDurationsBeforeExport, isOndaSupported, serializeName, type VideoExportFormat, type VideoExportTarget } from './export/videoExporter';
 import { type ToolView } from './editor/tools/ToolsMenu';
 import { ContextMenu } from './components/shared/ContextMenu';
 import { Timeline as TimelineView } from './editor/timeline/Timeline';
@@ -1898,7 +1898,7 @@ export default function ReVideeo() {
     }
   };
 
-  const exportRenderedFilm = async (name: string, format: VideoExportFormat, startFrame: number, endFrame: number, serverUrl: string, onProgress: (p: number) => void, signal: AbortSignal): Promise<void> => {
+  const exportRenderedFilm = async (name: string, format: VideoExportFormat, startFrame: number, endFrame: number, target: VideoExportTarget, onProgress: (p: number) => void, signal: AbortSignal): Promise<void> => {
     if (!project) return;
     const preset = getPreset(project.config.resolutionLabel, project.config.orientation);
 
@@ -1945,7 +1945,8 @@ export default function ReVideeo() {
       format,
       onProgress,
       signal,
-      serverUrl,
+      serverUrl: target.kind === 'server' ? target.serverUrl : undefined,
+      target,
       normalize: isMobileDevice,
     });
     const isCutted = finalStart > 1 || finalEndFrame < totalFrames;
@@ -1969,7 +1970,7 @@ export default function ReVideeo() {
 
     // Auto-download immediately (kept so accidental dialog dismissal doesn't lose the file).
     downloadVideoBlob(blob, finalName, format);
-    setToast('Export na serwer zakończony');
+    setToast(t('export.completed'));
     window.setTimeout(() => setToast(null), 3500);
     setExportReady({ id: recentExport.id, blob, name: finalName, format });
     setModal(null);
@@ -2678,6 +2679,7 @@ export default function ReVideeo() {
            contentFrames={contentFrames}
            fps={FPS}
            servers={settings.renderServers}
+           ondaAvailable={isOndaSupported()}
            mobileUnavailable={isMobileDevice && !settings.mobileRenderEnabled}
            defaultName={`render-${serializeName(project?.name ?? '')}`}
           onExport={exportRenderedFilm}

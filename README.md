@@ -24,7 +24,7 @@ SPDX identifier: `EUPL-1.2`
 - Keyboard shortcuts and professional editing tools
 - Progressive Web App (PWA) with offline support
 - Internationalization: Polish, English, German
-- Render server for video export (separate repo)
+- ONDA native browser rendering and optional render server export
 
 ## Tech Stack
 
@@ -33,6 +33,7 @@ SPDX identifier: `EUPL-1.2`
 | Frontend | React 19 + TypeScript + Vite + Tailwind CSS |
 | Preview Engine | `@revideeo/player` — native HTML5 renderer (EUPL-1.2) |
 | Core Library | `@revideeo/core` — manifest types, timeline utils, adapter interfaces |
+| Native Renderer | ONDA — Canvas, WebCodecs, and Mediabunny (no Remotion) |
 | Render Server | [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server) (separate repo) |
 | Deployment | Vercel (frontend) + self-hosted Node.js (render server) |
 | Testing | Vitest (238 tests) |

@@ -9,12 +9,17 @@ vi.mock('../src/export/renderClient', () => {
   };
 });
 
+vi.mock('../src/export/ondaRenderer', () => ({
+  exportVideoWithOnda: vi.fn(),
+}));
+
 import {
   ManifestEndpointUnavailableError,
   exportVideoViaManifest,
   exportVideoViaRenderServer,
 } from '../src/export/renderClient';
 import { exportVideo, type VideoExportInput } from '../src/export/videoExporter';
+import { exportVideoWithOnda } from '../src/export/ondaRenderer';
 
 const input: VideoExportInput = {
   clips: [],
@@ -43,6 +48,24 @@ describe('exportVideo manifest fallback', () => {
     vi.mocked(exportVideoViaManifest).mockRejectedValue(new Error('PipelineStatus::PIPELINE_ERROR_READ'));
 
     await expect(exportVideo(input)).rejects.toThrow('PIPELINE_ERROR_READ');
+    expect(exportVideoViaRenderServer).not.toHaveBeenCalled();
+  });
+
+  it('routes ONDA exports locally without contacting a server', async () => {
+    const rendered = new Blob(['onda-video']);
+    vi.mocked(exportVideoWithOnda).mockResolvedValue(rendered);
+
+    await expect(exportVideo({ ...input, target: { kind: 'onda' } })).resolves.toBe(rendered);
+    expect(exportVideoWithOnda).toHaveBeenCalledOnce();
+    expect(exportVideoViaManifest).not.toHaveBeenCalled();
+    expect(exportVideoViaRenderServer).not.toHaveBeenCalled();
+  });
+
+  it('does not fall back to a server after an ONDA failure', async () => {
+    vi.mocked(exportVideoWithOnda).mockRejectedValue(new Error('ONDA encoder failed'));
+
+    await expect(exportVideo({ ...input, target: { kind: 'onda' } })).rejects.toThrow('ONDA encoder failed');
+    expect(exportVideoViaManifest).not.toHaveBeenCalled();
     expect(exportVideoViaRenderServer).not.toHaveBeenCalled();
   });
 });
