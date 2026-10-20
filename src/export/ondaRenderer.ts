@@ -210,11 +210,12 @@ const getOutgoingProgress = (localFrame: number, clip: StoredClip, next: StoredC
   return Math.max(0, Math.min(1, (localFrame - outStart) / next.transitionDurationInFrames));
 };
 
-const drawClip = (
+const drawClip = async (
   context: CanvasRenderingContext2D,
   prepared: PreparedClip,
   localFrame: number,
-): void => {
+  fps: number,
+): Promise<void> => {
   if (localFrame < 0 || localFrame >= prepared.durationInFrames) return;
 
   // Compute transition states
@@ -287,9 +288,21 @@ const drawClip = (
       prepared.asset.drawHeight ?? prepared.boxHeight,
     );
 } else if (prepared.asset?.sink) {
-      // For video - still need to get sample per frame
-      // This is the remaining async part - could be optimized further with pre-fetching
-      // Note: video drawing remains async, but we've optimized everything else
+      // Fetch and draw video frame
+      const sourceTime = (prepared.startFrame + localFrame * prepared.playbackRate) / fps;
+      const sample = await prepared.asset.sink.getSample(sourceTime);
+      if (sample) {
+        const fit = prepared.fitMode ?? 'contain';
+        const ratio = fit === 'cover'
+          ? Math.max(prepared.boxWidth / sample.displayWidth, prepared.boxHeight / sample.displayHeight)
+          : Math.min(prepared.boxWidth / sample.displayWidth, prepared.boxHeight / sample.displayHeight);
+        const width = sample.displayWidth * ratio;
+        const height = sample.displayHeight * ratio;
+        const x = -prepared.boxWidth / 2 + (prepared.boxWidth - width) / 2;
+        const y = -prepared.boxHeight / 2 + (prepared.boxHeight - height) / 2;
+        sample.draw(context, x, y, width, height);
+        sample.close();
+      }
     }
   context.restore();
 };
@@ -456,8 +469,8 @@ export const exportVideoWithOnda = async (input: VideoExportInput): Promise<Blob
       context.fillStyle = '#000000';
       context.fillRect(0, 0, input.width, input.height);
       const timelineFrame = rangeStart + index;
-      for (const prepared of preparedClips) {
-        drawClip(context, prepared, timelineFrame - prepared.clip.offsetInTimeline);
+for (const prepared of preparedClips) {
+        await drawClip(context, prepared, timelineFrame - prepared.clip.offsetInTimeline, input.fps);
       }
       await videoSource.add(index / input.fps, 1 / input.fps, { keyFrame: index % keyFrameInterval === 0 });
       input.onProgress?.((index + 1) / frameCount);
