@@ -20,6 +20,13 @@ const EXT_BY_TYPE: Record<string, string> = {
 
 const extensionForBlob = (blob: Blob): string => EXT_BY_TYPE[blob.type] ?? 'mp4';
 
+export class ManifestEndpointUnavailableError extends Error {
+  constructor(status: number) {
+    super(`Serwer renderowania nie obsługuje manifestów (${status}).`);
+    this.name = 'ManifestEndpointUnavailableError';
+  }
+}
+
 const throwIfAborted = (signal?: AbortSignal): void => {
   if (signal?.aborted) throw new DOMException('Eksport anulowany', 'AbortError');
 };
@@ -179,6 +186,9 @@ export const exportVideoViaManifest = async (input: VideoExportInput): Promise<B
   const baseUrl = input.serverUrl?.trim() || BASE_URL;
   const startRes = await fetch(`${baseUrl}/api/render/manifest`, { method: 'POST', body: form, signal: input.signal });
   if (!startRes.ok) {
+    if ([404, 405, 501].includes(startRes.status)) {
+      throw new ManifestEndpointUnavailableError(startRes.status);
+    }
     const message = await startRes.text().catch(() => '');
     throw new Error(`Serwer renderowania zwrocil blad (${startRes.status}). ${message}`);
   }

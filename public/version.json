@@ -1,4 +1,4 @@
 {
-  "version": "0.4.5",
-  "changelog": "Detach audio goes below clip with track shift, fade handles visible on timeline, fade overlay visualization, PWA cache v6."
+  "version": "0.4.6",
+  "changelog": "Long renders keep their uploaded assets until completion, failed manifest renders no longer restart through the legacy endpoint, PWA cache v7."
 }

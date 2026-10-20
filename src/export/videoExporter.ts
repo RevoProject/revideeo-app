@@ -64,13 +64,14 @@ export const correctAssetDurationsBeforeExport = async (
   return corrected;
 };
 
-import { exportVideoViaRenderServer, exportVideoViaManifest } from './renderClient';
+import { exportVideoViaRenderServer, exportVideoViaManifest, ManifestEndpointUnavailableError } from './renderClient';
 
 export const exportVideo = async (input: VideoExportInput): Promise<Blob> => {
   checkAborted(input.signal);
   try {
     return await exportVideoViaManifest(input);
-  } catch {
+  } catch (error) {
+    if (!(error instanceof ManifestEndpointUnavailableError)) throw error;
     return exportVideoViaRenderServer(input);
   }
 };
