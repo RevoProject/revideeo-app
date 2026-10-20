@@ -29,6 +29,7 @@ interface OndaFormat {
   format: Mp4OutputFormat | WebMOutputFormat;
   videoCodec: VideoCodec;
   audioCodec: AudioCodec;
+  fallbackAudioCodecs: AudioCodec[];
   mimeType: string;
 }
 
@@ -39,8 +40,8 @@ interface VisualAsset {
 }
 
 const getFormat = (format: VideoExportInput['format']): OndaFormat => {
-  if (format === 'mp4') return { format: new Mp4OutputFormat({ fastStart: 'in-memory' }), videoCodec: 'avc', audioCodec: 'aac', mimeType: 'video/mp4' };
-  if (format === 'webm') return { format: new WebMOutputFormat(), videoCodec: 'vp8', audioCodec: 'opus', mimeType: 'video/webm' };
+  if (format === 'mp4') return { format: new Mp4OutputFormat({ fastStart: 'in-memory' }), videoCodec: 'avc', audioCodec: 'aac', fallbackAudioCodecs: ['opus'], mimeType: 'video/mp4' };
+  if (format === 'webm') return { format: new WebMOutputFormat(), videoCodec: 'vp8', audioCodec: 'opus', fallbackAudioCodecs: [], mimeType: 'video/webm' };
   throw new Error('ONDA nie obsługuje formatu MKV.');
 };
 
@@ -247,17 +248,51 @@ export const exportVideoWithOnda = async (input: VideoExportInput): Promise<Blob
   const context = canvas.getContext('2d');
   if (!context) throw new Error('ONDA: nie można utworzyć kontekstu Canvas 2D.');
 
+  // Determine audio codec and output format first (might fall back to WebM)
+  const audioMix = await mixAudio(input, rangeStart, frameCount);
+  let outputFormat = config.format;
+  let outputMimeType = config.mimeType;
+  let chosenAudioCodec = config.audioCodec;
+
+  if (audioMix) {
+    let audioCodecSupported = await canEncodeAudio(config.audioCodec, { numberOfChannels: 2, sampleRate: audioMix.sampleRate });
+    let chosenCodec = config.audioCodec;
+    if (!audioCodecSupported) {
+      // Try fallback codecs
+      for (const fallbackCodec of config.fallbackAudioCodecs) {
+        if (await canEncodeAudio(fallbackCodec, { numberOfChannels: 2, sampleRate: audioMix.sampleRate })) {
+          chosenCodec = fallbackCodec;
+          audioCodecSupported = true;
+          break;
+        }
+      }
+    }
+    if (!audioCodecSupported) {
+      // Fall back to WebM with opus if we're not already on WebM
+      if (config.format.constructor.name !== 'WebMOutputFormat') {
+        console.warn('ONDA: no audio codec supported for MP4, falling back to WebM');
+        outputFormat = new WebMOutputFormat();
+        outputMimeType = 'video/webm';
+        chosenCodec = 'opus';
+        if (!await canEncodeAudio('opus', { numberOfChannels: 2, sampleRate: audioMix.sampleRate })) {
+          throw new Error('ONDA: przeglądarka nie obsługuje żadnego kodeka audio (ani AAC, ani Opus).');
+        }
+      } else {
+        throw new Error('ONDA: przeglądarka nie obsługuje kodeka audio Opus.');
+      }
+    }
+    chosenAudioCodec = chosenCodec;
+  }
+
+  // Create output with the determined format
   const target = new BufferTarget();
-  const output = new Output({ format: config.format, target });
+  const output = new Output({ format: outputFormat, target });
   const videoSource = new CanvasSource(canvas, { codec: config.videoCodec, bitrate: QUALITY_HIGH });
   output.addVideoTrack(videoSource, { frameRate: input.fps });
-  const audioMix = await mixAudio(input, rangeStart, frameCount);
+
   let audioSource: OndaAudioSource | null = null;
   if (audioMix) {
-    if (!await canEncodeAudio(config.audioCodec, { numberOfChannels: 2, sampleRate: audioMix.sampleRate })) {
-      throw new Error(`ONDA: przeglądarka nie obsługuje kodeka audio ${config.audioCodec}.`);
-    }
-    audioSource = new OndaAudioSource({ codec: config.audioCodec, bitrate: QUALITY_HIGH });
+    audioSource = new OndaAudioSource({ codec: chosenAudioCodec as any, bitrate: QUALITY_HIGH });
     output.addAudioTrack(audioSource);
   }
 
@@ -309,7 +344,7 @@ export const exportVideoWithOnda = async (input: VideoExportInput): Promise<Blob
     videoSource.close();
     await output.finalize();
     if (!target.buffer) throw new Error('ONDA: encoder nie zwrócił danych wyjściowych.');
-    return new Blob([target.buffer], { type: config.mimeType });
+    return new Blob([target.buffer], { type: outputMimeType });
   } catch (error) {
     if (output.state === 'started') await output.cancel();
     throw error;
