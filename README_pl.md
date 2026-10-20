@@ -4,9 +4,9 @@
 
 Stworzony z ❤️ w Polsce dla Unii Europejskiej.
 
-> **Wymagany serwer renderujący** — Do eksportu wideo i edycji z pomocą AI potrzebny jest
-> osobny serwer renderujący: [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server).
-> Aplikacja frontendowa samodzielnie zapewnia edycję osi czasu, podgląd i zarządzanie projektami.
+> **Opcjonalny serwer renderujący** — Zgodne przeglądarki mogą lokalnie eksportować MP4/WebM.
+> Edycja z pomocą AI, eksport MKV i renderowanie serwerowe używają
+> [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server).
 
 ## Licencja
 
@@ -24,7 +24,7 @@ Identyfikator SPDX: `EUPL-1.2`
 - Skróty klawiszowe i profesjonalne narzędzia edycyjne
 - Progressive Web App (PWA) z obsługą offline
 - Internacjonalizacja: polski, angielski, niemiecki
-- Serwer renderujący do eksportu wideo (osobne repozytorium)
+- Lokalny eksport WebCodecs lub opcjonalny serwer renderujący
 
 ## Stack technologiczny
 
@@ -39,12 +39,13 @@ Identyfikator SPDX: `EUPL-1.2`
 
 ## Serwer renderujący
 
-Eksport wideo i funkcje edycji z pomocą AI wymagają serwera renderującego.
+Przeglądarka może lokalnie eksportować MP4/WebM. Edycja z pomocą AI, eksport MKV
+i renderowanie serwerowe wymagają serwera renderującego.
 Jest on utrzymywany w **osobnym repozytorium**:
 
 **→ [github.com/RevoProject/revideeo-render-server](https://github.com/RevoProject/revideeo-render-server)**
 
-Serwer renderujący działa niezależnie i NIE jest częścią bundle'a przeglądarkowego tego repozytorium.
+Serwer renderujący działa niezależnie od leniwie ładowanego renderera przeglądarkowego.
 
 ## Szybki start
 
@@ -94,10 +95,8 @@ cd packages/core   && npx vitest run   #  54 testów
 
 ## Informacja o zależnościach trzecich
 
-Ten projekt **nie zawiera kodu Remotion** w bundle'u przeglądarkowym.
-Remotion jest używany wyłącznie przez osobny serwer renderujący
-([revideeo-render-server](https://github.com/RevoProject/revideeo-render-server)),
-który utrzymuje własne zależności i obowiązki licencyjne.
+Remotion jest dołączony jako leniwie ładowany renderer przeglądarkowy i jest także
+używany przez osobny [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server).
 
 Zobacz [NOTICE](NOTICE) pełną listę zależności trzecich i ich licencje.
 

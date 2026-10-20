@@ -4,9 +4,9 @@
 
 Made with ❤️ in Poland for the European Union.
 
-> **Render server required** — For video export and AI-assisted editing, you need the
-> separate render server: [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server).
-> The frontend app alone provides timeline editing, preview, and project management.
+> **Optional render server** — Compatible browsers can export MP4/WebM locally.
+> AI-assisted editing, MKV export, and server rendering use
+> [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server).
 
 ## License
 
@@ -24,7 +24,7 @@ SPDX identifier: `EUPL-1.2`
 - Keyboard shortcuts and professional editing tools
 - Progressive Web App (PWA) with offline support
 - Internationalization: Polish, English, German
-- Render server for video export (separate repo)
+- Local WebCodecs video export or an optional render server
 
 ## Tech Stack
 
@@ -39,12 +39,13 @@ SPDX identifier: `EUPL-1.2`
 
 ## Render Server
 
-Video export and AI-assisted editing features require the render server.
+The browser can export MP4/WebM locally. AI-assisted editing, MKV export, and
+server-side rendering require the render server.
 It is maintained as a **separate repository**:
 
 **→ [github.com/RevoProject/revideeo-render-server](https://github.com/RevoProject/revideeo-render-server)**
 
-The render server runs independently and is NOT part of this repository's browser bundle.
+The render server runs independently from the lazily loaded browser renderer.
 
 ## Quick Start
 
@@ -94,10 +95,8 @@ cd packages/core   && npx vitest run   #  54 tests
 
 ## Third-Party Notice
 
-This project does **not** include any Remotion code in its browser bundle.
-Remotion is used exclusively by the separate render server
-([revideeo-render-server](https://github.com/RevoProject/revideeo-render-server)),
-which maintains its own dependencies and license obligations.
+Remotion is included as a lazily loaded browser renderer and is also used by the
+separate [revideeo-render-server](https://github.com/RevoProject/revideeo-render-server).
 
 See [NOTICE](NOTICE) for the full list of third-party dependencies and their licenses.
 

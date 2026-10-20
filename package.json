@@ -14,6 +14,8 @@
     "render-server": "node server/render-server.mjs"
   },
   "dependencies": {
+    "@remotion/media": "4.0.505",
+    "@remotion/web-renderer": "4.0.505",
     "@revideeo/core": "workspace:*",
     "@revideeo/player": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",

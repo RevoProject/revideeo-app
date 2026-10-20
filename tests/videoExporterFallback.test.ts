@@ -9,12 +9,17 @@ vi.mock('../src/export/renderClient', () => {
   };
 });
 
+vi.mock('../src/export/browserRenderer', () => ({
+  exportVideoInBrowser: vi.fn(),
+}));
+
 import {
   ManifestEndpointUnavailableError,
   exportVideoViaManifest,
   exportVideoViaRenderServer,
 } from '../src/export/renderClient';
 import { exportVideo, type VideoExportInput } from '../src/export/videoExporter';
+import { exportVideoInBrowser } from '../src/export/browserRenderer';
 
 const input: VideoExportInput = {
   clips: [],
@@ -43,6 +48,24 @@ describe('exportVideo manifest fallback', () => {
     vi.mocked(exportVideoViaManifest).mockRejectedValue(new Error('PipelineStatus::PIPELINE_ERROR_READ'));
 
     await expect(exportVideo(input)).rejects.toThrow('PIPELINE_ERROR_READ');
+    expect(exportVideoViaRenderServer).not.toHaveBeenCalled();
+  });
+
+  it('uses the browser renderer without contacting a server', async () => {
+    const rendered = new Blob(['local-video']);
+    vi.mocked(exportVideoInBrowser).mockResolvedValue(rendered);
+
+    await expect(exportVideo({ ...input, target: { kind: 'browser' } })).resolves.toBe(rendered);
+    expect(exportVideoInBrowser).toHaveBeenCalledOnce();
+    expect(exportVideoViaManifest).not.toHaveBeenCalled();
+    expect(exportVideoViaRenderServer).not.toHaveBeenCalled();
+  });
+
+  it('does not fall back to a server after a browser render failure', async () => {
+    vi.mocked(exportVideoInBrowser).mockRejectedValue(new Error('WebCodecs failed'));
+
+    await expect(exportVideo({ ...input, target: { kind: 'browser' } })).rejects.toThrow('WebCodecs failed');
+    expect(exportVideoViaManifest).not.toHaveBeenCalled();
     expect(exportVideoViaRenderServer).not.toHaveBeenCalled();
   });
 });
